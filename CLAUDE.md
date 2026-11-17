@@ -1,41 +1,44 @@
 # Roblox Game Factory — instructions for Claude
 
-You build complete, publishable Roblox games in this repo with minimal input from Charlie
-(studio: **Chiken Studios** — spelled "Chiken", never "Chicken").
+You run a 6-person game studio (Chiken Studios — spelled "Chiken", never "Chicken") that
+builds complete, publishable Roblox games with minimal input from Charlie.
 
-## The only two checkpoints with Charlie
-1. **Spec approval.** For a new idea, write `games/<slug>/SPEC.md` from `docs/SPEC_TEMPLATE.md`
-   (one page max), then STOP and ask Charlie to OK it. Ask any questions in that same message.
-2. **Done.** After approval, build the whole game without asking anything else.
-   Make reasonable calls yourself and log each one in `games/<slug>/DECISIONS.md`.
-
-Never stop mid-build to ask. If something is truly blocked (e.g. needs an asset ID or a
-Game Pass ID), use a placeholder in `Config.luau`, list it under "Charlie TODO" in
-`games/<slug>/README.md`, and keep going.
-
-## Workflow
-1. `/new-game <idea>` → run `scripts/new-game.sh <slug>`, fill in SPEC.md, stop for approval.
-2. `/build <slug>` (after OK) → follow `docs/BUILD_PLAN.md` phase by phase, committing after each.
-3. Before saying done: pass every item in `docs/QUALITY_CHECKLIST.md`, run the checks below,
-   and fill out `games/<slug>/README.md` (how to play, how to publish, Charlie TODO).
-
-## Checks (run all; fix until clean)
+## The team (subagents in `.claude/agents/`)
 ```
-bash scripts/check.sh <slug>     # stylua --check, selene lint, rojo build
+            inspiration/ uploads
+                   ↓
+ Charlie → [ IDEAS ] ──spec──→ Charlie OKs
+                   ↓
+     ┌─────────────┼─────────────┐
+ [GAMEPLAY]   [GRAPHICS]       [UI]        ← run in parallel
+     └──── questions ──→ [MANAGER] ──decision──→ [IDEAS] ──solution──→ back to branches
+                   ↓
+              [ CHECKER ] ──issues──→ branches (loop) ──PASS──→ done
 ```
-If a tool isn't installed locally, CI (`.github/workflows/build.yml`) runs them on push —
-push, then read the Actions result with `gh run view` and fix failures.
+You are the orchestrator: you run the stages, launch subagents, and keep `status.json`
+up to date with `scripts/status.py` so Charlie can watch on the website (`site/`).
 
-## Code rules (short version — full list in docs/ROBLOX_RULES.md)
-- Luau with `--!strict` at the top of every module. Rojo project layout from `template/`.
-- Server is authoritative: never trust client values for money, damage, or rewards.
-- All tunable numbers live in `src/shared/Config.luau`.
-- Build world geometry and UI **in code** (no Studio-only assets), so the game works straight
-  from `rojo build`.
-- Keep files under ~300 lines; one Service per system in `src/server/Services/`.
-- Save data with `DataService` only. Never call DataStore elsewhere.
+## Charlie checkpoints (only two)
+1. Spec approval after `/new-game`.
+2. The final "done" message after `/build`.
+Never stop mid-build to ask. Manager decides; anything only Charlie can do (pass IDs,
+publishing) goes in the game README's "Charlie TODO".
+
+## Commands
+- `/new-game <idea>` — Ideas stage, stops for approval
+- `/build <slug>` — Branches → Manager loop → Checker → done
+
+## Checks
+`bash scripts/check.sh <slug>` (stylua, selene, rojo build). Missing tools are skipped
+locally; CI runs them on push — read results with `gh run list` / `gh run view`.
+
+## Code rules (full list in docs/ROBLOX_RULES.md)
+- Luau, `--!strict`, Rojo layout from `template/`. Server is authoritative.
+- All tunable numbers in `src/shared/Config.luau`.
+- World and UI built **in code** so the game works straight from `rojo build`.
+- Files under ~300 lines; one Service per system. Only `DataService` touches DataStores.
+- Branch file ownership is in each agent file — respect it to avoid conflicts.
 
 ## Charlie's preferences
 - Keep messages to him short.
-- He wants games that can earn: always include Game Passes / Dev Products stubs, a daily
-  reward, and a clear progression loop that hooks in the first 60 seconds.
+- Games must earn: Game Passes / Dev Products, daily reward, hook in the first 60 seconds.

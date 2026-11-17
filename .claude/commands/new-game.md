@@ -1,12 +1,12 @@
 ---
-description: Start a new Roblox game from an idea — writes a 1-page spec for approval
+description: Stage 1 — Ideas lead designs a new game from an idea and stops for Charlie's OK
 argument-hint: <game idea>
 ---
 New game idea: $ARGUMENTS
 
-1. Pick a short kebab-case slug for the game.
-2. Run `bash scripts/new-game.sh <slug> "<Game Name>"`.
-3. Fill in `games/<slug>/SPEC.md` using `docs/SPEC_TEMPLATE.md`. Be decisive — pick
-   real numbers, real upgrade names, real pass ideas. One page max.
-4. Commit, then STOP and send Charlie a short message: the one-liner, the core loop, and
-   any questions. Do not start building until he approves.
+1. Pick a short kebab-case slug. Run `bash scripts/new-game.sh <slug> "<Game Name>" "<idea>"`.
+2. Use the **ideas** subagent (Job A) to write the full SPEC.md for `<slug>`.
+3. `python3 scripts/status.py <slug> stage approval`
+4. Commit + push (`git add -A && git commit -m "<slug>: spec" && git push`).
+5. STOP. Send Charlie: the pitch, the core loop (4 lines), any questions, and
+   "Reply ok, then run /build <slug>".

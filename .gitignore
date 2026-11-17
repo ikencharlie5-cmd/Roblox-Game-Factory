@@ -4,3 +4,4 @@ build/
 *.rbxm
 sourcemap.json
 .DS_Store
+_site/

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Usage: scripts/new-game.sh <slug> "<Game Name>"
+# Usage: scripts/new-game.sh <slug> "<Game Name>" "<idea>"
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 slug="${1:?slug required}"
 name="${2:-$slug}"
+idea="${3:-}"
 dest="games/$slug"
 
 if [ -e "$dest" ]; then
@@ -43,4 +44,18 @@ TBD
 - [ ] Create Game Passes / Dev Products and paste their IDs into \`src/shared/Config.luau\`
 EOF
 
+mkdir -p "$dest/notes" "$dest/inspiration"
+touch "$dest/inspiration/.gitkeep"
+printf '# Open questions\n\n' > "$dest/QUESTIONS.md"
+NAME="$name" SLUG="$slug" IDEA="$idea" python3 - "$dest/status.json" <<'PY'
+import json, os, sys, time
+now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+data = {
+    "name": os.environ["NAME"], "slug": os.environ["SLUG"], "idea": os.environ["IDEA"],
+    "stage": "ideas", "created": now, "updated": now,
+    "branches": {"gameplay": "waiting", "graphics": "waiting", "ui": "waiting"},
+    "log": [{"time": now, "from": "charlie", "to": "ideas", "text": os.environ["IDEA"] or "New game"}],
+}
+open(sys.argv[1], "w").write(json.dumps(data, indent=2) + "\n")
+PY
 echo "Created $dest"

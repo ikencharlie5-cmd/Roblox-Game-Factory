@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chiken Studios — Game Factory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f17; --panel: #151926; --panel2: #1c2133; --line: #2a3150;
+    --text: #e8ebf5; --dim: #8b93b0;
+    --ideas: #ffb02e; --gameplay: #4ade80; --graphics: #38bdf8; --ui: #c084fc;
+    --manager: #f87171; --checker: #facc15; --charlie: #fb923c; --done: #34d399; --system: #64748b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 Inter, system-ui, sans-serif;
+    background-image: radial-gradient(circle at 20% 0%, #1b2140 0, transparent 45%), radial-gradient(circle at 90% 30%, #2a1630 0, transparent 40%); min-height: 100vh; }
+  header { display: flex; align-items: center; gap: 16px; padding: 18px 28px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .logo { font-family: Fredoka; font-size: 26px; font-weight: 700; letter-spacing: .3px; }
+  .logo span { color: var(--ideas); }
+  .sub { color: var(--dim); font-size: 13px; }
+  .spacer { flex: 1; }
+  .btn { font: 600 14px Fredoka; padding: 10px 16px; border-radius: 12px; border: 0; cursor: pointer; text-decoration: none;
+    color: #111; background: var(--ideas); display: inline-flex; gap: 8px; align-items: center; transition: transform .1s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn.ghost { background: var(--panel2); color: var(--text); border: 1px solid var(--line); }
+  main { display: grid; grid-template-columns: 240px 1fr 360px; gap: 18px; padding: 18px 28px 40px; }
+  @media (max-width: 1150px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
+  h2 { font: 600 15px Fredoka; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); margin: 0 0 12px; }
+  .games { display: flex; flex-direction: column; gap: 8px; }
+  .game { padding: 12px; border-radius: 12px; background: var(--panel2); border: 1px solid transparent; cursor: pointer; }
+  .game.sel { border-color: var(--ideas); }
+  .game b { font-family: Fredoka; font-size: 16px; display: block; }
+  .pill { display: inline-block; font: 600 11px Inter; padding: 2px 8px; border-radius: 99px; text-transform: uppercase; letter-spacing: .5px; }
+  .empty { color: var(--dim); font-size: 14px; }
+  #map svg { width: 100%; height: auto; display: block; }
+  .node { cursor: pointer; }
+  .node rect { fill: var(--panel2); stroke: var(--line); stroke-width: 2; transition: all .2s; }
+  .node:hover rect { fill: #242a40; }
+  .node text { font-family: Fredoka; fill: var(--text); pointer-events: none; }
+  .node .role { font-size: 17px; font-weight: 600; }
+  .node .state { font-size: 12px; fill: var(--dim); font-family: Inter; }
+  .node.active rect { stroke-width: 3; animation: pulse 1.6s ease-in-out infinite; }
+  .node.sel rect { fill: #262d47; }
+  @keyframes pulse { 50% { stroke-opacity: .35; } }
+  .edge { fill: none; stroke: #39416a; stroke-width: 2.5; }
+  .edge.loop { stroke-dasharray: 6 6; }
+  .edge.hot { stroke: var(--ideas); animation: flow 1s linear infinite; stroke-dasharray: 8 6; }
+  @keyframes flow { to { stroke-dashoffset: -28; } }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tab { font: 600 13px Fredoka; padding: 6px 12px; border-radius: 10px; background: var(--panel2); color: var(--dim); border: 0; cursor: pointer; }
+  .tab.on { color: #111; }
+  .doc { background: var(--bg); border-radius: 12px; padding: 14px 18px; max-height: 520px; overflow: auto; font-size: 14px; }
+  .doc h1, .doc h2, .doc h3 { font-family: Fredoka; color: var(--text); text-transform: none; letter-spacing: 0; }
+  .doc h1 { font-size: 22px; } .doc h2 { font-size: 18px; margin-top: 18px; } .doc h3 { font-size: 15px; }
+  .doc code { font-family: 'JetBrains Mono'; background: var(--panel2); padding: 1px 5px; border-radius: 5px; font-size: 12.5px; }
+  .doc pre { background: var(--panel2); padding: 10px; border-radius: 8px; overflow: auto; }
+  .doc pre code { background: none; padding: 0; }
+  .doc table { border-collapse: collapse; width: 100%; } .doc td, .doc th { border: 1px solid var(--line); padding: 6px 8px; text-align: left; }
+  .feed { display: flex; flex-direction: column; gap: 10px; max-height: 560px; overflow: auto; }
+  .msg { background: var(--panel2); border-radius: 12px; padding: 10px 12px; border-left: 4px solid var(--system); }
+  .msg .who { font: 600 12px Fredoka; text-transform: uppercase; letter-spacing: .5px; }
+  .msg .t { color: var(--dim); font-size: 11px; float: right; }
+  .msg p { margin: 4px 0 0; font-size: 14px; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .inspo { background: var(--panel2); border-radius: 12px; overflow: hidden; font-size: 12px; }
+  .inspo img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; cursor: zoom-in; }
+  .inspo .cap { padding: 6px 8px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .inspo pre { margin: 0; padding: 8px; font-size: 11px; white-space: pre-wrap; max-height: 105px; overflow: hidden; color: var(--text); }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  #modal { position: fixed; inset: 0; background: #000c; display: none; align-items: center; justify-content: center; z-index: 9; padding: 20px; }
+  #modal.on { display: flex; }
+  #modal .box { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 24px; max-width: 560px; }
+  #modal img { max-width: 92vw; max-height: 88vh; border-radius: 12px; }
+  #modal code { font-family: 'JetBrains Mono'; background: var(--bg); padding: 3px 8px; border-radius: 6px; }
+  .updated { font-size: 12px; color: var(--dim); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">🐔 Chiken <span>Studios</span></div>
+    <div class="sub">Game Factory — live pipeline</div>
+  </div>
+  <div class="spacer"></div>
+  <span class="updated" id="updated"></span>
+  <a class="btn ghost" id="uploadGlobal" target="_blank">📎 Upload inspiration</a>
+  <button class="btn" onclick="showNew()">＋ New game idea</button>
+</header>
+
+<main>
+  <aside class="card">
+    <h2>Games</h2>
+    <div class="games" id="games"></div>
+  </aside>
+
+  <section class="stack">
+    <div class="card" id="map"></div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2 id="panelTitle">Team member</h2>
+      </div>
+      <div class="tabs" id="panelTabs"></div>
+      <div class="doc" id="panelDoc"></div>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:12px">
+        <h2 style="margin:0">Inspiration board</h2>
+        <a class="btn ghost" id="uploadGame" target="_blank">📎 Upload for this game</a>
+      </div>
+      <div class="gallery" id="gallery"></div>
+    </div>
+  </section>
+
+  <aside class="card">
+    <h2>Team chat</h2>
+    <div class="feed" id="feed"></div>
+  </aside>
+</main>
+
+<div id="modal" onclick="if(event.target===this)this.classList.remove('on')"><div id="modalBody"></div></div>
+
+<script>
+const REPO = "ikencharlie5-cmd/Roblox-Game-Factory";
+const ROLES = {
+  charlie:  { label: "Charlie",   icon: "👑", color: "var(--charlie)" },
+  ideas:    { label: "Ideas",     icon: "💡", color: "var(--ideas)" },
+  gameplay: { label: "Gameplay",  icon: "⚙️", color: "var(--gameplay)" },
+  graphics: { label: "Graphics",  icon: "🎨", color: "var(--graphics)" },
+  ui:       { label: "UI",        icon: "🖥️", color: "var(--ui)" },
+  manager:  { label: "Manager",   icon: "🧑‍💼", color: "var(--manager)" },
+  checker:  { label: "Checker",   icon: "🔍", color: "var(--checker)" },
+  done:     { label: "Shipped",   icon: "🚀", color: "var(--done)" },
+  system:   { label: "Pipeline",  icon: "•",  color: "var(--system)" },
+  all:      { label: "Everyone",  icon: "",   color: "var(--dim)" },
+};
+const STAGES = ["ideas", "approval", "branches", "manager", "checker", "done"];
+const STAGE_LABEL = { ideas: "Designing", approval: "Waiting for Charlie", branches: "Building", manager: "Manager deciding", checker: "Checking", done: "Shipped" };
+const BRANCH_COLOR = { waiting: "#64748b", working: "#ffb02e", blocked: "#f87171", done: "#34d399" };
+
+let DATA = { games: [], inspiration: [] };
+let selGame = null, selNode = "ideas", selTab = null;
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function md(src) {
+  if (!src) return '<p class="empty">Nothing here yet.</p>';
+  const lines = src.replace(/\r/g, "").split("\n");
+  let out = "", inList = false, inCode = false, table = [];
+  const inline = s => esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" style="color:var(--graphics)">$1</a>');
+  const flushTable = () => {
+    if (!table.length) return;
+    const rows = table.filter(r => !/^\|[\s:|-]+\|$/.test(r.trim()));
+    out += "<table>" + rows.map((r, i) => "<tr>" + r.trim().replace(/^\||\|$/g, "").split("|")
+      .map(c => i ? `<td>${inline(c.trim())}</td>` : `<th>${inline(c.trim())}</th>`).join("") + "</tr>").join("") + "</table>";
+    table = [];
+  };
+  for (const l of lines) {
+    if (l.startsWith("```")) { if (inList) { out += "</ul>"; inList = false; } out += inCode ? "</code></pre>" : "<pre><code>"; inCode = !inCode; continue; }
+    if (inCode) { out += esc(l) + "\n"; continue; }
+    if (l.trim().startsWith("|")) { table.push(l); continue; } else flushTable();
+    const li = l.match(/^\s*[-*]\s+(.*)/) || l.match(/^\s*\d+\.\s+(.*)/);
+    if (li) { if (!inList) { out += "<ul>"; inList = true; } out += `<li>${inline(li[1].replace(/^\[ \]/, "☐").replace(/^\[x\]/i, "☑"))}</li>`; continue; }
+    if (inList) { out += "</ul>"; inList = false; }
+    const h = l.match(/^(#{1,3})\s+(.*)/);
+    if (h) { out += `<h${h[1].length}>${inline(h[2])}</h${h[1].length}>`; continue; }
+    if (l.trim()) out += `<p>${inline(l)}</p>`;
+  }
+  flushTable(); if (inList) out += "</ul>";
+  return out;
+}
+
+const ago = t => {
+  if (!t) return "";
+  const s = (Date.now() - new Date(t)) / 1000;
+  return s < 60 ? "just now" : s < 3600 ? Math.floor(s / 60) + "m ago" : s < 86400 ? Math.floor(s / 3600) + "h ago" : Math.floor(s / 86400) + "d ago";
+};
+
+function renderGames() {
+  const el = document.getElementById("games");
+  if (!DATA.games.length) { el.innerHTML = '<p class="empty">No games yet. Hit <b>＋ New game idea</b> to start one.</p>'; return; }
+  el.innerHTML = DATA.games.map(g => {
+    const st = g.stage === "done" ? "done" : g.stage === "approval" ? "charlie" : g.stage === "branches" ? "gameplay" : g.stage;
+    return `<div class="game ${selGame?.slug === g.slug ? "sel" : ""}" onclick="pick('${g.slug}')">
+      <b>${esc(g.name)}</b>
+      <span class="pill" style="background:${ROLES[st]?.color || "var(--dim)"};color:#111">${STAGE_LABEL[g.stage] || g.stage}</span>
+      <div class="sub" style="margin-top:4px">${ago(g.updated)}</div></div>`;
+  }).join("");
+}
+
+function nodeState(id, g) {
+  if (!g) return { text: "idle", active: false, color: null };
+  const si = STAGES.indexOf(g.stage);
+  if (["gameplay", "graphics", "ui"].includes(id)) {
+    const s = g.branches?.[id] || "waiting";
+    return { text: s, active: g.stage === "branches" && s === "working", color: BRANCH_COLOR[s] };
+  }
+  const own = { ideas: "ideas", charlie: "approval", manager: "manager", checker: "checker", done: "done" }[id];
+  if (id === "inspiration") return { text: `${(g.inspiration?.length || 0) + DATA.inspiration.length} files`, active: false, color: null };
+  if (g.stage === own) return { text: id === "done" ? "shipped! 🎉" : "working now", active: id !== "done", color: ROLES[id].color };
+  if (si > STAGES.indexOf(own)) return { text: "✓ done", active: false, color: "#34d399" };
+  return { text: "waiting", active: false, color: null };
+}
+
+function renderMap() {
+  const g = selGame;
+  const N = {
+    inspiration: [870, 70, "📎", "Inspiration"],
+    charlie: [130, 70, "👑", "Charlie OK"],
+    ideas: [500, 70, "💡", "Ideas"],
+    manager: [870, 245, "🧑‍💼", "Manager"],
+    gameplay: [190, 245, "⚙️", "Gameplay"],
+    graphics: [410, 245, "🎨", "Graphics"],
+    ui: [630, 245, "🖥️", "UI / Menus"],
+    checker: [410, 420, "🔍", "Checker"],
+    done: [750, 420, "🚀", "Shipped"],
+  };
+  const W = 180, H = 70;
+  const hot = (from, to) => g && ((g.stage === "branches" && from === "ideas") || (g.stage === "manager" && to === "manager") ||
+    (g.stage === "checker" && to === "checker") || (g.stage === "approval" && to === "charlie") || (g.stage === "done" && to === "done"));
+  const E = (a, b, d, cls = "") => `<path class="edge ${cls} ${hot(a, b) ? "hot" : ""}" d="${d}" marker-end="url(#ar)"/>`;
+  const [ix, iy] = N.ideas, [mx, my] = N.manager;
+  let edges = "";
+  edges += E("inspiration", "ideas", `M${N.inspiration[0] - W / 2},70 L${ix + W / 2 + 8},70`);
+  edges += E("ideas", "charlie", `M${ix - W / 2},62 L${N.charlie[0] + W / 2 + 8},62`);
+  edges += E("charlie", "ideas", `M${N.charlie[0] + W / 2},80 L${ix - W / 2 - 8},80`, "loop");
+  for (const b of ["gameplay", "graphics", "ui"]) {
+    const [bx, by] = N[b];
+    edges += E("ideas", b, `M${ix},${iy + H / 2} C${ix},160 ${bx},150 ${bx},${by - H / 2 - 8}`);
+    edges += E(b, "checker", `M${bx},${by + H / 2} C${bx},340 ${N.checker[0]},330 ${N.checker[0]},${N.checker[1] - H / 2 - 8}`);
+  }
+  edges += E("ui", "manager", `M${N.ui[0] + W / 2},245 L${mx - W / 2 - 8},245`);
+  edges += E("manager", "ideas", `M${mx},${my - H / 2} C${mx},140 ${ix + 120},90 ${ix + W / 2 + 8},86`, "loop");
+  edges += E("checker", "done", `M${N.checker[0] + W / 2},420 L${N.done[0] - W / 2 - 8},420`);
+  edges += E("checker", "branches", `M${N.checker[0] - W / 2},430 C120,440 60,330 ${N.gameplay[0] - W / 2 - 8},262`, "loop");
+
+  const labels = `<text x="750" y="268" text-anchor="middle" fill="var(--manager)" font-size="11" font-family="Inter">questions</text>
+    <text x="760" y="122" fill="var(--manager)" font-size="12" font-family="Inter">decision → solution</text>
+    <text x="40" y="400" fill="var(--checker)" font-size="12" font-family="Inter">issues → fix</text>
+    <text x="300" y="54" fill="var(--charlie)" font-size="12" font-family="Inter">spec → OK?</text>`;
+
+  const nodes = Object.entries(N).map(([id, [x, y, icon, label]]) => {
+    const s = nodeState(id, g);
+    const stroke = s.color || "var(--line)";
+    return `<g class="node ${s.active ? "active" : ""} ${selNode === id ? "sel" : ""}" onclick="pickNode('${id}')">
+      <rect x="${x - W / 2}" y="${y - H / 2}" width="${W}" height="${H}" rx="16" style="stroke:${stroke}"/>
+      <text class="role" x="${x - W / 2 + 18}" y="${y - 4}">${icon} ${label}</text>
+      <circle cx="${x - W / 2 + 24}" cy="${y + 17}" r="4" fill="${s.color || "#475069"}"/>
+      <text class="state" x="${x - W / 2 + 34}" y="${y + 21}">${esc(s.text)}</text></g>`;
+  }).join("");
+
+  document.getElementById("map").innerHTML = `
+    <div class="row" style="justify-content:space-between;margin-bottom:6px">
+      <h2 style="margin:0">${g ? esc(g.name) : "Pipeline"}</h2>
+      ${g ? `<span class="sub">${esc(g.idea || "")}</span>` : ""}
+    </div>
+    <svg viewBox="0 0 1000 480" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#5a6390"/></marker></defs>
+      ${edges}${labels}${nodes}
+    </svg>`;
+}
+
+function panelTabsFor(id, g) {
+  const d = g?.docs || {}, n = g?.notes || {};
+  switch (id) {
+    case "ideas": return { "Game design (SPEC)": d["SPEC.md"] };
+    case "charlie": return { "Spec to approve": d["SPEC.md"], "Your TODO": d["README.md"] };
+    case "gameplay": case "graphics": case "ui": return { [ROLES[id].label + " notes"]: n[id], "Hand-off from Ideas": section(d["SPEC.md"], { gameplay: "For Gameplay", graphics: "For Graphics", ui: "For UI" }[id]) };
+    case "manager": return { "Decisions": d["DECISIONS.md"], "Questions": d["QUESTIONS.md"] };
+    case "checker": return { "Check report": d["CHECK_REPORT.md"] };
+    case "done": return { "Game README": d["README.md"] };
+    case "inspiration": return { "About": "Everything on the **Inspiration board** below is read by the Ideas lead before designing.\n\nUse the 📎 buttons to upload screenshots, sketches, or a `.txt` file with links." };
+  }
+  return {};
+}
+function section(src, name) {
+  if (!src) return "";
+  const m = src.split(/\n(?=## )/).find(s => s.startsWith("## " + name));
+  return m || "";
+}
+
+function renderPanel() {
+  const role = ROLES[selNode] || { label: "Inspiration", icon: "📎", color: "var(--dim)" };
+  document.getElementById("panelTitle").innerHTML = `${role.icon} ${role.label}`;
+  if (!selGame && selNode !== "inspiration") {
+    document.getElementById("panelTabs").innerHTML = "";
+    document.getElementById("panelDoc").innerHTML = '<p class="empty">Pick a game to see what this team member is working on.</p>';
+    return;
+  }
+  const tabs = panelTabsFor(selNode, selGame);
+  const names = Object.keys(tabs);
+  if (!names.includes(selTab)) selTab = names[0];
+  document.getElementById("panelTabs").innerHTML = names.map(t =>
+    `<button class="tab ${t === selTab ? "on" : ""}" style="${t === selTab ? `background:${role.color}` : ""}" onclick="selTab='${t.replace(/'/g, "\\'")}';renderPanel()">${esc(t)}</button>`).join("");
+  document.getElementById("panelDoc").innerHTML = md(tabs[selTab]);
+}
+
+function renderFeed() {
+  const el = document.getElementById("feed");
+  const log = (selGame?.log || []).slice().reverse();
+  if (!log.length) { el.innerHTML = '<p class="empty">Messages between team members show up here.</p>'; return; }
+  el.innerHTML = log.map(m => {
+    const f = ROLES[m.from] || ROLES.system, t = ROLES[m.to] || ROLES.all;
+    return `<div class="msg" style="border-left-color:${f.color}">
+      <span class="t">${ago(m.time)}</span>
+      <span class="who" style="color:${f.color}">${f.icon} ${f.label}</span>
+      <span class="who" style="color:var(--dim)"> → ${t.label}</span>
+      <p>${esc(m.text)}</p></div>`;
+  }).join("");
+}
+
+function renderGallery() {
+  const items = [...(selGame?.inspiration || []), ...DATA.inspiration];
+  const el = document.getElementById("gallery");
+  el.innerHTML = items.length ? items.map(i => i.kind === "image"
+    ? `<div class="inspo"><img src="${i.url}" alt="${esc(i.name)}" onclick="zoom('${i.url}')"><div class="cap">${esc(i.name)}</div></div>`
+    : `<div class="inspo"><pre>${esc(i.text || "📄")}</pre><div class="cap"><a href="${i.url}" target="_blank" style="color:var(--dim)">${esc(i.name)}</a></div></div>`
+  ).join("") : '<p class="empty" style="grid-column:1/-1">No inspiration yet — upload screenshots, sketches, or a .txt of links.</p>';
+  const up = `https://github.com/${REPO}/upload/main/` + (selGame ? `games/${selGame.slug}/inspiration` : "inspiration");
+  document.getElementById("uploadGame").href = up;
+  document.getElementById("uploadGame").style.display = selGame ? "" : "none";
+}
+
+function zoom(url) { document.getElementById("modalBody").innerHTML = `<img src="${url}">`; document.getElementById("modal").classList.add("on"); }
+function showNew() {
+  document.getElementById("modalBody").innerHTML = `<div class="box">
+    <h2 style="color:var(--ideas)">💡 Start a new game</h2>
+    <p>1. (Optional) <a href="https://github.com/${REPO}/upload/main/inspiration" target="_blank" style="color:var(--graphics)">Upload inspiration</a> first.</p>
+    <p>2. Open <a href="https://claude.ai/code" target="_blank" style="color:var(--graphics)">Claude Code</a> on this repo and type:</p>
+    <p><code>/new-game a tycoon where you grow clouds on sky islands</code></p>
+    <p>3. Ideas writes the spec → you OK it → type <code>/build &lt;slug&gt;</code> and watch it move through the pipeline here.</p>
+    <button class="btn" onclick="document.getElementById('modal').classList.remove('on')">Got it</button></div>`;
+  document.getElementById("modal").classList.add("on");
+}
+
+function pick(slug) { selGame = DATA.games.find(g => g.slug === slug) || null; location.hash = slug; render(); }
+function pickNode(id) { selNode = id; selTab = null; renderMap(); renderPanel(); }
+function render() { renderGames(); renderMap(); renderPanel(); renderFeed(); renderGallery(); }
+
+async function load() {
+  try {
+    const r = await fetch("data.json?t=" + Date.now());
+    DATA = await r.json();
+  } catch (e) { console.warn("no data.json", e); }
+  const slug = location.hash.slice(1) || selGame?.slug;
+  selGame = DATA.games.find(g => g.slug === slug) || DATA.games[0] || null;
+  document.getElementById("updated").textContent = "refreshed " + new Date().toLocaleTimeString();
+  render();
+}
+document.getElementById("uploadGlobal").href = `https://github.com/${REPO}/upload/main/inspiration`;
+load();
+setInterval(load, 60000);
+</script>
+</body>
+</html>

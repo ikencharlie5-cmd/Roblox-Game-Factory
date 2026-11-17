@@ -17,3 +17,8 @@ Claude builds whole Roblox games here. You only approve a 1-page spec.
 - `template/` — starter game: saving, leaderstats, daily reward, game passes, HUD
 - `docs/` — spec template, build plan, quality checklist, coding rules
 - `.github/workflows/build.yml` — lints + builds every game into a `.rbxl` on push
+
+## The website (live pipeline)
+**https://ikencharlie5-cmd.github.io/Roblox-Game-Factory/** — watch each game move through
+Ideas → Gameplay / Graphics / UI → Manager → Checker, read the team chat, and upload inspiration.
+Updates on every push.
