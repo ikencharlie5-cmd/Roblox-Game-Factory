@@ -42,3 +42,14 @@ locally; CI runs them on push — read results with `gh run list` / `gh run view
 ## Charlie's preferences
 - Keep messages to him short.
 - Games must earn: Game Passes / Dev Products, daily reward, hook in the first 60 seconds.
+
+## Studio mode (when a Roblox Studio MCP is connected)
+Check your tools for a Roblox Studio MCP (e.g. `run_code`, `insert_model`, `get_console_output`,
+`start_stop_play`). If present:
+- Still write all code to files in the repo (the repo is the source of truth).
+- Sync into Studio: run `rojo serve games/<slug>` in the background if Rojo is installed and
+  the Rojo plugin is connected; otherwise push each script's source into Studio via the MCP.
+- Checker MUST playtest: start play mode, read console output for errors, check the first
+  60 seconds work, stop play mode. Errors become issues in CHECK_REPORT.md.
+- Graphics may inspect/tune the built map in Studio, but must copy any change back into code.
+If no Studio MCP is present, use the normal `.rbxl` flow.

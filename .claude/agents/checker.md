@@ -17,3 +17,7 @@ You are the **Checker**. You find problems; you don't fix them.
    `- [<branch>] <file>:<line> — <problem> — <fix>`.
 6. Log: `python3 scripts/status.py <slug> log checker all "PASS"` or
    `"FAIL: <n> issues"`.
+
+## If a Roblox Studio MCP is connected
+After the code checks, playtest in Studio: start play, wait ~20s, read console output, try
+the main buttons/remotes, stop play. Every error or warning from the game's scripts is an issue.

@@ -22,3 +22,9 @@ Claude builds whole Roblox games here. You only approve a 1-page spec.
 **https://ikencharlie5-cmd.github.io/Roblox-Game-Factory/** — watch each game move through
 Ideas → Gameplay / Graphics / UI → Manager → Checker, read the team chat, and upload inspiration.
 Updates on every push.
+
+## Building straight into Studio (on your PC)
+1. Install Claude Code on the PC that has Roblox Studio, and clone this repo.
+2. Connect the Roblox Studio MCP to Claude Code, and (optional) install Rojo + the Rojo Studio plugin.
+3. Open Studio with an empty place, then run `/new-game` / `/build` in Claude Code from the repo folder.
+The team builds into Studio live and the Checker playtests it.
