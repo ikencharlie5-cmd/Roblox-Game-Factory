@@ -2,9 +2,9 @@
   "name": "\ud83c\udf31 Sprout Zoo",
   "slug": "plant-zoo",
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
-  "stage": "branches",
+  "stage": "manager",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-17T07:40:44Z",
+  "updated": "2026-11-17T07:41:58Z",
   "branches": {
     "gameplay": "blocked",
     "graphics": "done",
@@ -89,6 +89,12 @@
       "from": "graphics",
       "to": "all",
       "text": "Map built in code: hub with fountain-tree, 6 plots x 9 pads, 6 biome kits, 19 decor, 28 creatures x 4 stages, day/night + weather FX. Visuals follow gameplay attributes + workspace.ZooItems. See notes/graphics.md"
+    },
+    {
+      "time": "2026-11-17T07:41:58Z",
+      "from": "system",
+      "to": "all",
+      "text": "Stage \u2192 manager"
     }
   ]
 }
