@@ -63,7 +63,8 @@ function Formulas.CreatureBase(item: any): number
 end
 
 function Formulas.PlayerMult(data: any, vip: boolean, double: boolean): number
-	local m = (1 + Config.Income.PerRelease * data.releases) * (1 + Config.Income.PerAppeal * (data.upgrades.VisitorAppeal or 0))
+	local m = (1 + Config.Income.PerRelease * data.releases)
+		* (1 + Config.Income.PerAppeal * (data.upgrades.VisitorAppeal or 0))
 	if vip then
 		m *= Config.Income.VIP
 	end
@@ -89,7 +90,10 @@ function Formulas.SlotCount(data: any): number
 end
 
 function Formulas.OfflineCapSeconds(data: any): number
-	return (Config.Income.OfflineBaseCapHours + Config.Income.OfflineCapHoursPerBench * (data.upgrades.ComfyBenches or 0)) * 3600
+	return (
+		Config.Income.OfflineBaseCapHours
+		+ Config.Income.OfflineCapHoursPerBench * (data.upgrades.ComfyBenches or 0)
+	) * 3600
 end
 
 -- n = the release number being attempted (releases + 1)

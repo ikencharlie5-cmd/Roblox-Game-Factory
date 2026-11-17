@@ -39,13 +39,14 @@ local function deepCopy(t: any): any
 	return c
 end
 
--- Fill missing keys (recursively for nested dictionaries) from defaults.
-local function reconcile(data: { [string]: any }, defaults: { [string]: any })
+-- Fill missing keys from defaults. Recurses ONE level into dictionaries (upgrades, potions,
+-- inventory...) so new sub-keys appear, but never refills contents like inventory.seeds.
+local function reconcile(data: { [string]: any }, defaults: { [string]: any }, depth: number)
 	for k, v in defaults do
 		if data[k] == nil then
 			data[k] = deepCopy(v)
-		elseif type(v) == "table" and type(data[k]) == "table" and next(v) ~= nil and #v == 0 then
-			reconcile(data[k], v)
+		elseif depth < 1 and type(v) == "table" and type(data[k]) == "table" and next(v) ~= nil and #v == 0 then
+			reconcile(data[k], v, depth + 1)
 		end
 	end
 end
@@ -100,7 +101,7 @@ local function onJoin(player: Player)
 		return
 	end
 	local data = (saved :: any) or deepCopy(Config.DefaultData)
-	reconcile(data, Config.DefaultData :: any)
+	reconcile(data, Config.DefaultData :: any, 0)
 	if not player.Parent then
 		return
 	end

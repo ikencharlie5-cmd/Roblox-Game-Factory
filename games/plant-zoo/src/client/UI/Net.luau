@@ -39,12 +39,13 @@ local function interpret(a: any, b: any): (boolean, any)
 	return true, if a == true and b ~= nil then b else a
 end
 
--- Calls a client->server remote. Returns (ok, result-or-message).
-function Net.Call(name: string, ...: any): (boolean, any)
+-- Calls a client->server remote. Returns (ok, result-or-message, failedOnClient).
+-- Server-side failures already Notify + play Error (Guard.Fail), so only client-side ones toast here.
+function Net.Call(name: string, ...: any): (boolean, any, boolean?)
 	local r = Net.Find(name)
 	if not r then
 		warn("[UI] missing remote", name)
-		return false, "Not ready yet - try again!"
+		return false, "Not ready yet - try again!", true
 	end
 	if r:IsA("RemoteFunction") then
 		local args = table.pack(...)
@@ -53,26 +54,26 @@ function Net.Call(name: string, ...: any): (boolean, any)
 		end)
 		if not ok then
 			warn("[UI]", name, "failed:", a)
-			return false, "Something went wrong"
+			return false, "Something went wrong", true
 		end
 		return interpret(a, b)
 	elseif r:IsA("RemoteEvent") then
 		(r :: RemoteEvent):FireServer(...)
 		return true, nil
 	end
-	return false, "Bad remote"
+	return false, "Bad remote", true
 end
 
--- Call + feedback: error toast/sound on failure, optional success toast/sound.
+-- Call + feedback: error toast/sound on client-side failure, optional success toast/sound.
 function Net.Do(name: string, successText: string?, ...: any): (boolean, any)
-	local ok, res = Net.Call(name, ...)
-	if not ok then
+	local ok, res, clientSide = Net.Call(name, ...)
+	if not ok and clientSide then
 		Kit.Sound("Error")
 		if notifyFn then
 			(notifyFn :: (string, string?) -> ())(if type(res) == "string" then res else "Can't do that yet", "error")
 		end
-	elseif successText then
-		Kit.Sound("Buy")
+	elseif ok and successText then
+		Kit.Sound("Purchase")
 		if notifyFn then
 			(notifyFn :: (string, string?) -> ())(successText, "success")
 		end

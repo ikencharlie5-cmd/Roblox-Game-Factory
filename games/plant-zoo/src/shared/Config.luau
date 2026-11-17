@@ -132,7 +132,11 @@ Config.ColorMults = { Gold = 3, Diamond = 5, Rainbow = 10 }
 -- Upgrades (kept through Release). Costs[i] = price of level i. WateringCan starts at level 1 (free).
 Config.UpgradeOrder = { "WateringCan", "Fertilizer", "ShopLuck", "BiggerRestock", "VisitorAppeal", "ComfyBenches" }
 Config.Upgrades = {
-	WateringCan = { Name = "Watering Can", Costs = { 0, 2000, 20000, 200000, 2000000 }, Values = { 0.10, 0.15, 0.20, 0.25, 0.30 } },
+	WateringCan = {
+		Name = "Watering Can",
+		Costs = { 0, 2000, 20000, 200000, 2000000 },
+		Values = { 0.10, 0.15, 0.20, 0.25, 0.30 },
+	},
 	Fertilizer = { Name = "Fertilizer", Costs = { 1000, 15000, 150000, 1500000, 15000000 } },
 	ShopLuck = { Name = "Shop Luck", Costs = { 5000, 50000, 500000, 5000000, 50000000 } },
 	BiggerRestock = { Name = "Bigger Restock", Costs = { 10000, 100000, 1000000, 10000000 } },

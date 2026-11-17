@@ -1,15 +1,15 @@
 --!strict
--- Colors, fonts and icons shared by every UI module (cozy garden palette).
-local Theme = {}
+-- UI colors, fonts and icons (world colors live in Shared/Theme) (cozy garden palette).
+local Style = {}
 
 local function hex(h: string): Color3
 	return Color3.fromHex(h)
 end
 
-Theme.Font = Enum.Font.FredokaOne
-Theme.FontBody = Enum.Font.GothamBold
+Style.Font = Enum.Font.FredokaOne
+Style.FontBody = Enum.Font.GothamBold
 
-Theme.Color = {
+Style.Color = {
 	Cream = hex("#FFF8E7"),
 	Panel = hex("#FFFDF5"),
 	Card = hex("#F3EAD3"),
@@ -32,9 +32,9 @@ Theme.Color = {
 	Wood = hex("#A8673A"),
 }
 
-Theme.RarityOrder = { "Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythical", "Secret" }
+Style.RarityOrder = { "Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythical", "Secret" }
 
-Theme.Rarity = {
+Style.Rarity = {
 	Common = hex("#B0B0B0"),
 	Uncommon = hex("#5BD35B"),
 	Rare = hex("#3BA7FF"),
@@ -47,9 +47,9 @@ Theme.Rarity = {
 local SHORT = { C = "Common", U = "Uncommon", R = "Rare", E = "Epic", L = "Legendary", M = "Mythical", S = "Secret" }
 
 -- Accepts "C", "Common", "common" or a 1-7 index; returns the full rarity name.
-function Theme.NormRarity(r: any): string
+function Style.NormRarity(r: any): string
 	if type(r) == "number" then
-		return Theme.RarityOrder[math.clamp(math.floor(r), 1, 7)]
+		return Style.RarityOrder[math.clamp(math.floor(r), 1, 7)]
 	end
 	if type(r) ~= "string" or r == "" then
 		return "Common"
@@ -61,19 +61,19 @@ function Theme.NormRarity(r: any): string
 	if cap == "Mythic" then
 		return "Mythical"
 	end
-	return if Theme.Rarity[cap] then cap else "Common"
+	return if Style.Rarity[cap] then cap else "Common"
 end
 
-function Theme.RarityIndex(r: any): number
-	local name = Theme.NormRarity(r)
-	return table.find(Theme.RarityOrder, name) or 1
+function Style.RarityIndex(r: any): number
+	local name = Style.NormRarity(r)
+	return table.find(Style.RarityOrder, name) or 1
 end
 
-function Theme.RarityColor(r: any): Color3
-	return Theme.Rarity[Theme.NormRarity(r)]
+function Style.RarityColor(r: any): Color3
+	return Style.Rarity[Style.NormRarity(r)]
 end
 
-Theme.Biome = {
+Style.Biome = {
 	Meadow = { Color = hex("#7BD148"), Icon = "🌼" },
 	Pond = { Color = hex("#2EA6D9"), Icon = "💧" },
 	Desert = { Color = hex("#F2C27B"), Icon = "🌵" },
@@ -82,18 +82,18 @@ Theme.Biome = {
 	Frost = { Color = hex("#9FD8FF"), Icon = "❄️" },
 }
 
-function Theme.BiomeInfo(name: any): { Color: Color3, Icon: string }
+function Style.BiomeInfo(name: any): { Color: Color3, Icon: string }
 	if type(name) == "string" then
-		for key, info in Theme.Biome do
+		for key, info in Style.Biome do
 			if string.find(string.lower(name), string.lower(key), 1, true) then
 				return info
 			end
 		end
 	end
-	return { Color = Theme.Color.Grey, Icon = "⬜" }
+	return { Color = Style.Color.Grey, Icon = "⬜" }
 end
 
-Theme.Weather = {
+Style.Weather = {
 	Rain = { Icon = "🌧️", Color = hex("#4FA3E0"), Text = "Growth x1.5 · Dewy x2" },
 	Heatwave = { Icon = "☀️", Color = hex("#FF9E3D"), Text = "Sunkissed x2" },
 	SnowFlurry = { Icon = "❄️", Color = hex("#9FD8FF"), Text = "Frosted x3" },
@@ -102,9 +102,9 @@ Theme.Weather = {
 	Starfall = { Icon = "🌠", Color = hex("#3A3F8F"), Text = "Starlit x5" },
 }
 
-function Theme.WeatherInfo(name: string): { Icon: string, Color: Color3, Text: string }
+function Style.WeatherInfo(name: string): { Icon: string, Color: Color3, Text: string }
 	local key = string.gsub(name, "%s", "")
-	return Theme.Weather[key] or { Icon = "🌤️", Color = Theme.Color.Sky, Text = "" }
+	return Style.Weather[key] or { Icon = "🌤️", Color = Style.Color.Sky, Text = "" }
 end
 
-return Theme
+return Style

@@ -1,6 +1,6 @@
 --!strict
 -- Window frames + manager: only one menu open at a time, pop-in tween, close button, confirm dialog.
-local Theme = require(script.Parent:WaitForChild("Theme"))
+local Style = require(script.Parent:WaitForChild("Style"))
 local Kit = require(script.Parent:WaitForChild("Kit"))
 
 local Windows = {}
@@ -25,8 +25,8 @@ function Windows.Init(screenGui: ScreenGui)
 end
 
 function Windows.Create(name: string, title: string, accent: Color3?): Win
-	local color = accent or Theme.Color.Leaf
-	local frame = Kit.Panel(gui, Theme.Color.Cream, {
+	local color = accent or Style.Color.Leaf
+	local frame = Kit.Panel(gui, Style.Color.Cream, {
 		Name = name,
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.53),
@@ -46,7 +46,7 @@ function Windows.Create(name: string, title: string, accent: Color3?): Win
 	local titleLabel = Kit.Label(bar, title, {
 		Size = UDim2.new(1, -110, 1, -8),
 		Position = UDim2.new(0, 14, 0, 4),
-		TextColor3 = Theme.Color.White,
+		TextColor3 = Style.Color.White,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
 	Kit.Make("UIStroke", { Thickness = 2, Color = Kit.Darker(color, 0.5) }, titleLabel)
@@ -59,7 +59,7 @@ function Windows.Create(name: string, title: string, accent: Color3?): Win
 	}, frame)
 
 	local win: Win = { Name = name, Frame = frame, Body = body, Title = titleLabel }
-	Kit.Button(bar, "X", Theme.Color.Red, function()
+	Kit.Button(bar, "X", Style.Color.Red, function()
 		Windows.Close()
 	end, {
 		AnchorPoint = Vector2.new(1, 0.5),
@@ -142,7 +142,7 @@ function Windows.Confirm(title: string, text: string, yesText: string, onYes: ()
 		Size = UDim2.fromScale(1, 1),
 		ZIndex = 50,
 	}, gui)
-	local box = Kit.Panel(shade, Theme.Color.Cream, {
+	local box = Kit.Panel(shade, Style.Color.Cream, {
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
 		Size = UDim2.fromScale(0.42, 0.42),
@@ -153,19 +153,19 @@ function Windows.Confirm(title: string, text: string, yesText: string, onYes: ()
 	Kit.Label(box, text, {
 		Size = UDim2.fromScale(0.9, 0.36),
 		Position = UDim2.fromScale(0.05, 0.27),
-		Font = Theme.FontBody,
-		TextColor3 = Theme.Color.InkSoft,
+		Font = Style.FontBody,
+		TextColor3 = Style.Color.InkSoft,
 		ZIndex = 52,
 	})
 	local function close()
 		shade:Destroy()
 	end
-	Kit.Button(box, "Cancel", Theme.Color.Grey, close, {
+	Kit.Button(box, "Cancel", Style.Color.Grey, close, {
 		Size = UDim2.fromScale(0.42, 0.24),
 		Position = UDim2.fromScale(0.05, 0.7),
 		ZIndex = 52,
 	})
-	Kit.Button(box, yesText, Theme.Color.Red, function()
+	Kit.Button(box, yesText, Style.Color.Red, function()
 		close()
 		onYes()
 	end, { Size = UDim2.fromScale(0.42, 0.24), Position = UDim2.fromScale(0.53, 0.7), ZIndex = 52 })

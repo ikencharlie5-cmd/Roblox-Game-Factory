@@ -15,37 +15,37 @@ export type SoundDef = {
 
 local Sounds: { [string]: SoundDef } = {
 	-- UI
-	Click = { Id = 0, Volume = 0.5, Kind = "sfx" },
-	Open = { Id = 0, Volume = 0.45, Kind = "sfx" },
-	Close = { Id = 0, Volume = 0.4, Kind = "sfx" },
-	Error = { Id = 0, Volume = 0.5, Kind = "sfx", PitchVar = 0 },
+	Click = { Id = 15675059323, Volume = 0.5, Kind = "sfx" },
+	Open = { Id = 15675024286, Volume = 0.45, Kind = "sfx" },
+	Close = { Id = 15675028888, Volume = 0.4, Kind = "sfx" },
+	Error = { Id = 91501650514390, Volume = 0.5, Kind = "sfx", PitchVar = 0 },
 	Purchase = { Id = 127645268874265, Volume = 0.6, Kind = "sfx" }, -- Roblox docs "currency purchase sound"
-	Notify = { Id = 0, Volume = 0.45, Kind = "sfx" },
+	Notify = { Id = 15675085146, Volume = 0.45, Kind = "sfx" },
 
 	-- Money
-	Cash = { Id = 0, Volume = 0.55, Kind = "sfx", PitchVar = 0.1 }, -- tip jar coin pop
-	OfflineEarnings = { Id = 0, Volume = 0.6, Kind = "sfx" },
+	Cash = { Id = 130378474223829, Volume = 0.55, Kind = "sfx", PitchVar = 0.1 }, -- tip jar coin pop
+	OfflineEarnings = { Id = 138309872562566, Volume = 0.6, Kind = "sfx" },
 
 	-- Building / zoo actions
-	Place = { Id = 0, Volume = 0.55, Kind = "sfx", PitchVar = 0.08 }, -- buy/place thunk
-	Rotate = { Id = 0, Volume = 0.4, Kind = "sfx", PitchVar = 0.08 },
-	Remove = { Id = 0, Volume = 0.45, Kind = "sfx" },
+	Place = { Id = 106984966606682, Volume = 0.55, Kind = "sfx", PitchVar = 0.08 }, -- buy/place thunk
+	Rotate = { Id = 15675037413, Volume = 0.4, Kind = "sfx", PitchVar = 0.08 },
+	Remove = { Id = 15675075163, Volume = 0.45, Kind = "sfx" },
 	Water = { Id = 0, Volume = 0.5, Kind = "sfx", PitchVar = 0.1 },
-	Sell = { Id = 0, Volume = 0.55, Kind = "sfx" },
-	Expand = { Id = 0, Volume = 0.6, Kind = "sfx", PitchVar = 0 }, -- new pad / biome unlock
+	Sell = { Id = 130378474223829, Volume = 0.55, Kind = "sfx" },
+	Expand = { Id = 15675046931, Volume = 0.6, Kind = "sfx", PitchVar = 0 }, -- new pad / biome unlock
 	Restock = { Id = 131573697, Volume = 0.5, Kind = "sfx", PitchVar = 0 }, -- "Bell" (verify in Studio)
 	Photo = { Id = 0, Volume = 0.5, Kind = "sfx" },
-	Like = { Id = 0, Volume = 0.5, Kind = "sfx" },
+	Like = { Id = 15675055424, Volume = 0.5, Kind = "sfx" },
 
 	-- Growing
-	Plant = { Id = 0, Volume = 0.55, Kind = "sfx", PitchVar = 0.1 },
-	GrowStage = { Id = 0, Volume = 0.5, Kind = "sfx", PitchVar = 0.12 }, -- sprout "bloop"
-	Bloom = { Id = 0, Volume = 0.6, Kind = "sfx", PitchVar = 0.04 }, -- fully grown chime
-	Thriving = { Id = 0, Volume = 0.5, Kind = "sfx", PitchVar = 0.04 }, -- need met ✓ ding
+	Plant = { Id = 15675055424, Volume = 0.55, Kind = "sfx", PitchVar = 0.1 },
+	GrowStage = { Id = 106984966606682, Volume = 0.5, Kind = "sfx", PitchVar = 0.12 }, -- sprout "bloop"
+	Bloom = { Id = 15675043410, Volume = 0.6, Kind = "sfx", PitchVar = 0.04 }, -- fully grown chime
+	Thriving = { Id = 15675016548, Volume = 0.5, Kind = "sfx", PitchVar = 0.04 }, -- need met ✓ ding
 	Mutation = { Id = 0, Volume = 0.6, Kind = "sfx", PitchVar = 0.04 }, -- sparkle
 
 	-- Rarity reveals (scale C -> S). Common/Uncommon reuse Bloom.
-	RevealRare = { Id = 0, Volume = 0.55, Kind = "sfx", PitchVar = 0 },
+	RevealRare = { Id = 9038514384, Volume = 0.55, Kind = "sfx", PitchVar = 0 },
 	RevealEpic = { Id = 0, Volume = 0.6, Kind = "sfx", PitchVar = 0 },
 	RevealLegendary = { Id = 0, Volume = 0.65, Kind = "sfx", PitchVar = 0 },
 	-- "Fanfare Announcement 1" (APM track, cut at 5 s)
@@ -53,10 +53,10 @@ local Sounds: { [string]: SoundDef } = {
 	RevealSecret = { Id = 0, Volume = 0.7, Kind = "sfx", PitchVar = 0 },
 
 	-- Progress / rewards
-	Release = { Id = 0, Volume = 0.7, Kind = "sfx", PitchVar = 0 }, -- whoosh + choir
+	Release = { Id = 94077390731779, Volume = 0.7, Kind = "sfx", PitchVar = 0 }, -- whoosh + choir
 	DailyReward = { Id = 3422389728, Volume = 0.6, Kind = "sfx", PitchVar = 0 }, -- Roblox docs "retro jingle"
 	QuestComplete = { Id = 2686079706, Volume = 0.55, Kind = "sfx", PitchVar = 0 }, -- "Level Up" (verify in Studio)
-	Announce = { Id = 0, Volume = 0.55, Kind = "sfx", PitchVar = 0 }, -- server-wide toast chime
+	Announce = { Id = 15675043410, Volume = 0.55, Kind = "sfx", PitchVar = 0 }, -- server-wide toast chime
 
 	-- Weather start stings (Sounds.WeatherStart maps weather -> name)
 	WeatherRain = { Id = 0, Volume = 0.55, Kind = "sfx", PitchVar = 0 },
@@ -79,12 +79,12 @@ local Sounds: { [string]: SoundDef } = {
 	NightTheme = { Id = 1845208657, Volume = 0.22, Kind = "music", Looped = true }, -- "Sleepy Village" - Sean Elder
 
 	-- Ambience loops
-	AmbMeadow = { Id = 0, Volume = 0.3, Kind = "ambience", Looped = true }, -- birds/bees
-	AmbPond = { Id = 0, Volume = 0.3, Kind = "ambience", Looped = true }, -- bubbles
-	AmbDesert = { Id = 0, Volume = 0.25, Kind = "ambience", Looped = true }, -- wind
-	AmbCanopy = { Id = 0, Volume = 0.3, Kind = "ambience", Looped = true }, -- jungle
-	AmbFungus = { Id = 0, Volume = 0.3, Kind = "ambience", Looped = true }, -- cave drips
-	AmbFrost = { Id = 0, Volume = 0.25, Kind = "ambience", Looped = true }, -- wind chimes
+	AmbMeadow = { Id = 9112831327, Volume = 0.3, Kind = "ambience", Looped = true }, -- birds/bees
+	AmbPond = { Id = 9112877174, Volume = 0.3, Kind = "ambience", Looped = true }, -- bubbles
+	AmbDesert = { Id = 9113286969, Volume = 0.25, Kind = "ambience", Looped = true }, -- wind
+	AmbCanopy = { Id = 9112807051, Volume = 0.3, Kind = "ambience", Looped = true }, -- jungle
+	AmbFungus = { Id = 9120526768, Volume = 0.3, Kind = "ambience", Looped = true }, -- cave drips
+	AmbFrost = { Id = 9112832297, Volume = 0.25, Kind = "ambience", Looped = true }, -- wind chimes
 	AmbRain = { Id = 1516791621, Volume = 0.3, Kind = "ambience", Looped = true }, -- Roblox docs rain loop
 }
 

@@ -1,9 +1,10 @@
 --!strict
 -- UI building blocks. Every button gets a sound, a press tween and a 44px minimum touch size.
+local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 
-local Theme = require(script.Parent:WaitForChild("Theme"))
+local Style = require(script.Parent:WaitForChild("Style"))
 
 local Kit = {}
 
@@ -38,7 +39,7 @@ function Kit.Gui(name: string, order: number): ScreenGui
 		ResetOnSpawn = false,
 		DisplayOrder = order,
 		ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-		ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets,
+		ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets,
 	})
 	gui.Parent = player:WaitForChild("PlayerGui")
 	return gui
@@ -96,8 +97,8 @@ function Kit.Label(parent: Instance?, text: string, props: { [string]: any }?): 
 		Size = UDim2.fromScale(1, 1),
 		Text = text,
 		TextScaled = true,
-		Font = Theme.Font,
-		TextColor3 = Theme.Color.Ink,
+		Font = Style.Font,
+		TextColor3 = Style.Color.Ink,
 		RichText = true,
 	})
 	Kit.Make("UITextSizeConstraint", { MaxTextSize = 30, MinTextSize = 8 }, l)
@@ -110,9 +111,9 @@ end
 
 -- Panel = rounded frame with a soft outline.
 function Kit.Panel(parent: Instance?, color: Color3?, props: { [string]: any }?): Frame
-	local f = Kit.Make("Frame", { BackgroundColor3 = color or Theme.Color.Panel, BorderSizePixel = 0 })
+	local f = Kit.Make("Frame", { BackgroundColor3 = color or Style.Color.Panel, BorderSizePixel = 0 })
 	Kit.Corner(f, 12)
-	Kit.Stroke(f, Kit.Darker(color or Theme.Color.Panel, 0.2), 2)
+	Kit.Stroke(f, Kit.Darker(color or Style.Color.Panel, 0.2), 2)
 	for k, v in props or {} do
 		(f :: any)[k] = v
 	end
@@ -127,7 +128,7 @@ function Kit.Button(
 	onClick: (() -> ())?,
 	props: { [string]: any }?
 ): TextButton
-	local base = color or Theme.Color.Leaf
+	local base = color or Style.Color.Leaf
 	local b = Kit.Make("TextButton", {
 		AutoButtonColor = false,
 		BackgroundColor3 = base,
@@ -135,8 +136,8 @@ function Kit.Button(
 		Text = text,
 		TextScaled = true,
 		RichText = true,
-		Font = Theme.Font,
-		TextColor3 = Theme.Color.White,
+		Font = Style.Font,
+		TextColor3 = Style.Color.White,
 		Size = UDim2.fromScale(1, 1),
 	})
 	Kit.Corner(b, 12)
@@ -194,7 +195,7 @@ end
 
 function Kit.Progress(parent: Instance?, color: Color3, props: { [string]: any }?): (Frame, (number) -> ())
 	local back = Kit.Make("Frame", {
-		BackgroundColor3 = Theme.Color.Dark,
+		BackgroundColor3 = Style.Color.Dark,
 		BackgroundTransparency = 0.4,
 		BorderSizePixel = 0,
 		Size = UDim2.fromScale(1, 1),
@@ -229,7 +230,7 @@ function Kit.Scroll(parent: Instance?, props: { [string]: any }?): ScrollingFram
 		CanvasSize = UDim2.new(),
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
 		ScrollBarThickness = 8,
-		ScrollBarImageColor3 = Theme.Color.LeafDark,
+		ScrollBarImageColor3 = Style.Color.LeafDark,
 		ScrollingDirection = Enum.ScrollingDirection.Y,
 	})
 	for k, v in props or {} do
@@ -244,18 +245,26 @@ function Kit.Tabs(parent: Instance, names: { string }, onSelect: (string) -> ())
 	local row = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1) }, parent)
 	Kit.List(row, true, 6)
 	local buttons: { [string]: TextButton } = {}
-	local function select(name: string)
+	local function choose(name: string)
 		for n, b in buttons do
-			Kit.SetButtonColor(b, if n == name then Theme.Color.Sun else Theme.Color.Grey)
+			Kit.SetButtonColor(b, if n == name then Style.Color.Sun else Style.Color.Grey)
 		end
 		onSelect(name)
 	end
 	for i, n in names do
-		buttons[n] = Kit.Button(row, n, Theme.Color.Grey, function()
-			select(n)
+		buttons[n] = Kit.Button(row, n, Style.Color.Grey, function()
+			choose(n)
 		end, { Size = UDim2.new(1 / #names, -6, 1, 0), LayoutOrder = i })
 	end
-	return select
+	return choose
+end
+
+-- Cheap change signature for "re-render only if this changed" checks.
+function Kit.Sig(value: any): string
+	local ok, s = pcall(function()
+		return HttpService:JSONEncode(value)
+	end)
+	return if ok then s else tostring(os.clock())
 end
 
 return Kit

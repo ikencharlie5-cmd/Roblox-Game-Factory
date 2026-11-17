@@ -4,9 +4,9 @@
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
   "stage": "branches",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-17T07:21:56Z",
+  "updated": "2026-11-17T07:31:20Z",
   "branches": {
-    "gameplay": "working",
+    "gameplay": "blocked",
     "graphics": "working",
     "ui": "working",
     "audio": "done"
@@ -71,6 +71,12 @@
       "from": "audio",
       "to": "all",
       "text": "Audio done: Sounds.luau (50 sounds, 11 real IDs, rest Id=0 + search terms), SoundController + MusicDirector (zone/weather/night crossfade, biome ambience, MusicOn/SFXOn). See notes/audio.md"
+    },
+    {
+      "time": "2026-11-17T07:31:20Z",
+      "from": "gameplay",
+      "to": "all",
+      "text": "Full v1 server built (plots, seed restock+luck, offline growth, needs/Thriving, tip jars, weather+mutations, pads/biomes, Release, daily, quests, Hope shop, likes, leaderboard, monetization). Contract in notes/gameplay.md; 3 minor questions."
     }
   ]
 }

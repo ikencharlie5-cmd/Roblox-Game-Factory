@@ -120,3 +120,7 @@ Ambience: `AmbMeadow` (hub + Meadow pads), `AmbPond`, `AmbDesert`, `AmbCanopy`, 
 - AmbFungus: "cave drips ambience"
 - AmbFrost: "wind chimes ambience"
 - AmbRain: "rain ambience loop"
+
+## IDs filled by orchestrator via Studio Creator Store search
+From Roblox-owned (Roblox_UI_*), ProSoundEffects (licensed), DailySoundsFX (original, free), APMOfficial: Click=15675059323, Open=15675024286, Close=15675028888, Error=91501650514390, Notify=15675085146, Cash=130378474223829, OfflineEarnings=138309872562566, Place=106984966606682, Rotate=15675037413, Remove=15675075163, Sell=130378474223829, Expand=15675046931, Like=15675055424, Plant=15675055424, GrowStage=106984966606682, Bloom=15675043410, Thriving=15675016548, RevealRare=9038514384, Release=94077390731779, Announce=15675043410, AmbMeadow=9112831327, AmbPond=9112877174, AmbDesert=9113286969, AmbCanopy=9112807051, AmbFungus=9120526768, AmbFrost=9112832297
+Still 0: Water, Photo, Mutation, RevealEpic/Legendary/Secret, Weather* starts, Chirp, ChirpHappy.
