@@ -94,16 +94,13 @@ KITS.Pond = function(f, top, k)
 		railMat = M.Glass,
 		railT = 0.6,
 	})
-	local water = Build.Deco(
-		f,
-		{
-			Size = V(19.6, 0.35, 19.6),
-			CFrame = top * C(0, 0.12, 0),
-			Color = k.Accent,
-			Material = M.Glass,
-			Name = "Water",
-		}
-	)
+	local water = Build.Deco(f, {
+		Size = V(19.6, 0.35, 19.6),
+		CFrame = top * C(0, 0.12, 0),
+		Color = k.Accent,
+		Material = M.Glass,
+		Name = "Water",
+	})
 	water.Transparency = 0.45
 	water.CanQuery = false
 	local bubbles = Theme.Effects.Sparkle(hex("#DDF6FF"), 3)
@@ -200,15 +197,12 @@ function Biomes.Apply(base: BasePart, dressing: Folder, biome: string?)
 	base:SetAttribute("Biome", key)
 	local top = Biomes.TopCFrame(base)
 	-- Thin border strip so pads read as tiles.
-	Build.Deco(
-		dressing,
-		{
-			Size = V(20.6, 0.2, 20.6),
-			CFrame = top * C(0, -0.25, 0),
-			Color = kit.Ground:Lerp(Color3.new(0, 0, 0), 0.25),
-			Material = kit.GroundMaterial,
-		}
-	)
+	Build.Deco(dressing, {
+		Size = V(20.6, 0.2, 20.6),
+		CFrame = top * C(0, -0.25, 0),
+		Color = kit.Ground:Lerp(Color3.new(0, 0, 0), 0.25),
+		Material = kit.GroundMaterial,
+	})
 	KITS[key](dressing, top, kit)
 end
 
@@ -218,9 +212,10 @@ function Biomes.Lock(base: BasePart, lock: Folder, priceText: string, padIndex: 
 	base.Material = M.Ground
 	local top = Biomes.TopCFrame(base)
 	local hedge = Theme.Colors.Hedge
-	for _, s in { { 0, -HALF, true }, { 0, HALF, true }, { -HALF, 0, false }, { HALF, 0, false } } do
+	local e = HALF - 0.7
+	for _, s in { { 0, -e, true }, { 0, e, true }, { -e, 0, false }, { e, 0, false } } do
 		local x, z, alongX = s[1] :: number, s[2] :: number, s[3] :: boolean
-		local size = if alongX then V(21, 3, 1.4) else V(1.4, 3, 21)
+		local size = if alongX then V(20, 3, 1.4) else V(1.4, 3, 20)
 		Build.Part(
 			lock,
 			{ Size = size, CFrame = top * C(x, 1.5, z), Color = hedge, Material = M.Grass, Name = "Hedge" }

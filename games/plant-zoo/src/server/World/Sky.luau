@@ -1,6 +1,6 @@
 --!strict
 -- Lighting, Atmosphere, Sky, post FX, 12-minute day/night cycle, weather visuals.
--- Sets Lighting attribute "IsNight" and Workspace attribute "Weather" for other branches (audio/UI).
+-- Sets Lighting attribute "IsNight" (ClockTime >= 18 or < 6, same rule as gameplay WeatherService).
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
@@ -57,15 +57,12 @@ function Sky.Setup(areas: { Vector3 })
 	weatherCC = cc
 	local folder = Build.Folder(Workspace:WaitForChild("World"), "WeatherFX")
 	for _, pos in areas do
-		local p = Build.Deco(
-			folder,
-			{
-				Size = Vector3.new(110, 1, 110),
-				CFrame = CFrame.new(pos + Vector3.new(0, 50, 0)),
-				Transparency = 1,
-				Name = "WeatherSource",
-			}
-		)
+		local p = Build.Deco(folder, {
+			Size = Vector3.new(110, 1, 110),
+			CFrame = CFrame.new(pos + Vector3.new(0, 50, 0)),
+			Transparency = 1,
+			Name = "WeatherSource",
+		})
 		p.CanQuery = false
 		table.insert(weatherParts, p)
 	end
@@ -124,7 +121,7 @@ function Sky.StartCycle()
 			local col, amb = palette(t)
 			atmosphere.Color = col
 			Lighting.OutdoorAmbient = amb
-			setNight(t >= 19.2 or t < 5.8)
+			setNight(t >= 18 or t < 6)
 			task.wait(step)
 		end
 	end)
@@ -182,7 +179,6 @@ end
 function Sky.SetWeather(name: string?)
 	local key = canonicalWeather(name)
 	currentWeather = key
-	Workspace:SetAttribute("Weather", key or "Clear")
 	for _, p in weatherParts do
 		p:ClearAllChildren()
 		if key then

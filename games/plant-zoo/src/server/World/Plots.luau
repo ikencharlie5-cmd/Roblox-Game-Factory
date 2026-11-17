@@ -116,16 +116,13 @@ local function paths(f: Instance, cf: CFrame)
 	local h = Plots.Size / 2
 	local y = 0.05
 	local function strip(x: number, z: number, sx: number, sz: number)
-		Build.Part(
-			f,
-			{
-				Size = V(sx, 0.2, sz),
-				CFrame = cf * C(x, y, z),
-				Color = Theme.Colors.Path,
-				Material = M.Sand,
-				Name = "Path",
-			}
-		)
+		Build.Part(f, {
+			Size = V(sx, 0.2, sz),
+			CFrame = cf * C(x, y, z),
+			Color = Theme.Colors.Path,
+			Material = M.Sand,
+			Name = "Path",
+		})
 	end
 	for _, k in { -12, 12 } do
 		strip(k, 0, 4, 68)

@@ -166,10 +166,11 @@ Theme.WeatherMarks = {
 } :: { [string]: { Color: Color3, Tint: Color3?, Light: Color3? } }
 
 -- Grid: each ExhibitPad is 5x5 cells of 4 studs. Cell 1..25 row-major: row 1 = entrance side
--- (pad local -Z), column 1 = pad local -X. Rot 0..3 = 90 degree steps; rot 0 faces the entrance.
+-- (pad local -Z, toward the hub), column 1 = pad local -X. Same math as gameplay's PlotService.CellCFrame.
 Theme.Grid = { CellSize = 4, Cells = 5, PadSize = 20, PadSpacing = 24 }
 
--- Offset from the pad's TOP-CENTER CFrame to a cell (multiply: padTop * Theme.CellOffset(cell, rot)).
+-- Offset from the pad's TOP-CENTER CFrame to a cell (padTop * Theme.CellOffset(cell, rot)).
+-- rot: degrees (0/90/180/270, gameplay's format) or quarter turns 0..3.
 function Theme.CellOffset(cell: number, rot: number?): CFrame
 	local n = Theme.Grid.Cells
 	local c = math.clamp(math.floor(cell), 1, n * n)
@@ -177,7 +178,9 @@ function Theme.CellOffset(cell: number, rot: number?): CFrame
 	local col = (c - 1) % n + 1
 	local s = Theme.Grid.CellSize
 	local mid = (n + 1) / 2
-	return CFrame.new((col - mid) * s, 0, (row - mid) * s) * CFrame.Angles(0, math.rad(90 * ((rot or 0) % 4)), 0)
+	local r = rot or 0
+	local deg = if r > 3 then r else r * 90
+	return CFrame.new((col - mid) * s, 0, (row - mid) * s) * CFrame.Angles(0, math.rad(deg), 0)
 end
 
 Theme.Effects = require(script.Effects)

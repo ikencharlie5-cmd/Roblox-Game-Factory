@@ -71,4 +71,44 @@ function Reserve.Beam(position: Vector3)
 	end)
 end
 
+-- Mirror gameplay's GameState.WorldReserve list ({species, color, owner}); newest entries win.
+-- Plays a beam over a zone for each entry that wasn't there last time.
+local seen: { [string]: number } = {}
+local synced = false
+function Reserve.Sync(list: { any })
+	reserveFolder:ClearAllChildren()
+	local counts: { [string]: number } = {}
+	local fresh: { [string]: number } = {}
+	for _, e in list do
+		local key = string.format("%s|%s|%s", tostring(e.species), tostring(e.color), tostring(e.owner))
+		fresh[key] = (fresh[key] or 0) + 1
+	end
+	local beams: { [string]: boolean } = {}
+	for key, n in fresh do
+		if synced and n > (seen[key] or 0) then
+			local species = string.split(key, "|")[1]
+			beams[CreatureModels.GetLook(species).Biome] = true
+		end
+	end
+	seen = fresh
+	synced = true
+	for i = #list, 1, -1 do
+		local e = list[i]
+		if typeof(e) == "table" and typeof(e.species) == "string" then
+			local biome = CreatureModels.GetLook(e.species).Biome
+			counts[biome] = (counts[biome] or 0) + 1
+			if counts[biome] <= RESERVE_CAP then
+				local color = if typeof(e.color) == "string" and e.color ~= "None" then e.color else nil
+				Reserve.Add(e.species, color, tostring(e.owner or "?"))
+			end
+		end
+	end
+	for biome in beams do
+		local zone = zones[biome]
+		if zone then
+			Reserve.Beam(zone.Position)
+		end
+	end
+end
+
 return Reserve

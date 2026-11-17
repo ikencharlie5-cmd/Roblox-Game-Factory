@@ -90,27 +90,21 @@ local function stall(
 	)
 	Build.Tag(counter, tag, attrs)
 	Build.Deco(m, { Size = V(12.4, 0.4, 3.4), CFrame = cf * C(0, 3.6, 0), Color = Theme.Colors.Cream })
-	Build.Part(
-		m,
-		{
-			Size = V(12, 9, 0.6),
-			CFrame = cf * C(0, 4.5, 4),
-			Color = c2:Lerp(Color3.new(1, 1, 1), 0.6),
-			Material = M.WoodPlanks,
-			Name = "Back",
-		}
-	)
+	Build.Part(m, {
+		Size = V(12, 9, 0.6),
+		CFrame = cf * C(0, 4.5, 4),
+		Color = c2:Lerp(Color3.new(1, 1, 1), 0.6),
+		Material = M.WoodPlanks,
+		Name = "Back",
+	})
 	for _, x in { -5.8, 5.8 } do
-		Build.Part(
-			m,
-			{
-				Size = V(0.8, 9.5, 0.8),
-				CFrame = cf * C(x, 4.75, -1.2),
-				Color = Theme.Colors.WoodDark,
-				Material = M.Wood,
-				Name = "Post",
-			}
-		)
+		Build.Part(m, {
+			Size = V(0.8, 9.5, 0.8),
+			CFrame = cf * C(x, 4.75, -1.2),
+			Color = Theme.Colors.WoodDark,
+			Material = M.Wood,
+			Name = "Post",
+		})
 	end
 	for i = 0, 5 do
 		local stripe =
@@ -134,15 +128,12 @@ local function seedShop(f: Instance, cf: CFrame): TextLabel
 		Build.Flower(counter.Parent :: Instance, (cf * C(x, 4, -0.4)).Position, Theme.Rarity[Theme.RarityOrder[i + 1]])
 	end
 	local holder = counter.Parent :: Instance
-	Build.Deco(
-		holder,
-		{
-			Size = V(6.8, 2.6, 0.2),
-			CFrame = sign.CFrame * C(0, 2.9, 0.15),
-			Color = Theme.Colors.Gold,
-			Material = M.Metal,
-		}
-	)
+	Build.Deco(holder, {
+		Size = V(6.8, 2.6, 0.2),
+		CFrame = sign.CFrame * C(0, 2.9, 0.15),
+		Color = Theme.Colors.Gold,
+		Material = M.Metal,
+	})
 	local board = Build.Deco(
 		holder,
 		{ Size = V(6, 2, 0.3), CFrame = sign.CFrame * C(0, 2.9, 0), Color = Theme.Colors.Cream, Name = "RestockClock" }
@@ -214,15 +205,12 @@ local RESERVE_PROPS: { [string]: (Instance, CFrame) -> () } = {
 		Build.Blob(f, V(2, 0.8, 2), cf * C(0, 1.4, 0), hex("#B57CFF"), M.Neon)
 	end,
 	["Frost Garden"] = function(f, cf)
-		Build.Deco(
-			f,
-			{
-				Size = V(0.8, 2.4, 0.8),
-				CFrame = cf * C(0, 1.2, 0) * A(0, rad(45), 0),
-				Color = hex("#9FD8FF"),
-				Material = M.Ice,
-			}
-		)
+		Build.Deco(f, {
+			Size = V(0.8, 2.4, 0.8),
+			CFrame = cf * C(0, 1.2, 0) * A(0, rad(45), 0),
+			Color = hex("#9FD8FF"),
+			Material = M.Ice,
+		})
 	end,
 }
 
@@ -246,16 +234,13 @@ local function reserve(f: Instance, cf: CFrame): ({ [string]: BasePart }, BasePa
 	local altar = Build.Cyl(m, 3, 4, cf * C(0, 2.9, 0), hex("#C9C2B2"), M.Marble, true)
 	altar.Name = "ReleaseAltar"
 	Build.Tag(altar, "ReleaseAltar")
-	local gem = Build.Deco(
-		m,
-		{
-			Size = V(1.6, 3, 1.6),
-			CFrame = cf * C(0, 6.2, 0) * A(rad(45), rad(45), 0),
-			Color = Theme.Colors.Thriving,
-			Material = M.Neon,
-			Name = "Gem",
-		}
-	)
+	local gem = Build.Deco(m, {
+		Size = V(1.6, 3, 1.6),
+		CFrame = cf * C(0, 6.2, 0) * A(rad(45), rad(45), 0),
+		Color = Theme.Colors.Thriving,
+		Material = M.Neon,
+		Name = "Gem",
+	})
 	Theme.Effects.Sparkle(Theme.Colors.Thriving, 8).Parent = gem
 	local sign = Build.Deco(
 		m,

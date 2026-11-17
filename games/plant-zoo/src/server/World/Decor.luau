@@ -74,29 +74,23 @@ end
 
 B["Log"] = function(m)
 	local log = C(0, 0.8, 0) * A(0, rad(90), 0)
-	local p = Build.Part(
-		m,
-		{
-			Size = V(3.6, 1.6, 1.6),
-			CFrame = log,
-			Color = hex("#8B5A2B"),
-			Material = M.Wood,
-			Shape = Enum.PartType.Cylinder,
-			CanCollide = false,
-		}
-	)
+	local p = Build.Part(m, {
+		Size = V(3.6, 1.6, 1.6),
+		CFrame = log,
+		Color = hex("#8B5A2B"),
+		Material = M.Wood,
+		Shape = Enum.PartType.Cylinder,
+		CanCollide = false,
+	})
 	p.CanTouch = false
-	local cap = Build.Part(
-		m,
-		{
-			Size = V(0.1, 1.3, 1.3),
-			CFrame = log * C(1.8, 0, 0),
-			Color = hex("#E0B07A"),
-			Material = M.Wood,
-			Shape = Enum.PartType.Cylinder,
-			CanCollide = false,
-		}
-	)
+	local cap = Build.Part(m, {
+		Size = V(0.1, 1.3, 1.3),
+		CFrame = log * C(1.8, 0, 0),
+		Color = hex("#E0B07A"),
+		Material = M.Wood,
+		Shape = Enum.PartType.Cylinder,
+		CanCollide = false,
+	})
 	cap.CanTouch = false
 	blob(m, V(1.4, 0.4, 1), C(0.2, 1.55, 0.3), hex("#5FB23A"), M.Grass)
 	ball(m, 0.4, C(-0.4, 1.7, -0.6), hex("#FF6F61"))
@@ -189,28 +183,22 @@ end
 
 B["Hollow Log"] = function(m)
 	local cf = C(0, 1.2, 0) * A(0, rad(90), 0)
-	local p = Build.Part(
-		m,
-		{
-			Size = V(3.8, 2.4, 2.4),
-			CFrame = cf,
-			Color = hex("#6B4A2E"),
-			Material = M.Wood,
-			Shape = Enum.PartType.Cylinder,
-			CanCollide = false,
-		}
-	)
+	local p = Build.Part(m, {
+		Size = V(3.8, 2.4, 2.4),
+		CFrame = cf,
+		Color = hex("#6B4A2E"),
+		Material = M.Wood,
+		Shape = Enum.PartType.Cylinder,
+		CanCollide = false,
+	})
 	p.CanTouch = false
-	local hole = Build.Part(
-		m,
-		{
-			Size = V(0.1, 1.7, 1.7),
-			CFrame = cf * C(-1.9, 0, 0),
-			Color = hex("#2A1A10"),
-			Shape = Enum.PartType.Cylinder,
-			CanCollide = false,
-		}
-	)
+	local hole = Build.Part(m, {
+		Size = V(0.1, 1.7, 1.7),
+		CFrame = cf * C(-1.9, 0, 0),
+		Color = hex("#2A1A10"),
+		Shape = Enum.PartType.Cylinder,
+		CanCollide = false,
+	})
 	hole.CanTouch = false
 	blob(m, V(2.2, 0.5, 1.6), C(0, 2.4, 0.2), hex("#2F8F4E"), M.Grass)
 	cyl(m, 0.4, 0.2, C(0.9, 2.6, -0.5), hex("#FFF6E0"))
@@ -293,15 +281,12 @@ end
 
 B["Info Sign"] = function(m)
 	blk(m, V(0.3, 2.2, 0.3), C(0, 1.1, 0), Theme.Colors.WoodDark, M.Wood)
-	local board = Build.Part(
-		m,
-		{
-			Size = V(2.6, 1.6, 0.2),
-			CFrame = C(0, 2.6, 0) * A(rad(-10), 0, 0),
-			Color = Theme.Colors.Cream,
-			CanCollide = false,
-		}
-	)
+	local board = Build.Part(m, {
+		Size = V(2.6, 1.6, 0.2),
+		CFrame = C(0, 2.6, 0) * A(rad(-10), 0, 0),
+		Color = Theme.Colors.Cream,
+		CanCollide = false,
+	})
 	board.CanTouch = false
 	Build.Label(board, Enum.NormalId.Front, "Did you know?", Theme.Colors.Text)
 	blk(m, V(2.8, 0.15, 0.3), C(0, 3.45, 0.15), hex("#4CAF50"), M.Grass)

@@ -72,16 +72,13 @@ local function spoke(f: Instance, i: number)
 		{ Size = V(10, 0.2, outer - inner), CFrame = cf, Color = Theme.Colors.Path, Material = M.Sand, Name = "Spoke" }
 	)
 	for _, side in { -1, 1 } do
-		Build.Part(
-			f,
-			{
-				Size = V(0.8, 0.3, outer - inner),
-				CFrame = cf * C(side * 5.4, 0.05, 0),
-				Color = Theme.Colors.PathEdge,
-				Material = M.Cobblestone,
-				Name = "Edge",
-			}
-		)
+		Build.Part(f, {
+			Size = V(0.8, 0.3, outer - inner),
+			CFrame = cf * C(side * 5.4, 0.05, 0),
+			Color = Theme.Colors.PathEdge,
+			Material = M.Cobblestone,
+			Name = "Edge",
+		})
 		for _, z in { -20, 20 } do
 			lamp(f, (cf * C(side * 7, -0.1, z)).Position)
 		end

@@ -4,10 +4,10 @@
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
   "stage": "branches",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-17T07:36:32Z",
+  "updated": "2026-11-17T07:40:44Z",
   "branches": {
     "gameplay": "blocked",
-    "graphics": "working",
+    "graphics": "done",
     "ui": "done",
     "audio": "done"
   },
@@ -83,6 +83,12 @@
       "from": "ui",
       "to": "all",
       "text": "UI done: 25 modules in src/client/UI (HUD, sidebar, Seed/Hope shop, Bag, build mode w/ grid ghost+rotate, creature card w/ needs Fix, Index, Upgrades, Release+cutscene, Daily, Quests, Visit/Like/Top10, Store, Settings, toasts/announce, 60s tutorial arrows). Sends rot in degrees; flagged Theme.CellOffset quarter-turn mismatch in QUESTIONS.md. Notes: notes/ui.md"
+    },
+    {
+      "time": "2026-11-17T07:40:44Z",
+      "from": "graphics",
+      "to": "all",
+      "text": "Map built in code: hub with fountain-tree, 6 plots x 9 pads, 6 biome kits, 19 decor, 28 creatures x 4 stages, day/night + weather FX. Visuals follow gameplay attributes + workspace.ZooItems. See notes/graphics.md"
     }
   ]
 }
