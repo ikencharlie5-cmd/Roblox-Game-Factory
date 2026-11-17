@@ -11,7 +11,7 @@ Don't edit files you don't own; if you need something from another branch, write
 
 ## Steps
 1. `python3 scripts/status.py <slug> branch gameplay working`
-2. Read SPEC.md (esp. `## For Gameplay`), `docs/ROBLOX_RULES.md`, `CLAUDE.md`.
+2. Read `research/RESEARCH.md` (your section + links), SPEC.md (esp. `## For Gameplay`), `docs/ROBLOX_RULES.md`, `CLAUDE.md`.
 3. Build: Config numbers → DataService defaults → one Service per system → remotes
    (declare in Remotes.luau) → monetization handlers. Validate every remote server-side.
 4. Write `games/<slug>/notes/gameplay.md`: what you built, every remote name + args +

@@ -7,9 +7,11 @@ Commit + push after every numbered step so the website updates.
 
 1. **Branches.** `python3 scripts/status.py $ARGUMENTS stage branches`, set all 3 branches
    to `waiting`, then launch the **gameplay**, **graphics**, and **ui** subagents IN PARALLEL
-   (one message, three Agent calls), each told the slug.
+   (one message, three Agent calls), each told the slug and to read their section of
+   `research/RESEARCH.md`.
 2. **Manager loop.** If `games/$ARGUMENTS/QUESTIONS.md` has open items (no ✅):
-   a. `status.py $ARGUMENTS stage manager` → **manager** subagent decides.
+   a. `status.py $ARGUMENTS stage manager` → **manager** subagent decides. If a question needs
+      outside knowledge, first run the **rnd** subagent (Job B) on it.
    b. **ideas** subagent (Job B) turns decisions into instructions.
    c. `status.py $ARGUMENTS stage branches` → re-run only the affected branch subagents
       (in parallel), telling them to apply the new SPEC instructions.

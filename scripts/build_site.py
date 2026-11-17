@@ -47,6 +47,7 @@ def main():
             continue
         g = json.loads(status_file.read_text())
         g["docs"] = {name: read(d / name) for name in DOCS if (d / name).exists()}
+        g["docs"]["RESEARCH.md"] = read(d / "research" / "RESEARCH.md")
         g["notes"] = {f.stem: read(f) for f in sorted((d / "notes").glob("*.md"))}
         g["inspiration"] = collect_inspo(d / "inspiration", f"inspo/{d.name}")
         games.append(g)

@@ -20,7 +20,7 @@ Claude builds whole Roblox games here. You only approve a 1-page spec.
 
 ## The website (live pipeline)
 **https://ikencharlie5-cmd.github.io/Roblox-Game-Factory/** — watch each game move through
-Ideas → Gameplay / Graphics / UI → Manager → Checker, read the team chat, and upload inspiration.
+R&D → Ideas → Gameplay / Graphics / UI → Manager → Checker, read the team chat, and upload inspiration.
 Updates on every push.
 
 ## Building straight into Studio (on your PC)

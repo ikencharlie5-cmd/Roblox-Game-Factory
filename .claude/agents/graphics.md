@@ -10,7 +10,7 @@ modules, and `games/<slug>/src/shared/Theme.luau` (colors, materials, sound IDs,
 
 ## Steps
 1. `python3 scripts/status.py <slug> branch graphics working`
-2. Read SPEC.md (esp. `## For Graphics`) and the inspiration images.
+2. Read `research/RESEARCH.md` (your section + links), SPEC.md (esp. `## For Graphics`) and the inspiration images.
 3. Build the whole map in code with `Instance.new`: terrain/baseplate, spawn, zones, paths,
    props made from Parts/Unions-free primitives, signs (SurfaceGui), lighting
    (Lighting props, Atmosphere, Sky), and reusable effects (`Theme.Effects`).

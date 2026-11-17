@@ -52,9 +52,9 @@ import json, os, sys, time
 now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 data = {
     "name": os.environ["NAME"], "slug": os.environ["SLUG"], "idea": os.environ["IDEA"],
-    "stage": "ideas", "created": now, "updated": now,
+    "stage": "research", "created": now, "updated": now,
     "branches": {"gameplay": "waiting", "graphics": "waiting", "ui": "waiting"},
-    "log": [{"time": now, "from": "charlie", "to": "ideas", "text": os.environ["IDEA"] or "New game"}],
+    "log": [{"time": now, "from": "charlie", "to": "rnd", "text": os.environ["IDEA"] or "New game"}],
 }
 open(sys.argv[1], "w").write(json.dumps(data, indent=2) + "\n")
 PY

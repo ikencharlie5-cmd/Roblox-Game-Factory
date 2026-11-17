@@ -9,7 +9,7 @@ You are the **UI / Menus / Player view** branch.
 
 ## Steps
 1. `python3 scripts/status.py <slug> branch ui working`
-2. Read SPEC.md (esp. `## For UI`), and `notes/gameplay.md` if it exists (remote names).
+2. Read `research/RESEARCH.md` (your section + links), SPEC.md (esp. `## For UI`), and `notes/gameplay.md` if it exists (remote names).
    If it doesn't exist yet, use the remote names from SPEC.md and list your assumptions.
 3. Build in code: HUD, shop/upgrade menus, notifications, tutorial arrow/text for the first
    60s, camera tweaks, sound/tween feedback on every button. Phone-friendly: Scale sizing,

@@ -10,7 +10,7 @@
   :root {
     --bg: #0d0f17; --panel: #151926; --panel2: #1c2133; --line: #2a3150;
     --text: #e8ebf5; --dim: #8b93b0;
-    --ideas: #ffb02e; --gameplay: #4ade80; --graphics: #38bdf8; --ui: #c084fc;
+    --ideas: #ffb02e; --rnd: #2dd4bf; --gameplay: #4ade80; --graphics: #38bdf8; --ui: #c084fc;
     --manager: #f87171; --checker: #facc15; --charlie: #fb923c; --done: #34d399; --system: #64748b;
   }
   * { box-sizing: border-box; }
@@ -127,6 +127,7 @@
 const REPO = "ikencharlie5-cmd/Roblox-Game-Factory";
 const ROLES = {
   charlie:  { label: "Charlie",   icon: "👑", color: "var(--charlie)" },
+  rnd:      { label: "R&D",       icon: "🔬", color: "var(--rnd)" },
   ideas:    { label: "Ideas",     icon: "💡", color: "var(--ideas)" },
   gameplay: { label: "Gameplay",  icon: "⚙️", color: "var(--gameplay)" },
   graphics: { label: "Graphics",  icon: "🎨", color: "var(--graphics)" },
@@ -137,8 +138,8 @@ const ROLES = {
   system:   { label: "Pipeline",  icon: "•",  color: "var(--system)" },
   all:      { label: "Everyone",  icon: "",   color: "var(--dim)" },
 };
-const STAGES = ["ideas", "approval", "branches", "manager", "checker", "done"];
-const STAGE_LABEL = { ideas: "Designing", approval: "Waiting for Charlie", branches: "Building", manager: "Manager deciding", checker: "Checking", done: "Shipped" };
+const STAGES = ["research", "ideas", "approval", "branches", "manager", "checker", "done"];
+const STAGE_LABEL = { research: "Researching", ideas: "Designing", approval: "Waiting for Charlie", branches: "Building", manager: "Manager deciding", checker: "Checking", done: "Shipped" };
 const BRANCH_COLOR = { waiting: "#64748b", working: "#ffb02e", blocked: "#f87171", done: "#34d399" };
 
 let DATA = { games: [], inspiration: [] };
@@ -184,7 +185,7 @@ function renderGames() {
   const el = document.getElementById("games");
   if (!DATA.games.length) { el.innerHTML = '<p class="empty">No games yet. Hit <b>＋ New game idea</b> to start one.</p>'; return; }
   el.innerHTML = DATA.games.map(g => {
-    const st = g.stage === "done" ? "done" : g.stage === "approval" ? "charlie" : g.stage === "branches" ? "gameplay" : g.stage;
+    const st = g.stage === "research" ? "rnd" : g.stage === "done" ? "done" : g.stage === "approval" ? "charlie" : g.stage === "branches" ? "gameplay" : g.stage;
     return `<div class="game ${selGame?.slug === g.slug ? "sel" : ""}" onclick="pick('${g.slug}')">
       <b>${esc(g.name)}</b>
       <span class="pill" style="background:${ROLES[st]?.color || "var(--dim)"};color:#111">${STAGE_LABEL[g.stage] || g.stage}</span>
@@ -199,7 +200,7 @@ function nodeState(id, g) {
     const s = g.branches?.[id] || "waiting";
     return { text: s, active: g.stage === "branches" && s === "working", color: BRANCH_COLOR[s] };
   }
-  const own = { ideas: "ideas", charlie: "approval", manager: "manager", checker: "checker", done: "done" }[id];
+  const own = { rnd: "research", ideas: "ideas", charlie: "approval", manager: "manager", checker: "checker", done: "done" }[id];
   if (id === "inspiration") return { text: `${(g.inspiration?.length || 0) + DATA.inspiration.length} files`, active: false, color: null };
   if (g.stage === own) return { text: id === "done" ? "shipped! 🎉" : "working now", active: id !== "done", color: ROLES[id].color };
   if (si > STAGES.indexOf(own)) return { text: "✓ done", active: false, color: "#34d399" };
@@ -209,39 +210,45 @@ function nodeState(id, g) {
 function renderMap() {
   const g = selGame;
   const N = {
-    inspiration: [870, 70, "📎", "Inspiration"],
-    charlie: [130, 70, "👑", "Charlie OK"],
-    ideas: [500, 70, "💡", "Ideas"],
-    manager: [870, 245, "🧑‍💼", "Manager"],
-    gameplay: [190, 245, "⚙️", "Gameplay"],
-    graphics: [410, 245, "🎨", "Graphics"],
-    ui: [630, 245, "🖥️", "UI / Menus"],
-    checker: [410, 420, "🔍", "Checker"],
-    done: [750, 420, "🚀", "Shipped"],
+    inspiration: [870, 60, "📎", "Inspiration"],
+    rnd: [870, 170, "🔬", "R&D"],
+    charlie: [130, 170, "👑", "Charlie OK"],
+    ideas: [500, 170, "💡", "Ideas"],
+    manager: [870, 345, "🧑‍💼", "Manager"],
+    gameplay: [190, 345, "⚙️", "Gameplay"],
+    graphics: [410, 345, "🎨", "Graphics"],
+    ui: [630, 345, "🖥️", "UI / Menus"],
+    checker: [410, 520, "🔍", "Checker"],
+    done: [750, 520, "🚀", "Shipped"],
   };
   const W = 180, H = 70;
-  const hot = (from, to) => g && ((g.stage === "branches" && from === "ideas") || (g.stage === "manager" && to === "manager") ||
+  const hot = (from, to) => g && ((g.stage === "research" && to === "rnd") || (g.stage === "ideas" && from === "rnd" && to === "ideas") ||
+    (g.stage === "branches" && from === "ideas") || (g.stage === "manager" && to === "manager") ||
     (g.stage === "checker" && to === "checker") || (g.stage === "approval" && to === "charlie") || (g.stage === "done" && to === "done"));
   const E = (a, b, d, cls = "") => `<path class="edge ${cls} ${hot(a, b) ? "hot" : ""}" d="${d}" marker-end="url(#ar)"/>`;
-  const [ix, iy] = N.ideas, [mx, my] = N.manager;
+  const [ix, iy] = N.ideas, [mx, my] = N.manager, [rx, ry] = N.rnd;
   let edges = "";
-  edges += E("inspiration", "ideas", `M${N.inspiration[0] - W / 2},70 L${ix + W / 2 + 8},70`);
-  edges += E("ideas", "charlie", `M${ix - W / 2},62 L${N.charlie[0] + W / 2 + 8},62`);
-  edges += E("charlie", "ideas", `M${N.charlie[0] + W / 2},80 L${ix - W / 2 - 8},80`, "loop");
+  edges += E("inspiration", "rnd", `M${rx},${N.inspiration[1] + H / 2} L${rx},${ry - H / 2 - 8}`);
+  edges += E("rnd", "ideas", `M${rx - W / 2},${ry} L${ix + W / 2 + 8},${iy}`);
+  edges += E("rnd", "branches", `M${rx - 60},${ry + H / 2} C${rx - 80},265 ${N.ui[0] + 40},260 ${N.ui[0] + 40},${N.ui[1] - H / 2 - 8}`, "loop");
+  edges += E("ideas", "charlie", `M${ix - W / 2},${iy - 8} L${N.charlie[0] + W / 2 + 8},${iy - 8}`);
+  edges += E("charlie", "ideas", `M${N.charlie[0] + W / 2},${iy + 10} L${ix - W / 2 - 8},${iy + 10}`, "loop");
   for (const b of ["gameplay", "graphics", "ui"]) {
     const [bx, by] = N[b];
-    edges += E("ideas", b, `M${ix},${iy + H / 2} C${ix},160 ${bx},150 ${bx},${by - H / 2 - 8}`);
-    edges += E(b, "checker", `M${bx},${by + H / 2} C${bx},340 ${N.checker[0]},330 ${N.checker[0]},${N.checker[1] - H / 2 - 8}`);
+    edges += E("ideas", b, `M${ix},${iy + H / 2} C${ix},260 ${bx},250 ${bx},${by - H / 2 - 8}`);
+    edges += E(b, "checker", `M${bx},${by + H / 2} C${bx},440 ${N.checker[0]},430 ${N.checker[0]},${N.checker[1] - H / 2 - 8}`);
   }
-  edges += E("ui", "manager", `M${N.ui[0] + W / 2},245 L${mx - W / 2 - 8},245`);
-  edges += E("manager", "ideas", `M${mx},${my - H / 2} C${mx},140 ${ix + 120},90 ${ix + W / 2 + 8},86`, "loop");
-  edges += E("checker", "done", `M${N.checker[0] + W / 2},420 L${N.done[0] - W / 2 - 8},420`);
-  edges += E("checker", "branches", `M${N.checker[0] - W / 2},430 C120,440 60,330 ${N.gameplay[0] - W / 2 - 8},262`, "loop");
+  edges += E("ui", "manager", `M${N.ui[0] + W / 2},${my} L${mx - W / 2 - 8},${my}`);
+  edges += E("manager", "ideas", `M${mx + 40},${my - H / 2} C${mx + 120},250 ${mx + 120},${ry + 70} ${rx + 30},${ry + H / 2 + 8}`, "loop");
+  edges += E("checker", "done", `M${N.checker[0] + W / 2},${N.checker[1]} L${N.done[0] - W / 2 - 8},${N.done[1]}`);
+  edges += E("checker", "branches", `M${N.checker[0] - W / 2},${N.checker[1] + 10} C120,540 60,430 ${N.gameplay[0] - W / 2 - 8},362`, "loop");
 
-  const labels = `<text x="750" y="268" text-anchor="middle" fill="var(--manager)" font-size="11" font-family="Inter">questions</text>
-    <text x="760" y="122" fill="var(--manager)" font-size="12" font-family="Inter">decision → solution</text>
-    <text x="40" y="400" fill="var(--checker)" font-size="12" font-family="Inter">issues → fix</text>
-    <text x="300" y="54" fill="var(--charlie)" font-size="12" font-family="Inter">spec → OK?</text>`;
+  const labels = `<text x="750" y="368" text-anchor="middle" fill="var(--manager)" font-size="11" font-family="Inter">questions</text>
+    <text x="985" y="300" text-anchor="end" fill="var(--manager)" font-size="11" font-family="Inter">decision → R&D/Ideas → fix</text>
+    <text x="700" y="250" text-anchor="middle" fill="#2dd4bf" font-size="11" font-family="Inter">refs for branches</text>
+    <text x="40" y="500" fill="var(--checker)" font-size="12" font-family="Inter">issues → fix</text>
+    <text x="300" y="150" fill="var(--charlie)" font-size="12" font-family="Inter">spec → OK?</text>
+    <text x="690" y="160" text-anchor="middle" fill="#2dd4bf" font-size="11" font-family="Inter">research</text>`;
 
   const nodes = Object.entries(N).map(([id, [x, y, icon, label]]) => {
     const s = nodeState(id, g);
@@ -258,7 +265,7 @@ function renderMap() {
       <h2 style="margin:0">${g ? esc(g.name) : "Pipeline"}</h2>
       ${g ? `<span class="sub">${esc(g.idea || "")}</span>` : ""}
     </div>
-    <svg viewBox="0 0 1000 480" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 1000 570" xmlns="http://www.w3.org/2000/svg">
       <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0,0 L10,5 L0,10 z" fill="#5a6390"/></marker></defs>
       ${edges}${labels}${nodes}
@@ -268,13 +275,14 @@ function renderMap() {
 function panelTabsFor(id, g) {
   const d = g?.docs || {}, n = g?.notes || {};
   switch (id) {
-    case "ideas": return { "Game design (SPEC)": d["SPEC.md"] };
+    case "rnd": return { "Research report": d["RESEARCH.md"] };
+    case "ideas": return { "Game design (SPEC)": d["SPEC.md"], "From R&D": section(d["RESEARCH.md"], "For Ideas") };
     case "charlie": return { "Spec to approve": d["SPEC.md"], "Your TODO": d["README.md"] };
-    case "gameplay": case "graphics": case "ui": return { [ROLES[id].label + " notes"]: n[id], "Hand-off from Ideas": section(d["SPEC.md"], { gameplay: "For Gameplay", graphics: "For Graphics", ui: "For UI" }[id]) };
+    case "gameplay": case "graphics": case "ui": return { [ROLES[id].label + " notes"]: n[id], "Hand-off from Ideas": section(d["SPEC.md"], { gameplay: "For Gameplay", graphics: "For Graphics", ui: "For UI" }[id]), "R&D refs": section(d["RESEARCH.md"], { gameplay: "For Gameplay", graphics: "For Graphics", ui: "For UI" }[id]) };
     case "manager": return { "Decisions": d["DECISIONS.md"], "Questions": d["QUESTIONS.md"] };
     case "checker": return { "Check report": d["CHECK_REPORT.md"] };
     case "done": return { "Game README": d["README.md"] };
-    case "inspiration": return { "About": "Everything on the **Inspiration board** below is read by the Ideas lead before designing.\n\nUse the 📎 buttons to upload screenshots, sketches, or a `.txt` file with links." };
+    case "inspiration": return { "About": "Everything on the **Inspiration board** below is read by R&D and the Ideas lead before designing. R&D also adds links it finds online.\n\nUse the 📎 buttons to upload screenshots, sketches, or a `.txt` file with links." };
   }
   return {};
 }
