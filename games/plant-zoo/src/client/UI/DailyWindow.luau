@@ -115,7 +115,6 @@ function DailyWindow.Mount()
 		end
 		local ok, res = Net.Do("ClaimDaily", nil)
 		if ok then
-			Kit.Sound("DailyReward")
 			if type(res) == "table" and type(res.text) == "string" then
 				infoLabel.Text = "🎉 " .. res.text
 			end

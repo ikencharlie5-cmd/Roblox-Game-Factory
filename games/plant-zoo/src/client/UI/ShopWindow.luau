@@ -33,7 +33,8 @@ local function seedCard(entry: any, order: number)
 	local stroke = card:FindFirstChildOfClass("UIStroke") :: UIStroke
 	stroke.Color = color
 	stroke.Thickness = 3
-	local band = Kit.Make("Frame", { BackgroundColor3 = color, Size = UDim2.fromScale(1, 0.2), BorderSizePixel = 0 }, card)
+	local band =
+		Kit.Make("Frame", { BackgroundColor3 = color, Size = UDim2.fromScale(1, 0.2), BorderSizePixel = 0 }, card)
 	Kit.Corner(band, 10)
 	Kit.Label(band, rarity, { TextColor3 = Style.Color.White, Size = UDim2.fromScale(1, 0.9) })
 	local biome = if s then Style.BiomeInfo(s.Biome).Icon else ""
@@ -49,24 +50,29 @@ local function seedCard(entry: any, order: number)
 		TextColor3 = Style.Color.InkSoft,
 	})
 	local soldOut = (entry.left or 0) <= 0
-	Kit.Button(card, if soldOut then "Sold out" else "$" .. Format.Number(entry.cost or 0), if soldOut
-		then Style.Color.Grey
-		else Style.Color.Leaf, function()
-		if soldOut then
-			Kit.Sound("Error")
-			return
-		end
-		local ok = Net.Do("BuySeed", nil, entry.slot)
-		if ok then
-			Kit.Sound("Purchase")
-		end
-	end, { Size = UDim2.new(1, -12, 0.3, 0), Position = UDim2.new(0, 6, 0.64, 0) })
+	Kit.Button(
+		card,
+		if soldOut then "Sold out" else "$" .. Format.Number(entry.cost or 0),
+		if soldOut then Style.Color.Grey else Style.Color.Leaf,
+		function()
+			if soldOut then
+				Kit.Sound("Error")
+				return
+			end
+			Net.Do("BuySeed", nil, entry.slot) -- server plays Purchase / Reveal<Rarity>
+		end,
+		{ Size = UDim2.new(1, -12, 0.3, 0), Position = UDim2.new(0, 6, 0.64, 0) }
+	)
 end
 
 local function hopeCard(item: any, order: number)
 	local def = Derived.Config.HopeShop[item.Key] or { Name = item.Key, Cost = 0 }
 	local card = Kit.Panel(list, Style.Color.Panel, { LayoutOrder = order })
-	Kit.Label(card, item.Icon .. " " .. def.Name, { Size = UDim2.new(1, -8, 0.24, 0), Position = UDim2.new(0, 4, 0.04, 0) })
+	Kit.Label(
+		card,
+		item.Icon .. " " .. def.Name,
+		{ Size = UDim2.new(1, -8, 0.24, 0), Position = UDim2.new(0, 4, 0.04, 0) }
+	)
 	Kit.Label(card, item.Desc, {
 		Size = UDim2.new(1, -8, 0.3, 0),
 		Position = UDim2.new(0, 4, 0.3, 0),
@@ -74,7 +80,11 @@ local function hopeCard(item: any, order: number)
 		TextColor3 = Style.Color.InkSoft,
 	})
 	Kit.Button(card, "🌟 " .. Format.Number(def.Cost), Style.Color.Sun, function()
-		Net.Do("BuyHopeItem", "Got " .. def.Name .. "!", item.Key)
+		-- Server plays the sound and toasts the crate result; we only add a hint for potions/tonics.
+		local ok = Net.Do("BuyHopeItem", nil, item.Key)
+		if ok and item.Key ~= "HopeCrate" then
+			Net.Toast("Got " .. def.Name .. "! It's in your Bag > Items", "success")
+		end
 	end, { Size = UDim2.new(1, -12, 0.3, 0), Position = UDim2.new(0, 6, 0.64, 0) })
 end
 

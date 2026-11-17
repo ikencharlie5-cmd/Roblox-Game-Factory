@@ -72,10 +72,12 @@ function UpgradesWindow.Render(force: boolean?)
 		end
 		if cost then
 			Kit.Button(row, "$" .. Format.Number(cost), Style.Color.Leaf, function()
-				if Net.Do("BuyUpgrade", "⬆️ " .. def.Name .. " upgraded!", key) then
-					Kit.Sound("Purchase")
-				end
-			end, { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -6, 0.5, 0), Size = UDim2.new(0.24, 0, 0, 48) })
+				Net.Do("BuyUpgrade", "⬆️ " .. def.Name .. " upgraded!", key)
+			end, {
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.new(1, -6, 0.5, 0),
+				Size = UDim2.new(0.24, 0, 0, 48),
+			})
 		else
 			Kit.Label(row, "MAX ⭐", {
 				AnchorPoint = Vector2.new(1, 0.5),

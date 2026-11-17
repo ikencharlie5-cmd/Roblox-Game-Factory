@@ -10,6 +10,7 @@ local Derived = require(script.Parent:WaitForChild("Derived"))
 local Windows = require(script.Parent:WaitForChild("Windows"))
 
 local Hud = {}
+local _skip: any = nil -- sink for unused multiple-return values
 
 local cashLabel: TextLabel
 local rateLabel: TextLabel
@@ -62,8 +63,8 @@ function Hud.Mount(gui: ScreenGui)
 		TextXAlignment = Enum.TextXAlignment.Left,
 		Font = Style.FontBody,
 	})
-	_, hopeLabel = pill(top, "🌟", Style.Color.Hope, 0.28, 2)
-	_, luckLabel = pill(top, "🍀", Style.Color.Luck, 0.26, 3)
+	_skip, hopeLabel = pill(top, "🌟", Style.Color.Hope, 0.28, 2)
+	_skip, luckLabel = pill(top, "🍀", Style.Color.Luck, 0.26, 3)
 
 	-- Weather banner under the currencies
 	weatherBanner = Kit.Panel(gui, Style.Color.Sky, {
@@ -113,7 +114,7 @@ function Hud.Mount(gui: ScreenGui)
 		Position = UDim2.new(0, 5, 0, 2),
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
-	_, setPad = Kit.Progress(padBtn, Style.Color.Leaf, {
+	_skip, setPad = Kit.Progress(padBtn, Style.Color.Leaf, {
 		Size = UDim2.new(1, -10, 0.3, 0),
 		Position = UDim2.new(0, 5, 0.62, 0),
 	})
@@ -132,7 +133,7 @@ function Hud.Mount(gui: ScreenGui)
 		Position = UDim2.new(0, 5, 0, 0),
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
-	_, setRelease = Kit.Progress(relBtn, Style.Color.Purple, {
+	_skip, setRelease = Kit.Progress(relBtn, Style.Color.Purple, {
 		Size = UDim2.new(1, -10, 0.3, 0),
 		Position = UDim2.new(0, 5, 0.58, 0),
 	})
@@ -204,7 +205,6 @@ function Hud.Tick()
 	local left = (restockId + 1) * period - now
 	restockLabel.Text = "🛒 Restock " .. Format.Time(left)
 	if lastRestockId ~= -1 and restockId ~= lastRestockId then
-		Kit.Sound("Restock")
 		restockLabel.TextColor3 = Style.Color.Sun
 		Kit.Tween(restockLabel, 1, { TextColor3 = Style.Color.White })
 	end

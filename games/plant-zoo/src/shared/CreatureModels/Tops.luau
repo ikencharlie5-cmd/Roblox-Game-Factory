@@ -18,16 +18,39 @@ local WHITE = Color3.new(1, 1, 1)
 local NEON = Enum.Material.Neon
 
 -- Petals around center's local Z axis (center's XY plane).
-local function ring(add: Add, center: CFrame, radius: number, n: number, size: Vector3, color: Color3, mat: Enum.Material?)
+local function ring(
+	add: Add,
+	center: CFrame,
+	radius: number,
+	n: number,
+	size: Vector3,
+	color: Color3,
+	mat: Enum.Material?
+)
 	for i = 0, n - 1 do
 		add("blob", size, center * A(0, 0, rad(i * 360 / n)) * C(0, radius, 0), color, { mat = mat })
 	end
 end
 
 -- Same ring but lying flat (petals around Y).
-local function flatRing(add: Add, center: CFrame, radius: number, n: number, size: Vector3, color: Color3, tilt: number, mat: Enum.Material?)
+local function flatRing(
+	add: Add,
+	center: CFrame,
+	radius: number,
+	n: number,
+	size: Vector3,
+	color: Color3,
+	tilt: number,
+	mat: Enum.Material?
+)
 	for i = 0, n - 1 do
-		add("blob", size, center * A(0, rad(i * 360 / n), 0) * C(0, 0, -radius) * A(rad(tilt), 0, 0), color, { mat = mat })
+		add(
+			"blob",
+			size,
+			center * A(0, rad(i * 360 / n), 0) * C(0, 0, -radius) * A(rad(tilt), 0, 0),
+			color,
+			{ mat = mat }
+		)
 	end
 end
 
@@ -166,7 +189,13 @@ end
 
 Tops.mothwings = function(add, head, r, _b, a)
 	for _, x in { -1, 1 } do
-		add("blob", V(0.2, 3, 2.4), C(x * 1.9, 2.8, 0.5) * A(0, rad(x * 20), rad(-x * 25)), a, { transparency = 0.25, mat = Enum.Material.Glass })
+		add(
+			"blob",
+			V(0.2, 3, 2.4),
+			C(x * 1.9, 2.8, 0.5) * A(0, rad(x * 20), rad(-x * 25)),
+			a,
+			{ transparency = 0.25, mat = Enum.Material.Glass }
+		)
 		add("cyl", V(0.1, 1, 0.1), head * C(x * 0.35, r + 0.4, 0) * A(0, 0, rad(-x * 20)), hex("#5E3B1E"))
 		add("ball", V(0.3, 0.3, 0.3), head * C(x * 0.55, r + 0.9, 0), a, { mat = NEON })
 	end
@@ -197,7 +226,13 @@ Tops.bonsai = function(add, head, r, _b, a)
 	add("blob", V(1.8, 0.5, 1.4), head * C(-0.3, r + 0.9, 0.1), LEAF)
 	add("blob", V(1.1, 0.4, 0.9), head * C(0.5, r + 1.3, 0.1), GREEN)
 	for _, x in { -1, 1 } do
-		add("block", V(0.2, 0.9, 0.2), head * C(x * 0.7, r - 0.1, 0.3) * A(rad(-30), 0, rad(-x * 30)), a, { mat = NEON })
+		add(
+			"block",
+			V(0.2, 0.9, 0.2),
+			head * C(x * 0.7, r - 0.1, 0.3) * A(rad(-30), 0, rad(-x * 30)),
+			a,
+			{ mat = NEON }
+		)
 	end
 end
 
@@ -211,16 +246,34 @@ end
 
 Tops.icecrown = function(add, head, r, _b, a)
 	for i = 0, 4 do
-		add("block", V(0.4, 1.1 + (i % 2) * 0.5, 0.4), head * A(0, rad(i * 72), 0) * C(0, r - 0.1, -0.6) * A(rad(-15), 0, 0), a, { mat = Enum.Material.Ice })
+		add(
+			"block",
+			V(0.4, 1.1 + (i % 2) * 0.5, 0.4),
+			head * A(0, rad(i * 72), 0) * C(0, r - 0.1, -0.6) * A(rad(-15), 0, 0),
+			a,
+			{ mat = Enum.Material.Ice }
+		)
 	end
 end
 
 Tops.flame = function(add, head, r, _b, a)
 	for i = -1, 1 do
-		add("blob", V(0.5, 1.6, 0.4), head * C(i * 0.35, r + 0.5, 0.2) * A(rad(-20), 0, rad(-i * 20)), a, { mat = NEON })
+		add(
+			"blob",
+			V(0.5, 1.6, 0.4),
+			head * C(i * 0.35, r + 0.5, 0.2) * A(rad(-20), 0, rad(-i * 20)),
+			a,
+			{ mat = NEON }
+		)
 	end
 	for i = -1, 1 do
-		add("blob", V(0.5, 0.25, 2.2), C(i * 0.45, 1.6, 1.8) * A(rad(20), rad(i * 20), 0), if i == 0 then a else hex("#FF3D2B"), { mat = NEON })
+		add(
+			"blob",
+			V(0.5, 0.25, 2.2),
+			C(i * 0.45, 1.6, 1.8) * A(rad(20), rad(i * 20), 0),
+			if i == 0 then a else hex("#FF3D2B"),
+			{ mat = NEON }
+		)
 	end
 end
 

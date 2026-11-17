@@ -29,7 +29,15 @@ function QuestsWindow.TutorialStep(): (any, number)
 	return def, step
 end
 
-local function row(order: number, title: string, progress: number, goal: number, claimable: boolean, claimed: boolean, onClaim: (() -> ())?)
+local function row(
+	order: number,
+	title: string,
+	progress: number,
+	goal: number,
+	claimable: boolean,
+	claimed: boolean,
+	onClaim: (() -> ())?
+)
 	local r = Kit.Panel(list, if claimable then Style.Color.Cream else Style.Color.Panel, {
 		LayoutOrder = order,
 		Size = UDim2.new(1, -8, 0, 64),
@@ -58,11 +66,17 @@ local function row(order: number, title: string, progress: number, goal: number,
 			TextColor3 = Style.Color.LeafDark,
 		})
 	elseif onClaim then
-		Kit.Button(r, if claimable then "Claim!" else "...", if claimable then Style.Color.Sun else Style.Color.Grey, onClaim, {
-			AnchorPoint = Vector2.new(1, 0.5),
-			Position = UDim2.new(1, -8, 0.5, 0),
-			Size = UDim2.new(0.26, 0, 0, 48),
-		})
+		Kit.Button(
+			r,
+			if claimable then "Claim!" else "...",
+			if claimable then Style.Color.Sun else Style.Color.Grey,
+			onClaim,
+			{
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.new(1, -8, 0.5, 0),
+				Size = UDim2.new(0.26, 0, 0, 48),
+			}
+		)
 	end
 end
 
@@ -108,9 +122,7 @@ function QuestsWindow.Render(force: boolean?)
 				Kit.Sound("Error")
 				return
 			end
-			if Net.Do("ClaimQuest", nil, i) then
-				Kit.Sound("QuestComplete")
-			end
+			Net.Do("ClaimQuest", nil, i)
 		end)
 	end
 	if #quests == 0 then

@@ -41,7 +41,6 @@ end
 local function cutscene()
 	local cam = workspace.CurrentCamera
 	local altar = Plots.TaggedPart("ReleaseAltar")
-	Kit.Sound("Release")
 	if splash then
 		(splash :: (string, Color3?, number?) -> ())("🕊️ Released to the Wild!", Style.Color.Purple, 2.5)
 	end
@@ -90,10 +89,16 @@ function ReleaseWindow.Render(force: boolean?)
 			count += 1
 			local s = Derived.Species(item.species)
 			local isSel = selected == item.id
-			local b = Kit.Button(list, Derived.DisplayName(item), if isSel then Style.Color.Purple else Style.RarityColor(s.Rarity), function()
-				selected = item.id
-				ReleaseWindow.Render(true)
-			end, { LayoutOrder = count })
+			local b = Kit.Button(
+				list,
+				Derived.DisplayName(item),
+				if isSel then Style.Color.Purple else Style.RarityColor(s.Rarity),
+				function()
+					selected = item.id
+					ReleaseWindow.Render(true)
+				end,
+				{ LayoutOrder = count }
+			)
 			if isSel then
 				local st = b:FindFirstChildOfClass("UIStroke") :: UIStroke
 				st.Thickness = 4

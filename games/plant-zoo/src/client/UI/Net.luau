@@ -28,6 +28,13 @@ function Net.SetNotifier(fn: (string, string?) -> ())
 	notifyFn = fn
 end
 
+-- Shows a toast through the notifier set by Main (safe before it is set).
+function Net.Toast(text: string, kind: string?)
+	if notifyFn then
+		(notifyFn :: (string, string?) -> ())(text, kind)
+	end
+end
+
 -- Interprets common server return shapes: (false, "msg"), {ok=false, msg=...}, nil.
 local function interpret(a: any, b: any): (boolean, any)
 	if a == false then
@@ -73,7 +80,6 @@ function Net.Do(name: string, successText: string?, ...: any): (boolean, any)
 			(notifyFn :: (string, string?) -> ())(if type(res) == "string" then res else "Can't do that yet", "error")
 		end
 	elseif ok and successText then
-		Kit.Sound("Purchase")
 		if notifyFn then
 			(notifyFn :: (string, string?) -> ())(successText, "success")
 		end

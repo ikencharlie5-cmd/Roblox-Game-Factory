@@ -38,7 +38,13 @@ local function centerpiece(f: Instance)
 	Build.Cyl(f, 22, 4.5, C(0, 13, 0), hex("#8B5A2B"), M.Wood, true)
 	for i = 0, 4 do
 		local a = rad(i * 72)
-		Build.Blob(f, V(2.2, 3, 5), C(math.cos(a) * 2.6, 4.5, math.sin(a) * 2.6) * A(0, -a + rad(90), rad(20)), hex("#7A4E2D"), M.Wood)
+		Build.Blob(
+			f,
+			V(2.2, 3, 5),
+			C(math.cos(a) * 2.6, 4.5, math.sin(a) * 2.6) * A(0, -a + rad(90), rad(20)),
+			hex("#7A4E2D"),
+			M.Wood
+		)
 	end
 	local leaves = { hex("#FFB7D5"), hex("#7BD148"), hex("#FF8FB8"), hex("#5FB23A"), hex("#FFD1E3") }
 	local spots = { V(0, 27, 0), V(6, 24, 2), V(-5, 25, -4), V(2, 24, -7), V(-3, 23, 6) }
@@ -48,7 +54,8 @@ local function centerpiece(f: Instance)
 	end
 	for i = 0, 5 do
 		local a = rad(i * 60 + 20)
-		local fruit = Build.Ball(f, 1.4, C(math.cos(a) * 8, 21 + (i % 2) * 3, math.sin(a) * 8), Theme.Colors.Gold, M.Neon)
+		local fruit =
+			Build.Ball(f, 1.4, C(math.cos(a) * 8, 21 + (i % 2) * 3, math.sin(a) * 8), Theme.Colors.Gold, M.Neon)
 		if i % 2 == 0 then
 			local l = Instance.new("PointLight")
 			l.Color = Theme.Colors.Gold
@@ -66,21 +73,54 @@ local function centerpiece(f: Instance)
 end
 
 -- Market stall with striped awning. Returns the counter (tagged part) and the roof sign.
-local function stall(f: Instance, cf: CFrame, title: string, c1: Color3, c2: Color3, tag: string, attrs: { [string]: any }): (Part, Part)
+local function stall(
+	f: Instance,
+	cf: CFrame,
+	title: string,
+	c1: Color3,
+	c2: Color3,
+	tag: string,
+	attrs: { [string]: any }
+): (Part, Part)
 	local m = Build.Model(f, title)
 	local wood = Theme.Colors.Wood
-	local counter = Build.Part(m, { Size = V(12, 3.4, 3), CFrame = cf * C(0, 1.7, 0), Color = wood, Material = M.WoodPlanks, Name = "Counter" })
+	local counter = Build.Part(
+		m,
+		{ Size = V(12, 3.4, 3), CFrame = cf * C(0, 1.7, 0), Color = wood, Material = M.WoodPlanks, Name = "Counter" }
+	)
 	Build.Tag(counter, tag, attrs)
 	Build.Deco(m, { Size = V(12.4, 0.4, 3.4), CFrame = cf * C(0, 3.6, 0), Color = Theme.Colors.Cream })
-	Build.Part(m, { Size = V(12, 9, 0.6), CFrame = cf * C(0, 4.5, 4), Color = c2:Lerp(Color3.new(1, 1, 1), 0.6), Material = M.WoodPlanks, Name = "Back" })
+	Build.Part(
+		m,
+		{
+			Size = V(12, 9, 0.6),
+			CFrame = cf * C(0, 4.5, 4),
+			Color = c2:Lerp(Color3.new(1, 1, 1), 0.6),
+			Material = M.WoodPlanks,
+			Name = "Back",
+		}
+	)
 	for _, x in { -5.8, 5.8 } do
-		Build.Part(m, { Size = V(0.8, 9.5, 0.8), CFrame = cf * C(x, 4.75, -1.2), Color = Theme.Colors.WoodDark, Material = M.Wood, Name = "Post" })
+		Build.Part(
+			m,
+			{
+				Size = V(0.8, 9.5, 0.8),
+				CFrame = cf * C(x, 4.75, -1.2),
+				Color = Theme.Colors.WoodDark,
+				Material = M.Wood,
+				Name = "Post",
+			}
+		)
 	end
 	for i = 0, 5 do
-		local stripe = Build.Wedge(m, V(2.2, 1.6, 6), cf * C(-5.5 + i * 2.2, 10.3, 1.6), if i % 2 == 0 then c1 else c2, M.Fabric)
+		local stripe =
+			Build.Wedge(m, V(2.2, 1.6, 6), cf * C(-5.5 + i * 2.2, 10.3, 1.6), if i % 2 == 0 then c1 else c2, M.Fabric)
 		stripe.CanCollide = false
 	end
-	local sign = Build.Deco(m, { Size = V(10, 2.6, 0.5), CFrame = cf * C(0, 12.6, 3.6), Color = Theme.Colors.Cream, Name = "Sign" })
+	local sign = Build.Deco(
+		m,
+		{ Size = V(10, 2.6, 0.5), CFrame = cf * C(0, 12.6, 3.6), Color = Theme.Colors.Cream, Name = "Sign" }
+	)
 	Build.Label(sign, Enum.NormalId.Front, title, Theme.Colors.Text)
 	Build.Label(sign, Enum.NormalId.Back, title, Theme.Colors.Text)
 	return counter, sign
@@ -94,8 +134,19 @@ local function seedShop(f: Instance, cf: CFrame): TextLabel
 		Build.Flower(counter.Parent :: Instance, (cf * C(x, 4, -0.4)).Position, Theme.Rarity[Theme.RarityOrder[i + 1]])
 	end
 	local holder = counter.Parent :: Instance
-	Build.Deco(holder, { Size = V(6.8, 2.6, 0.2), CFrame = sign.CFrame * C(0, 2.9, 0.15), Color = Theme.Colors.Gold, Material = M.Metal })
-	local board = Build.Deco(holder, { Size = V(6, 2, 0.3), CFrame = sign.CFrame * C(0, 2.9, 0), Color = Theme.Colors.Cream, Name = "RestockClock" })
+	Build.Deco(
+		holder,
+		{
+			Size = V(6.8, 2.6, 0.2),
+			CFrame = sign.CFrame * C(0, 2.9, 0.15),
+			Color = Theme.Colors.Gold,
+			Material = M.Metal,
+		}
+	)
+	local board = Build.Deco(
+		holder,
+		{ Size = V(6, 2, 0.3), CFrame = sign.CFrame * C(0, 2.9, 0), Color = Theme.Colors.Cream, Name = "RestockClock" }
+	)
 	local label = Build.Label(board, Enum.NormalId.Front, "Restock 5:00", Theme.Colors.Text)
 	Build.Label(board, Enum.NormalId.Back, "Restock 5:00", Theme.Colors.Text)
 	return label
@@ -104,9 +155,15 @@ end
 local function leaderboard(f: Instance, cf: CFrame): { TextLabel }
 	local m = Build.Model(f, "Leaderboard")
 	for _, x in { -8.5, 8.5 } do
-		Build.Part(m, { Size = V(1, 16, 1), CFrame = cf * C(x, 8, 0), Color = Theme.Colors.WoodDark, Material = M.Wood })
+		Build.Part(
+			m,
+			{ Size = V(1, 16, 1), CFrame = cf * C(x, 8, 0), Color = Theme.Colors.WoodDark, Material = M.Wood }
+		)
 	end
-	local board = Build.Part(m, { Size = V(16, 12, 0.8), CFrame = cf * C(0, 9, 0), Color = hex("#2F5D3A"), Material = M.Wood, Name = "Board" })
+	local board = Build.Part(
+		m,
+		{ Size = V(16, 12, 0.8), CFrame = cf * C(0, 9, 0), Color = hex("#2F5D3A"), Material = M.Wood, Name = "Board" }
+	)
 	Build.Tag(board, "Leaderboard", { Stat = "TotalEarned" })
 	Build.Deco(m, { Size = V(18, 1, 1.6), CFrame = cf * C(0, 15.5, 0), Color = Theme.Colors.Leaf, Material = M.Grass })
 	local gui = Instance.new("SurfaceGui")
@@ -157,7 +214,15 @@ local RESERVE_PROPS: { [string]: (Instance, CFrame) -> () } = {
 		Build.Blob(f, V(2, 0.8, 2), cf * C(0, 1.4, 0), hex("#B57CFF"), M.Neon)
 	end,
 	["Frost Garden"] = function(f, cf)
-		Build.Deco(f, { Size = V(0.8, 2.4, 0.8), CFrame = cf * C(0, 1.2, 0) * A(0, rad(45), 0), Color = hex("#9FD8FF"), Material = M.Ice })
+		Build.Deco(
+			f,
+			{
+				Size = V(0.8, 2.4, 0.8),
+				CFrame = cf * C(0, 1.2, 0) * A(0, rad(45), 0),
+				Color = hex("#9FD8FF"),
+				Material = M.Ice,
+			}
+		)
 	end,
 }
 
@@ -181,9 +246,21 @@ local function reserve(f: Instance, cf: CFrame): ({ [string]: BasePart }, BasePa
 	local altar = Build.Cyl(m, 3, 4, cf * C(0, 2.9, 0), hex("#C9C2B2"), M.Marble, true)
 	altar.Name = "ReleaseAltar"
 	Build.Tag(altar, "ReleaseAltar")
-	local gem = Build.Deco(m, { Size = V(1.6, 3, 1.6), CFrame = cf * C(0, 6.2, 0) * A(rad(45), rad(45), 0), Color = Theme.Colors.Thriving, Material = M.Neon, Name = "Gem" })
+	local gem = Build.Deco(
+		m,
+		{
+			Size = V(1.6, 3, 1.6),
+			CFrame = cf * C(0, 6.2, 0) * A(rad(45), rad(45), 0),
+			Color = Theme.Colors.Thriving,
+			Material = M.Neon,
+			Name = "Gem",
+		}
+	)
 	Theme.Effects.Sparkle(Theme.Colors.Thriving, 8).Parent = gem
-	local sign = Build.Deco(m, { Size = V(12, 2.4, 0.4), CFrame = cf * C(0, 2.6, -16.5), Color = Theme.Colors.Cream, Name = "Sign" })
+	local sign = Build.Deco(
+		m,
+		{ Size = V(12, 2.4, 0.4), CFrame = cf * C(0, 2.6, -16.5), Color = Theme.Colors.Cream, Name = "Sign" }
+	)
 	Build.Label(sign, Enum.NormalId.Front, "🌍 World Reserve", Theme.Colors.Text)
 	return zones, altar
 end

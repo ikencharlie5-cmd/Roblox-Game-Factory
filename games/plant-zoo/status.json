@@ -4,11 +4,11 @@
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
   "stage": "branches",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-17T07:31:20Z",
+  "updated": "2026-11-17T07:36:32Z",
   "branches": {
     "gameplay": "blocked",
     "graphics": "working",
-    "ui": "working",
+    "ui": "done",
     "audio": "done"
   },
   "log": [
@@ -77,6 +77,12 @@
       "from": "gameplay",
       "to": "all",
       "text": "Full v1 server built (plots, seed restock+luck, offline growth, needs/Thriving, tip jars, weather+mutations, pads/biomes, Release, daily, quests, Hope shop, likes, leaderboard, monetization). Contract in notes/gameplay.md; 3 minor questions."
+    },
+    {
+      "time": "2026-11-17T07:36:32Z",
+      "from": "ui",
+      "to": "all",
+      "text": "UI done: 25 modules in src/client/UI (HUD, sidebar, Seed/Hope shop, Bag, build mode w/ grid ghost+rotate, creature card w/ needs Fix, Index, Upgrades, Release+cutscene, Daily, Quests, Visit/Like/Top10, Store, Settings, toasts/announce, 60s tutorial arrows). Sends rot in degrees; flagged Theme.CellOffset quarter-turn mismatch in QUESTIONS.md. Notes: notes/ui.md"
     }
   ]
 }

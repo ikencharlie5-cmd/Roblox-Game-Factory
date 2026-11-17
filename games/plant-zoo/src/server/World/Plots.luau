@@ -116,7 +116,16 @@ local function paths(f: Instance, cf: CFrame)
 	local h = Plots.Size / 2
 	local y = 0.05
 	local function strip(x: number, z: number, sx: number, sz: number)
-		Build.Part(f, { Size = V(sx, 0.2, sz), CFrame = cf * C(x, y, z), Color = Theme.Colors.Path, Material = M.Sand, Name = "Path" })
+		Build.Part(
+			f,
+			{
+				Size = V(sx, 0.2, sz),
+				CFrame = cf * C(x, y, z),
+				Color = Theme.Colors.Path,
+				Material = M.Sand,
+				Name = "Path",
+			}
+		)
 	end
 	for _, k in { -12, 12 } do
 		strip(k, 0, 4, 68)
@@ -132,7 +141,10 @@ local function border(f: Instance, cf: CFrame)
 	local h = Plots.Size / 2
 	local hedge = Theme.Colors.Hedge
 	local function wall(x: number, z: number, sx: number, sz: number)
-		Build.Part(f, { Size = V(sx, 2, sz), CFrame = cf * C(x, 0.5, z), Color = hedge, Material = M.Grass, Name = "Hedge" })
+		Build.Part(
+			f,
+			{ Size = V(sx, 2, sz), CFrame = cf * C(x, 0.5, z), Color = hedge, Material = M.Grass, Name = "Hedge" }
+		)
 	end
 	wall(0, h + 0.75, 81.5, 1.5)
 	wall(-(h + 0.75), 0, 1.5, 81.5)
@@ -153,7 +165,10 @@ local function sign(plot: Plot)
 		Build.Cyl(f, 9, 1, cf * C(x, 4, 0), Theme.Colors.Wood, M.Wood, true)
 		Build.Ball(f, 1.6, cf * C(x, 9, 0), Theme.Colors.Leaf, M.Grass)
 	end
-	local board = Build.Part(f, { Size = V(13, 3.2, 0.6), CFrame = cf * C(0, 7.4, 0), Color = Theme.Colors.Cream, Name = "Board" })
+	local board = Build.Part(
+		f,
+		{ Size = V(13, 3.2, 0.6), CFrame = cf * C(0, 7.4, 0), Color = Theme.Colors.Cream, Name = "Board" }
+	)
 	board.CanCollide = false
 	Build.Tag(board, "PlotSign", { PlotIndex = plot.index })
 	local front = Build.Label(board, Enum.NormalId.Front, "Free Plot", Theme.Colors.Text)
@@ -165,7 +180,9 @@ local function sign(plot: Plot)
 	local function refresh()
 		local name = plot.model:GetAttribute("OwnerName")
 		local likes = plot.model:GetAttribute("Likes") or 0
-		local text = if typeof(name) == "string" and name ~= "" then string.format("%s's Zoo  ❤ %d", name, likes) else "Free Plot"
+		local text = if typeof(name) == "string" and name ~= ""
+			then string.format("%s's Zoo  ❤ %d", name, likes)
+			else "Free Plot"
 		front.Text = text
 		back.Text = text
 	end
@@ -198,7 +215,8 @@ function Plots.Build(parent: Instance, onPad: (Plot, Pad) -> ()): { Plot }
 		spawn.CanTouch = false
 		spawn.CanQuery = false
 		Build.Tag(spawn, "PlotSpawn", { PlotIndex = i })
-		local plot: Plot = { index = i, model = model, cf = cf, pads = {}, spawn = spawn, visitors = Build.Folder(model, "Visitors") }
+		local plot: Plot =
+			{ index = i, model = model, cf = cf, pads = {}, spawn = spawn, visitors = Build.Folder(model, "Visitors") }
 		paths(Build.Folder(model, "Paths"), cf)
 		border(Build.Folder(model, "Border"), cf)
 		sign(plot)

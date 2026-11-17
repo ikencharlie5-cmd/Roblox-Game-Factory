@@ -28,7 +28,11 @@ local function card(title: string, rarity: string?, sub: string, order: number):
 	local stroke = c:FindFirstChildOfClass("UIStroke") :: UIStroke
 	stroke.Color = color
 	stroke.Thickness = 3
-	Kit.Label(c, title, { Size = UDim2.new(1, -8, 0.22, 0), Position = UDim2.new(0, 4, 0.03, 0), TextColor3 = Kit.Darker(color, 0.3) })
+	Kit.Label(
+		c,
+		title,
+		{ Size = UDim2.new(1, -8, 0.22, 0), Position = UDim2.new(0, 4, 0.03, 0), TextColor3 = Kit.Darker(color, 0.3) }
+	)
 	Kit.Label(c, sub, {
 		Size = UDim2.new(1, -8, 0.3, 0),
 		Position = UDim2.new(0, 4, 0.26, 0),
@@ -73,7 +77,9 @@ local function renderSeeds()
 		local c = card(
 			string.format("%s x%d", name, seeds[name]),
 			if s then s.Rarity else nil,
-			if s then string.format("%s %s · %s grow", Style.BiomeInfo(s.Biome).Icon, s.Biome, Format.Time(s.Grow)) else "",
+			if s
+				then string.format("%s %s · %s grow", Style.BiomeInfo(s.Biome).Icon, s.Biome, Format.Time(s.Grow))
+				else "",
 			i
 		)
 		actions(c, {
@@ -128,11 +134,14 @@ local function renderCreatures()
 					text = "$" .. Format.Number(Derived.SellValue(item)),
 					color = Style.Color.Sun,
 					fn = function()
-						Windows.Confirm("Sell " .. tostring(item.species) .. "?", "You get $" .. Format.Number(Derived.SellValue(item)), "Sell", function()
-							if Net.Do("SellCreature", nil, item.id) then
-								Kit.Sound("Sell")
+						Windows.Confirm(
+							"Sell " .. tostring(item.species) .. "?",
+							"You get $" .. Format.Number(Derived.SellValue(item)),
+							"Sell",
+							function()
+								Net.Do("SellCreature", nil, item.id)
 							end
-						end)
+						)
 					end,
 				},
 			})
@@ -170,7 +179,7 @@ local function renderItems()
 				text = "Drink!",
 				color = Style.Color.Purple,
 				fn = function()
-					Net.Do("UseHopeItem", "🍀 Luck x2 for 15 min!", "LuckPotion")
+					Net.Do("UseHopeItem", nil, "LuckPotion")
 				end,
 			},
 		})

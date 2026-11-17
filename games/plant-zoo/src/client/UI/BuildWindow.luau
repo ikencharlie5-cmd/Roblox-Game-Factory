@@ -75,7 +75,11 @@ local function renderDecor()
 				)
 				if unlocked then
 					bottomButton(c, "$" .. Format.Number(def.Cost) .. " Place", Style.Color.Leaf, function()
-						BuildMode.Start({ mode = "buydecor", ref = kind, label = "🪴 " .. kind .. " - tap cells to buy & place" })
+						BuildMode.Start({
+							mode = "buydecor",
+							ref = kind,
+							label = "🪴 " .. kind .. " - tap cells to buy & place",
+						})
 					end)
 				else
 					bottomButton(c, "🔒 " .. def.Biome, Style.Color.Grey, function()
@@ -133,9 +137,7 @@ local function renderExhibits()
 		elseif pad == owned + 1 then
 			local c = cardBase(pad, "🌿 Pad " .. pad, "Expand your zoo!", Style.Color.Leaf)
 			bottomButton(c, "$" .. Format.Number(price), Style.Color.Leaf, function()
-				if Net.Do("BuyPad", "🎉 Pad " .. pad .. " unlocked!") then
-					Kit.Sound("Expand")
-				end
+				Net.Do("BuyPad", nil, pad)
 			end)
 			highlight(c)
 		else
@@ -150,12 +152,15 @@ local function renderBiomes()
 	for i, name in Config.BiomeOrder do
 		local def = Config.Biomes[name] or { Cost = 0 }
 		local info = Style.BiomeInfo(name)
-		local c = cardBase(i, info.Icon .. " " .. name, if biomes[name] then "Unlocked forever ✅" else "Kept through Release", info.Color)
+		local c = cardBase(
+			i,
+			info.Icon .. " " .. name,
+			if biomes[name] then "Unlocked forever ✅" else "Kept through Release",
+			info.Color
+		)
 		if not biomes[name] then
 			bottomButton(c, "$" .. Format.Number(def.Cost), Style.Color.Leaf, function()
-				if Net.Do("UnlockBiome", "🎉 " .. name .. " unlocked!", name) then
-					Kit.Sound("Expand")
-				end
+				Net.Do("UnlockBiome", nil, name)
 			end)
 		end
 		if filter.biome == name then

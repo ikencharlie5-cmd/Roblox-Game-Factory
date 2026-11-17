@@ -12,6 +12,7 @@ local Net = require(script.Parent:WaitForChild("Net"))
 local State = require(script.Parent:WaitForChild("State"))
 local Plots = require(script.Parent:WaitForChild("Plots"))
 local Windows = require(script.Parent:WaitForChild("Windows"))
+local BuildGhost = require(script.Parent:WaitForChild("BuildGhost"))
 
 local BuildMode = {}
 
@@ -26,12 +27,9 @@ local placeBtn: TextButton
 local rotateBtn: TextButton
 local moveBtn: TextButton
 local removeBtn: TextButton
-local ghostFolder: Folder
-local ghost: Part
-local tiles: { Part } = {}
 
 local active: Opts? = nil
-local rot = 0
+local rot = 0 -- quarter turns 0..3 locally; the server wants degrees (rot * 90)
 local selPad: number? = nil
 local selCell: number? = nil
 local selectedItem: number? = nil
@@ -55,39 +53,26 @@ local function cellFree(pad: number, cell: number): boolean
 	return true
 end
 
-local function hideGhost()
-	ghost.Parent = nil
-	for _, t in tiles do
-		t.Parent = nil
-	end
-end
-
 local function drawGhost()
 	local opts = active
 	if not opts or opts.mode == "edit" or not selPad or not selCell then
-		hideGhost()
+		BuildGhost.Hide()
 		return
 	end
 	local part = Plots.Pads()[selPad]
 	if not part then
-		hideGhost()
+		BuildGhost.Hide()
 		return
 	end
-	for c = 1, 25 do
-		local t = tiles[c]
-		t.CFrame = Plots.CellCFrame(part, c, 0) * CFrame.new(0, 0.1, 0)
-		t.Color = if cellFree(selPad, c) then Style.Color.Leaf else Style.Color.Red
-		t.Parent = ghostFolder
-	end
-	local free = cellFree(selPad, selCell)
-	ghost.Color = if free then Style.Color.Cash else Style.Color.Red
-	ghost.CFrame = Plots.CellCFrame(part, selCell, rot) * CFrame.new(0, 1.2, 0)
-	ghost.Parent = ghostFolder
+	local pad = selPad
+	local free = BuildGhost.Draw(part, selCell, rot, function(c)
+		return cellFree(pad, c)
+	end)
 	Kit.SetButtonColor(placeBtn, if free then Style.Color.Leaf else Style.Color.Grey)
 end
 
 local function pick(screen: Vector2, viewport: boolean): (number?, number?, RaycastResult?)
-	local res = Plots.Raycast(screen, viewport, { ghostFolder })
+	local res = Plots.Raycast(screen, viewport, { BuildGhost.Folder() })
 	if not res then
 		return nil, nil, nil
 	end
@@ -110,7 +95,7 @@ function BuildMode.Stop()
 	end
 	active = nil
 	selectedItem = nil
-	hideGhost()
+	BuildGhost.Hide()
 	bar.Visible = false
 	if hoverConn then
 		hoverConn:Disconnect()
@@ -132,17 +117,14 @@ local function confirm()
 	end
 	local ok
 	if opts.mode == "seed" or opts.mode == "creature" or opts.mode == "decor" then
-		ok = Net.Do("PlaceItem", nil, opts.mode, opts.ref, selPad, selCell, rot)
+		ok = Net.Do("PlaceItem", nil, opts.mode, opts.ref, selPad, selCell, rot * 90)
 	elseif opts.mode == "buydecor" then
-		ok = Net.Do("BuyDecor", nil, opts.ref, selPad, selCell, rot)
+		ok = Net.Do("BuyDecor", nil, opts.ref, selPad, selCell, rot * 90)
 	elseif opts.mode == "move" then
-		ok = Net.Do("MoveItem", nil, opts.ref, selPad, selCell, rot)
+		ok = Net.Do("MoveItem", nil, opts.ref, selPad, selCell, rot * 90)
 	end
 	if ok then
-		Kit.Sound("Place")
-		local scale = ghost.Size
-		ghost.Size = scale * 1.4
-		Kit.Tween(ghost, 0.2, { Size = scale })
+		BuildGhost.Pop()
 		-- Decor bought from the shop stays in build mode so you can place several.
 		if opts.mode ~= "buydecor" then
 			BuildMode.Stop()
@@ -211,7 +193,8 @@ local function onTap(screen: Vector2, isMouse: boolean)
 		local model, id = Plots.ItemFromHit(if res then res.Instance else nil)
 		if model and id and Plots.IsMine(model) then
 			selectedItem = id
-			titleLabel.Text = "Selected: " .. tostring(model:GetAttribute("Species") or model:GetAttribute("DecorKind") or "item")
+			titleLabel.Text = "Selected: "
+				.. tostring(model:GetAttribute("Species") or model:GetAttribute("DecorKind") or "item")
 			Kit.Sound("Click")
 		else
 			selectedItem = nil
@@ -232,41 +215,7 @@ local function onTap(screen: Vector2, isMouse: boolean)
 end
 
 function BuildMode.Mount(gui: ScreenGui)
-	ghostFolder = Kit.Make("Folder", { Name = "BuildGhost" }, workspace.CurrentCamera)
-	ghost = Kit.Make("Part", {
-		Anchored = true,
-		CanCollide = false,
-		CanQuery = false,
-		CanTouch = false,
-		Size = Vector3.new(3.4, 2.4, 3.4),
-		Transparency = 0.45,
-		Material = Enum.Material.Neon,
-	})
-	-- Arrow nose shows which way the item faces.
-	local nose = Kit.Make("WedgePart", {
-		Anchored = true,
-		CanCollide = false,
-		CanQuery = false,
-		Size = Vector3.new(1.4, 0.8, 1.2),
-		Color = Style.Color.White,
-		Transparency = 0.2,
-	})
-	nose.Parent = ghost
-	ghost:GetPropertyChangedSignal("CFrame"):Connect(function()
-		nose.CFrame = ghost.CFrame * CFrame.new(0, 1.6, -1)
-	end)
-	for c = 1, 25 do
-		tiles[c] = Kit.Make("Part", {
-			Anchored = true,
-			CanCollide = false,
-			CanQuery = false,
-			CanTouch = false,
-			Size = Vector3.new(3.7, 0.1, 3.7),
-			Transparency = 0.65,
-			Material = Enum.Material.Neon,
-		})
-	end
-
+	BuildGhost.Init()
 	bar = Kit.Panel(gui, Style.Color.Cream, {
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.45, 0, 1, -8),

@@ -202,15 +202,17 @@ function Kit.Progress(parent: Instance?, color: Color3, props: { [string]: any }
 		ClipsDescendants = true,
 	})
 	Kit.Corner(back, 8)
-	local fill = Kit.Make("Frame", { BackgroundColor3 = color, BorderSizePixel = 0, Size = UDim2.fromScale(0, 1) }, back)
+	local fill =
+		Kit.Make("Frame", { BackgroundColor3 = color, BorderSizePixel = 0, Size = UDim2.fromScale(0, 1) }, back)
 	Kit.Corner(fill, 8)
 	for k, v in props or {} do
 		(back :: any)[k] = v
 	end
 	back.Parent = parent
-	return back, function(alpha: number)
-		Kit.Tween(fill, 0.3, { Size = UDim2.fromScale(math.clamp(alpha, 0, 1), 1) })
-	end
+	return back,
+		function(alpha: number)
+			Kit.Tween(fill, 0.3, { Size = UDim2.fromScale(math.clamp(alpha, 0, 1), 1) })
+		end
 end
 
 -- Remove everything except layout/constraint objects.

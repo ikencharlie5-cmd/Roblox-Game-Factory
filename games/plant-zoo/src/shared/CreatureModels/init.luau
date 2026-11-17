@@ -23,7 +23,8 @@ for name, look in Looks do
 	byNorm[Theme.Normalize(name)] = look
 end
 
-local DEFAULT: Looks.Look = { Kind = "blob", Body = "#7BD148", Accent = "#FFD54F", Top = "sprout", Rarity = "Common", Biome = "Meadow" }
+local DEFAULT: Looks.Look =
+	{ Kind = "blob", Body = "#7BD148", Accent = "#FFD54F", Top = "sprout", Rarity = "Common", Biome = "Meadow" }
 
 function CreatureModels.GetLook(species: string): Looks.Look
 	return Looks[species] or byNorm[Theme.Normalize(species)] or DEFAULT
@@ -113,7 +114,13 @@ end
 local function face(add: Kinds.Add, head: CFrame, r: number)
 	local black = Color3.fromHex("#1B1B2A")
 	for _, x in { -1, 1 } do
-		add("ball", Vector3.one * 0.5 * r, head * CFrame.new(x * 0.42 * r, 0.15 * r, -0.83 * r), Color3.new(1, 1, 1), { skin = false })
+		add(
+			"ball",
+			Vector3.one * 0.5 * r,
+			head * CFrame.new(x * 0.42 * r, 0.15 * r, -0.83 * r),
+			Color3.new(1, 1, 1),
+			{ skin = false }
+		)
 		add("ball", Vector3.one * 0.3 * r, head * CFrame.new(x * 0.42 * r, 0.17 * r, -1.0 * r), black, { skin = false })
 		add(
 			"blob",
@@ -138,7 +145,13 @@ local function buildStage(add: Kinds.Add, stage: string, look: Looks.Look)
 	add("cyl", Vector3.new(0.3, h, 0.3), CFrame.new(0, 0.4 + h / 2, 0), Color3.fromHex("#4CAF50"), { skin = false })
 	local ly = if stage == "Sprout" then 0.4 + h else 0.9
 	for _, x in { -1, 1 } do
-		add("blob", Vector3.new(1.4, 0.15, 0.7), CFrame.new(x * 0.6, ly, 0) * CFrame.Angles(0, 0, math.rad(-x * 25)), leaf, { skin = false })
+		add(
+			"blob",
+			Vector3.new(1.4, 0.15, 0.7),
+			CFrame.new(x * 0.6, ly, 0) * CFrame.Angles(0, 0, math.rad(-x * 25)),
+			leaf,
+			{ skin = false }
+		)
 	end
 	if stage == "Bud" then
 		add("blob", Vector3.new(1.5, 2.1, 1.5), CFrame.new(0, 2.6, 0), b)

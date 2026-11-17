@@ -52,7 +52,8 @@ function IndexWindow.Render(force: boolean?)
 			local stroke = c:FindFirstChildOfClass("UIStroke") :: UIStroke
 			stroke.Color = color
 			stroke.Thickness = 3
-			local band = Kit.Make("Frame", { BackgroundColor3 = color, BorderSizePixel = 0, Size = UDim2.fromScale(1, 0.18) }, c)
+			local band =
+				Kit.Make("Frame", { BackgroundColor3 = color, BorderSizePixel = 0, Size = UDim2.fromScale(1, 0.18) }, c)
 			Kit.Corner(band, 10)
 			Kit.Label(band, string.format("#%d %s", i, s.Rarity), { TextColor3 = Style.Color.White })
 			Kit.Label(c, if isFound then s.Name else "???", {
@@ -61,12 +62,16 @@ function IndexWindow.Render(force: boolean?)
 				TextColor3 = if isFound then Style.Color.Ink else Style.Color.Grey,
 			})
 			local biome = Style.BiomeInfo(s.Biome).Icon .. " " .. s.Biome
-			Kit.Label(c, if isFound then string.format("%s\n$%s/s · %s", biome, Format.Number(s.Income), s.Role) else biome, {
-				Size = UDim2.new(1, -8, 0.3, 0),
-				Position = UDim2.new(0, 4, 0.43, 0),
-				Font = Style.FontBody,
-				TextColor3 = if isFound then Style.Color.InkSoft else Style.Color.Grey,
-			})
+			Kit.Label(
+				c,
+				if isFound then string.format("%s\n$%s/s · %s", biome, Format.Number(s.Income), s.Role) else biome,
+				{
+					Size = UDim2.new(1, -8, 0.3, 0),
+					Position = UDim2.new(0, 4, 0.43, 0),
+					Font = Style.FontBody,
+					TextColor3 = if isFound then Style.Color.InkSoft else Style.Color.Grey,
+				}
+			)
 			local badges = ""
 			if type(entry) == "table" then
 				for mut in entry do

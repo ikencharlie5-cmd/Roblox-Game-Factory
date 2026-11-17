@@ -46,9 +46,8 @@ function Notify.Toast(text: string, kind: string?)
 		return
 	end
 	local k = kind or "info"
-	if k == "error" then
-		Kit.Sound("Error")
-	elseif k ~= "cash" then
+	-- Errors: the server (or Net.Do) already plays "Error", so no second sound here.
+	if k ~= "error" and k ~= "cash" then
 		Kit.Sound("Notify")
 	end
 	order += 1
@@ -179,7 +178,11 @@ function Notify.Offline(amount: number, seconds: number, isVip: boolean)
 		Size = UDim2.fromScale(0.4, 0.5),
 	})
 	Kit.Make("UISizeConstraint", { MinSize = Vector2.new(280, 220), MaxSize = Vector2.new(480, 360) }, box)
-	Kit.Label(box, "🌙 While you were away...", { Size = UDim2.fromScale(0.9, 0.18), Position = UDim2.fromScale(0.05, 0.05) })
+	Kit.Label(
+		box,
+		"🌙 While you were away...",
+		{ Size = UDim2.fromScale(0.9, 0.18), Position = UDim2.fromScale(0.05, 0.05) }
+	)
 	Kit.Label(box, "+$" .. Format.Number(amount), {
 		Size = UDim2.fromScale(0.9, 0.24),
 		Position = UDim2.fromScale(0.05, 0.25),

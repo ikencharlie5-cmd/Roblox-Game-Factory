@@ -43,7 +43,10 @@ local function fence(f: Instance, top: CFrame, st: FenceStyle): { CFrame }
 		local r: Vector3 = maybeRail
 		local function rail(cx: number, cz: number, len: number, alongX: boolean)
 			local size = if alongX then V(len, r.Y, r.X) else V(r.X, r.Y, len)
-			local p = Build.Deco(f, { Size = size, CFrame = top * C(cx, r.Z, cz), Color = st.railColor, Material = st.railMat })
+			local p = Build.Deco(
+				f,
+				{ Size = size, CFrame = top * C(cx, r.Z, cz), Color = st.railColor, Material = st.railMat }
+			)
 			p.Transparency = st.railT or 0
 		end
 		rail(0, HALF, HALF * 2, true)
@@ -91,7 +94,16 @@ KITS.Pond = function(f, top, k)
 		railMat = M.Glass,
 		railT = 0.6,
 	})
-	local water = Build.Deco(f, { Size = V(19.6, 0.35, 19.6), CFrame = top * C(0, 0.12, 0), Color = k.Accent, Material = M.Glass, Name = "Water" })
+	local water = Build.Deco(
+		f,
+		{
+			Size = V(19.6, 0.35, 19.6),
+			CFrame = top * C(0, 0.12, 0),
+			Color = k.Accent,
+			Material = M.Glass,
+			Name = "Water",
+		}
+	)
 	water.Transparency = 0.45
 	water.CanQuery = false
 	local bubbles = Theme.Effects.Sparkle(hex("#DDF6FF"), 3)
@@ -144,7 +156,8 @@ KITS["Fungus Cave"] = function(f, top, k)
 	for i, cf in tops do
 		if i % 2 == 1 then
 			Build.Cyl(f, 0.8, 0.3, cf * C(0, 0.4, 0), Theme.Colors.Cream, nil, false)
-			local cap = Build.Blob(f, V(1.6, 0.7, 1.6), cf * C(0, 0.9, 0), if i % 4 == 1 then k.Accent else k.Accent2, M.Neon)
+			local cap =
+				Build.Blob(f, V(1.6, 0.7, 1.6), cf * C(0, 0.9, 0), if i % 4 == 1 then k.Accent else k.Accent2, M.Neon)
 			if i == 1 then
 				light(cap, k.Accent, 16)
 			end
@@ -164,7 +177,8 @@ KITS["Frost Garden"] = function(f, top, k)
 	for _, cf in tops do
 		Build.Blob(f, V(1, 0.4, 1), cf * C(0, 0.1, 0), Color3.new(1, 1, 1), M.Snow)
 	end
-	local snow = Build.Deco(f, { Size = V(18, 0.2, 18), CFrame = top * C(0, 9, 0), Transparency = 1, Name = "SnowSource" })
+	local snow =
+		Build.Deco(f, { Size = V(18, 0.2, 18), CFrame = top * C(0, 9, 0), Transparency = 1, Name = "SnowSource" })
 	snow.CanQuery = false
 	local e = Theme.Effects.Weather("Snow")
 	if e then
@@ -186,7 +200,15 @@ function Biomes.Apply(base: BasePart, dressing: Folder, biome: string?)
 	base:SetAttribute("Biome", key)
 	local top = Biomes.TopCFrame(base)
 	-- Thin border strip so pads read as tiles.
-	Build.Deco(dressing, { Size = V(20.6, 0.2, 20.6), CFrame = top * C(0, -0.25, 0), Color = kit.Ground:Lerp(Color3.new(0, 0, 0), 0.25), Material = kit.GroundMaterial })
+	Build.Deco(
+		dressing,
+		{
+			Size = V(20.6, 0.2, 20.6),
+			CFrame = top * C(0, -0.25, 0),
+			Color = kit.Ground:Lerp(Color3.new(0, 0, 0), 0.25),
+			Material = kit.GroundMaterial,
+		}
+	)
 	KITS[key](dressing, top, kit)
 end
 
@@ -199,18 +221,30 @@ function Biomes.Lock(base: BasePart, lock: Folder, priceText: string, padIndex: 
 	for _, s in { { 0, -HALF, true }, { 0, HALF, true }, { -HALF, 0, false }, { HALF, 0, false } } do
 		local x, z, alongX = s[1] :: number, s[2] :: number, s[3] :: boolean
 		local size = if alongX then V(21, 3, 1.4) else V(1.4, 3, 21)
-		Build.Part(lock, { Size = size, CFrame = top * C(x, 1.5, z), Color = hedge, Material = M.Grass, Name = "Hedge" })
+		Build.Part(
+			lock,
+			{ Size = size, CFrame = top * C(x, 1.5, z), Color = hedge, Material = M.Grass, Name = "Hedge" }
+		)
 	end
 	for i = 0, 5 do
 		local a = rad(i * 60)
 		Build.Ball(lock, 1, top * C(math.cos(a) * 10, 3.1, math.sin(a) * 10), hex("#FF8FB8"))
 	end
-	Build.Deco(lock, { Size = V(0.5, 4, 0.5), CFrame = top * C(0, 2, 0), Color = Theme.Colors.WoodDark, Material = M.Wood })
-	local board = Build.Deco(lock, { Size = V(7, 3.4, 0.4), CFrame = top * C(0, 4.6, 0), Color = Theme.Colors.Cream, Name = "PriceSign" })
+	Build.Deco(
+		lock,
+		{ Size = V(0.5, 4, 0.5), CFrame = top * C(0, 2, 0), Color = Theme.Colors.WoodDark, Material = M.Wood }
+	)
+	local board = Build.Deco(
+		lock,
+		{ Size = V(7, 3.4, 0.4), CFrame = top * C(0, 4.6, 0), Color = Theme.Colors.Cream, Name = "PriceSign" }
+	)
 	local txt = string.format("Exhibit %d\n🔒 %s", padIndex, priceText)
 	Build.Label(board, Enum.NormalId.Front, txt, Theme.Colors.Text)
 	Build.Label(board, Enum.NormalId.Back, txt, Theme.Colors.Text)
-	Build.Deco(lock, { Size = V(7.4, 0.4, 0.8), CFrame = top * C(0, 6.4, 0), Color = Theme.Colors.Leaf, Material = M.Grass })
+	Build.Deco(
+		lock,
+		{ Size = V(7.4, 0.4, 0.8), CFrame = top * C(0, 6.4, 0), Color = Theme.Colors.Leaf, Material = M.Grass }
+	)
 end
 
 return Biomes

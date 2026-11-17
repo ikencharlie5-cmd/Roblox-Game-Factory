@@ -15,6 +15,7 @@ local BuildMode = require(script.Parent:WaitForChild("BuildMode"))
 local Plots = require(script.Parent:WaitForChild("Plots"))
 
 local CreatureCard = {}
+local _skip: any = nil -- sink for unused multiple-return values
 
 local win: Windows.Win
 local header: TextLabel
@@ -34,7 +35,11 @@ function CreatureCard.SetNotifier(fn: (string, string?) -> ())
 end
 
 local function needRow(order: number, ok: boolean, text: string, fix: (() -> ())?)
-	local row = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0.3, -4), LayoutOrder = order }, needsBox)
+	local row = Kit.Make(
+		"Frame",
+		{ BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0.3, -4), LayoutOrder = order },
+		needsBox
+	)
 	Kit.Make("UISizeConstraint", { MinSize = Vector2.new(0, 34) }, row)
 	Kit.Label(row, if ok then "✅" else "❌", { Size = UDim2.fromScale(0.12, 1) })
 	Kit.Label(row, text, {
@@ -45,7 +50,13 @@ local function needRow(order: number, ok: boolean, text: string, fix: (() -> ())
 		TextColor3 = if ok then Style.Color.LeafDark else Style.Color.Ink,
 	})
 	if not ok and fix then
-		Kit.Button(row, "🔧 Fix", Style.Color.Sun, fix, { Size = UDim2.fromScale(0.25, 1), Position = UDim2.fromScale(0.74, 0) })
+		Kit.Button(
+			row,
+			"🔧 Fix",
+			Style.Color.Sun,
+			fix,
+			{ Size = UDim2.fromScale(0.25, 1), Position = UDim2.fromScale(0.74, 0) }
+		)
 	end
 end
 
@@ -57,16 +68,24 @@ local function renderNeeds(item: any, s: any)
 		return
 	end
 	local padBiome = State.Tbl("padBiome")[item.pad] or "?"
-	needRow(1, r.biome == true, string.format("%s %s exhibit (pad is %s)", Style.BiomeInfo(s.Biome).Icon, s.Biome, padBiome), function()
-		Windows.Open("Build", { tab = "Exhibits", pad = item.pad, biome = s.Biome })
-	end)
+	needRow(
+		1,
+		r.biome == true,
+		string.format("%s %s exhibit (pad is %s)", Style.BiomeInfo(s.Biome).Icon, s.Biome, padBiome),
+		function()
+			Windows.Open("Build", { tab = "Exhibits", pad = item.pad, biome = s.Biome })
+		end
+	)
 	needRow(2, r.decor == true, "🪴 " .. s.Decor .. " in this pad", function()
 		Windows.Open("Build", { tab = "Decor", decor = s.Decor, pad = item.pad })
 	end)
 	if s.Buddy then
 		needRow(3, r.buddy == true, "🤝 A " .. s.Buddy .. " buddy in this pad", function()
 			if notify then
-				(notify :: (string, string?) -> ())("Place any " .. s.Buddy .. " creature in Pad " .. tostring(item.pad), "info")
+				(notify :: (string, string?) -> ())(
+					"Place any " .. s.Buddy .. " creature in Pad " .. tostring(item.pad),
+					"info"
+				)
 			end
 			Windows.Open("Index", { role = s.Buddy })
 		end)
@@ -137,7 +156,8 @@ function CreatureCard.Mount()
 		TextColor3 = Style.Color.InkSoft,
 	})
 	stageLabel = Kit.Label(body, "", { Size = UDim2.new(1, 0, 0.08, 0), Position = UDim2.fromScale(0, 0.22) })
-	_, setStage = Kit.Progress(body, Style.Color.Leaf, { Size = UDim2.new(1, 0, 0.05, 0), Position = UDim2.fromScale(0, 0.31) })
+	_skip, setStage =
+		Kit.Progress(body, Style.Color.Leaf, { Size = UDim2.new(1, 0, 0.05, 0), Position = UDim2.fromScale(0, 0.31) })
 	thrivingLabel = Kit.Label(body, "", { Size = UDim2.new(1, 0, 0.08, 0), Position = UDim2.fromScale(0, 0.38) })
 	needsBox = Kit.Make("Frame", {
 		BackgroundTransparency = 1,
@@ -156,9 +176,7 @@ function CreatureCard.Mount()
 		return Kit.Button(row, text, color, fn, { Size = UDim2.new(0.24, -6, 1, 0), LayoutOrder = order })
 	end
 	waterBtn = act("💦 Water", Style.Color.Sky, 1, function()
-		if Net.Do("Water", nil, currentId) then
-			Kit.Sound("Water")
-		end
+		Net.Do("Water", nil, currentId)
 	end)
 	tonicBtn = act("💧 Tonic", Style.Color.Purple, 2, function()
 		Net.Do("UseHopeItem", "Grown instantly! 🌳", "GrowTonic", currentId)
@@ -172,12 +190,16 @@ function CreatureCard.Mount()
 			return
 		end
 		local value = Derived.SellValue(item)
-		Windows.Confirm("Sell " .. tostring(item.species) .. "?", "You get $" .. Format.Number(value) .. ". It's gone for good!", "Sell", function()
-			if Net.Do("SellCreature", nil, item.id) then
-				Kit.Sound("Sell")
-				Windows.Close()
+		Windows.Confirm(
+			"Sell " .. tostring(item.species) .. "?",
+			"You get $" .. Format.Number(value) .. ". It's gone for good!",
+			"Sell",
+			function()
+				if Net.Do("SellCreature", nil, item.id) then
+					Windows.Close()
+				end
 			end
-		end)
+		)
 	end)
 
 	win.OnOpen = function()

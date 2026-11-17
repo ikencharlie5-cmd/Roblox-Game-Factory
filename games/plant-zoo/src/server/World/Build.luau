@@ -168,12 +168,32 @@ end
 -- Simple low-poly tree: trunk + 2-3 leaf balls. ~4 parts.
 function Build.Tree(parent: Instance, pos: Vector3, scale: number, leaf: Color3?)
 	local s = scale
-	local trunk = Build.Cyl(parent, 6 * s, 1.4 * s, CFrame.new(pos + Vector3.new(0, 3 * s, 0)), Color3.fromHex("#8B5A2B"), Enum.Material.Wood, true)
+	local trunk = Build.Cyl(
+		parent,
+		6 * s,
+		1.4 * s,
+		CFrame.new(pos + Vector3.new(0, 3 * s, 0)),
+		Color3.fromHex("#8B5A2B"),
+		Enum.Material.Wood,
+		true
+	)
 	trunk.Name = "Trunk"
 	local c = leaf or Color3.fromHex("#4CAF50")
 	Build.Ball(parent, 6 * s, CFrame.new(pos + Vector3.new(0, 7 * s, 0)), c, Enum.Material.Grass)
-	Build.Ball(parent, 4.5 * s, CFrame.new(pos + Vector3.new(1.8 * s, 6 * s, 0.8 * s)), c:Lerp(Color3.new(1, 1, 0.6), 0.15), Enum.Material.Grass)
-	Build.Ball(parent, 4 * s, CFrame.new(pos + Vector3.new(-1.6 * s, 6.4 * s, -1 * s)), c:Lerp(Color3.new(0, 0.2, 0), 0.15), Enum.Material.Grass)
+	Build.Ball(
+		parent,
+		4.5 * s,
+		CFrame.new(pos + Vector3.new(1.8 * s, 6 * s, 0.8 * s)),
+		c:Lerp(Color3.new(1, 1, 0.6), 0.15),
+		Enum.Material.Grass
+	)
+	Build.Ball(
+		parent,
+		4 * s,
+		CFrame.new(pos + Vector3.new(-1.6 * s, 6.4 * s, -1 * s)),
+		c:Lerp(Color3.new(0, 0.2, 0), 0.15),
+		Enum.Material.Grass
+	)
 end
 
 -- Little flower: stem + bloom. 2 parts.

@@ -57,7 +57,15 @@ function Sky.Setup(areas: { Vector3 })
 	weatherCC = cc
 	local folder = Build.Folder(Workspace:WaitForChild("World"), "WeatherFX")
 	for _, pos in areas do
-		local p = Build.Deco(folder, { Size = Vector3.new(110, 1, 110), CFrame = CFrame.new(pos + Vector3.new(0, 50, 0)), Transparency = 1, Name = "WeatherSource" })
+		local p = Build.Deco(
+			folder,
+			{
+				Size = Vector3.new(110, 1, 110),
+				CFrame = CFrame.new(pos + Vector3.new(0, 50, 0)),
+				Transparency = 1,
+				Name = "WeatherSource",
+			}
+		)
 		p.CanQuery = false
 		table.insert(weatherParts, p)
 	end
@@ -100,7 +108,8 @@ local function palette(t: number): (Color3, Color3)
 	elseif t >= 18.5 and t < 20 then
 		return sunset:Lerp(night, (t - 18.5) / 1.5), Color3.fromRGB(110, 110, 140)
 	elseif t >= 5.5 and t < 7 then
-		return night:Lerp(sunset, (t - 5.5) / 1.5):Lerp(day, math.max(0, (t - 6.3) / 0.7)), Color3.fromRGB(140, 130, 150)
+		return night:Lerp(sunset, (t - 5.5) / 1.5):Lerp(day, math.max(0, (t - 6.3) / 0.7)),
+			Color3.fromRGB(140, 130, 150)
 	end
 	return night, Color3.fromRGB(90, 95, 135)
 end
@@ -125,8 +134,18 @@ local WEATHER_CC: { [string]: { TintColor: Color3, Saturation: number, Brightnes
 	Rain = { TintColor = Color3.fromRGB(225, 235, 245), Saturation = -0.1, Brightness = -0.05, Density = 0.4 },
 	Thunderstorm = { TintColor = Color3.fromRGB(200, 205, 225), Saturation = -0.2, Brightness = -0.12, Density = 0.45 },
 	Heatwave = { TintColor = Color3.fromRGB(255, 235, 210), Saturation = 0.1, Brightness = 0.03, Density = 0.32 },
-	["Snow Flurry"] = { TintColor = Color3.fromRGB(230, 242, 255), Saturation = -0.05, Brightness = 0.03, Density = 0.38 },
-	["Bloom Season"] = { TintColor = Color3.fromRGB(255, 240, 248), Saturation = 0.2, Brightness = 0.02, Density = 0.28 },
+	["Snow Flurry"] = {
+		TintColor = Color3.fromRGB(230, 242, 255),
+		Saturation = -0.05,
+		Brightness = 0.03,
+		Density = 0.38,
+	},
+	["Bloom Season"] = {
+		TintColor = Color3.fromRGB(255, 240, 248),
+		Saturation = 0.2,
+		Brightness = 0.02,
+		Density = 0.28,
+	},
 	Starfall = { TintColor = Color3.fromRGB(235, 235, 255), Saturation = 0.1, Brightness = 0, Density = 0.25 },
 }
 
@@ -136,7 +155,11 @@ local function canonicalWeather(name: string?): string?
 	end
 	local n = Theme.Normalize(name)
 	for k in WEATHER_CC do
-		if Theme.Normalize(k) == n or (n == "snow" and k == "Snow Flurry") or (n == "bloom" and k == "Bloom Season") then
+		if
+			Theme.Normalize(k) == n
+			or (n == "snow" and k == "Snow Flurry")
+			or (n == "bloom" and k == "Bloom Season")
+		then
 			return k
 		end
 	end

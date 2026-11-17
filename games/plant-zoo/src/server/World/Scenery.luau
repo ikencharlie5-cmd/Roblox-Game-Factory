@@ -44,8 +44,14 @@ end
 
 local function lamp(f: Instance, pos: Vector3)
 	Build.Cyl(f, 7, 0.5, C(pos + V(0, 3.5, 0)), hex("#3B3B4A"), M.Metal, true)
-	local lantern = Build.Deco(f, { Size = V(1.2, 1.4, 1.2), CFrame = C(pos + V(0, 7.6, 0)), Color = hex("#FFF2B3"), Name = "Lantern" })
-	Build.Deco(f, { Size = V(1.6, 0.3, 1.6), CFrame = C(pos + V(0, 8.45, 0)), Color = hex("#3B3B4A"), Material = M.Metal })
+	local lantern = Build.Deco(
+		f,
+		{ Size = V(1.2, 1.4, 1.2), CFrame = C(pos + V(0, 7.6, 0)), Color = hex("#FFF2B3"), Name = "Lantern" }
+	)
+	Build.Deco(
+		f,
+		{ Size = V(1.6, 0.3, 1.6), CFrame = C(pos + V(0, 8.45, 0)), Color = hex("#3B3B4A"), Material = M.Metal }
+	)
 	local l = Instance.new("PointLight")
 	l.Color = hex("#FFD58A")
 	l.Range = 18
@@ -61,9 +67,21 @@ local function spoke(f: Instance, i: number)
 	local mid = (inner + outer) / 2
 	local p = polar(angle, mid, 0.1)
 	local cf = CFrame.lookAt(p, V(0, 0.1, 0))
-	Build.Part(f, { Size = V(10, 0.2, outer - inner), CFrame = cf, Color = Theme.Colors.Path, Material = M.Sand, Name = "Spoke" })
+	Build.Part(
+		f,
+		{ Size = V(10, 0.2, outer - inner), CFrame = cf, Color = Theme.Colors.Path, Material = M.Sand, Name = "Spoke" }
+	)
 	for _, side in { -1, 1 } do
-		Build.Part(f, { Size = V(0.8, 0.3, outer - inner), CFrame = cf * C(side * 5.4, 0.05, 0), Color = Theme.Colors.PathEdge, Material = M.Cobblestone, Name = "Edge" })
+		Build.Part(
+			f,
+			{
+				Size = V(0.8, 0.3, outer - inner),
+				CFrame = cf * C(side * 5.4, 0.05, 0),
+				Color = Theme.Colors.PathEdge,
+				Material = M.Cobblestone,
+				Name = "Edge",
+			}
+		)
 		for _, z in { -20, 20 } do
 			lamp(f, (cf * C(side * 7, -0.1, z)).Position)
 		end
@@ -87,13 +105,20 @@ end
 local function cloud(f: Instance, pos: Vector3, rng: Random)
 	for k = 0, 2 do
 		local s = rng:NextNumber(14, 22)
-		local b = Build.Ball(f, s, C(pos + V((k - 1) * s * 0.7, rng:NextNumber(-2, 2), rng:NextNumber(-3, 3))), Color3.new(1, 1, 1), M.SmoothPlastic)
+		local b = Build.Ball(
+			f,
+			s,
+			C(pos + V((k - 1) * s * 0.7, rng:NextNumber(-2, 2), rng:NextNumber(-3, 3))),
+			Color3.new(1, 1, 1),
+			M.SmoothPlastic
+		)
 		b.CastShadow = false
 	end
 end
 
 local function fireflyZone(f: Instance, pos: Vector3, size: number)
-	local p = Build.Deco(f, { Size = V(size, 6, size), CFrame = C(pos + V(0, 4, 0)), Transparency = 1, Name = "Fireflies" })
+	local p =
+		Build.Deco(f, { Size = V(size, 6, size), CFrame = C(pos + V(0, 4, 0)), Transparency = 1, Name = "Fireflies" })
 	p.CanQuery = false
 	local e = Theme.Effects.Fireflies()
 	e.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
@@ -123,16 +148,32 @@ function Scenery.Build(parent: Instance, plotCount: number, plotRadius: number)
 		end
 		for k = 0, 3 do
 			local pos = polar(mid + rng:NextNumber(-8, 8), 150 + k * 25)
-			Build.Tree(f, pos, rng:NextNumber(1, 1.6), Theme.Colors.Leaf:Lerp(hex("#FFB7D5"), if k % 2 == 0 then 0 else 0.6))
+			Build.Tree(
+				f,
+				pos,
+				rng:NextNumber(1, 1.6),
+				Theme.Colors.Leaf:Lerp(hex("#FFB7D5"), if k % 2 == 0 then 0 else 0.6)
+			)
 		end
 		task.wait()
 	end
 	-- Outer forest ring + hills so the world feels enclosed.
 	for k = 0, 35 do
 		local ang = k * 10 + rng:NextNumber(-3, 3)
-		Build.Tree(f, polar(ang, rng:NextNumber(270, 300)), rng:NextNumber(1.6, 2.4), Theme.Colors.Leaf:Lerp(hex("#2F8F4E"), rng:NextNumber()))
+		Build.Tree(
+			f,
+			polar(ang, rng:NextNumber(270, 300)),
+			rng:NextNumber(1.6, 2.4),
+			Theme.Colors.Leaf:Lerp(hex("#2F8F4E"), rng:NextNumber())
+		)
 		if k % 2 == 0 then
-			local hill = Build.Blob(f, V(rng:NextNumber(60, 90), rng:NextNumber(25, 45), rng:NextNumber(50, 70)), C(polar(ang + 5, 340)), Theme.Colors.GrassDark, M.Grass)
+			local hill = Build.Blob(
+				f,
+				V(rng:NextNumber(60, 90), rng:NextNumber(25, 45), rng:NextNumber(50, 70)),
+				C(polar(ang + 5, 340)),
+				Theme.Colors.GrassDark,
+				M.Grass
+			)
 			hill.CastShadow = false
 		end
 		if k % 6 == 0 then

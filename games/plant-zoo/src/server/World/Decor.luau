@@ -74,9 +74,29 @@ end
 
 B["Log"] = function(m)
 	local log = C(0, 0.8, 0) * A(0, rad(90), 0)
-	local p = Build.Part(m, { Size = V(3.6, 1.6, 1.6), CFrame = log, Color = hex("#8B5A2B"), Material = M.Wood, Shape = Enum.PartType.Cylinder, CanCollide = false })
+	local p = Build.Part(
+		m,
+		{
+			Size = V(3.6, 1.6, 1.6),
+			CFrame = log,
+			Color = hex("#8B5A2B"),
+			Material = M.Wood,
+			Shape = Enum.PartType.Cylinder,
+			CanCollide = false,
+		}
+	)
 	p.CanTouch = false
-	local cap = Build.Part(m, { Size = V(0.1, 1.3, 1.3), CFrame = log * C(1.8, 0, 0), Color = hex("#E0B07A"), Material = M.Wood, Shape = Enum.PartType.Cylinder, CanCollide = false })
+	local cap = Build.Part(
+		m,
+		{
+			Size = V(0.1, 1.3, 1.3),
+			CFrame = log * C(1.8, 0, 0),
+			Color = hex("#E0B07A"),
+			Material = M.Wood,
+			Shape = Enum.PartType.Cylinder,
+			CanCollide = false,
+		}
+	)
 	cap.CanTouch = false
 	blob(m, V(1.4, 0.4, 1), C(0.2, 1.55, 0.3), hex("#5FB23A"), M.Grass)
 	ball(m, 0.4, C(-0.4, 1.7, -0.6), hex("#FF6F61"))
@@ -143,7 +163,13 @@ B["Palm Shade"] = function(m)
 	end
 	local top = C(0.8, 4.9, 0)
 	for i = 0, 4 do
-		blob(m, V(3, 0.2, 0.9), top * A(0, rad(i * 72), 0) * C(1.3, -0.3, 0) * A(0, 0, rad(-20)), hex("#4FA84A"), M.Grass)
+		blob(
+			m,
+			V(3, 0.2, 0.9),
+			top * A(0, rad(i * 72), 0) * C(1.3, -0.3, 0) * A(0, 0, rad(-20)),
+			hex("#4FA84A"),
+			M.Grass
+		)
 	end
 	ball(m, 0.5, top * C(0.2, -0.3, 0.3), hex("#7A4E2D"))
 end
@@ -163,9 +189,28 @@ end
 
 B["Hollow Log"] = function(m)
 	local cf = C(0, 1.2, 0) * A(0, rad(90), 0)
-	local p = Build.Part(m, { Size = V(3.8, 2.4, 2.4), CFrame = cf, Color = hex("#6B4A2E"), Material = M.Wood, Shape = Enum.PartType.Cylinder, CanCollide = false })
+	local p = Build.Part(
+		m,
+		{
+			Size = V(3.8, 2.4, 2.4),
+			CFrame = cf,
+			Color = hex("#6B4A2E"),
+			Material = M.Wood,
+			Shape = Enum.PartType.Cylinder,
+			CanCollide = false,
+		}
+	)
 	p.CanTouch = false
-	local hole = Build.Part(m, { Size = V(0.1, 1.7, 1.7), CFrame = cf * C(-1.9, 0, 0), Color = hex("#2A1A10"), Shape = Enum.PartType.Cylinder, CanCollide = false })
+	local hole = Build.Part(
+		m,
+		{
+			Size = V(0.1, 1.7, 1.7),
+			CFrame = cf * C(-1.9, 0, 0),
+			Color = hex("#2A1A10"),
+			Shape = Enum.PartType.Cylinder,
+			CanCollide = false,
+		}
+	)
 	hole.CanTouch = false
 	blob(m, V(2.2, 0.5, 1.6), C(0, 2.4, 0.2), hex("#2F8F4E"), M.Grass)
 	cyl(m, 0.4, 0.2, C(0.9, 2.6, -0.5), hex("#FFF6E0"))
@@ -175,7 +220,13 @@ end
 B["Nest"] = function(m)
 	for i = 0, 7 do
 		local a = rad(i * 45)
-		blob(m, V(1.4, 0.6, 0.6), C(math.cos(a) * 1.1, 0.4, math.sin(a) * 1.1) * A(0, -a, 0), hex(i % 2 == 0 and "#8B5A2B" or "#A8673A"), M.Wood)
+		blob(
+			m,
+			V(1.4, 0.6, 0.6),
+			C(math.cos(a) * 1.1, 0.4, math.sin(a) * 1.1) * A(0, -a, 0),
+			hex(i % 2 == 0 and "#8B5A2B" or "#A8673A"),
+			M.Wood
+		)
 	end
 	blob(m, V(2.2, 0.3, 2.2), C(0, 0.25, 0), hex("#6B4A2E"), M.Wood)
 	for i, col in { "#BDE7FF", "#FFF6E0", "#FFD9E8" } do
@@ -242,7 +293,15 @@ end
 
 B["Info Sign"] = function(m)
 	blk(m, V(0.3, 2.2, 0.3), C(0, 1.1, 0), Theme.Colors.WoodDark, M.Wood)
-	local board = Build.Part(m, { Size = V(2.6, 1.6, 0.2), CFrame = C(0, 2.6, 0) * A(rad(-10), 0, 0), Color = Theme.Colors.Cream, CanCollide = false })
+	local board = Build.Part(
+		m,
+		{
+			Size = V(2.6, 1.6, 0.2),
+			CFrame = C(0, 2.6, 0) * A(rad(-10), 0, 0),
+			Color = Theme.Colors.Cream,
+			CanCollide = false,
+		}
+	)
 	board.CanTouch = false
 	Build.Label(board, Enum.NormalId.Front, "Did you know?", Theme.Colors.Text)
 	blk(m, V(2.8, 0.15, 0.3), C(0, 3.45, 0.15), hex("#4CAF50"), M.Grass)
