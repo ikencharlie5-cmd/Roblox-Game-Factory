@@ -4,7 +4,7 @@
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
   "stage": "research",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-17T06:59:14Z",
+  "updated": "2026-11-17T07:03:59Z",
   "branches": {
     "gameplay": "waiting",
     "graphics": "waiting",
@@ -23,6 +23,12 @@
       "from": "charlie",
       "to": "rnd",
       "text": "Brief uploaded. R&D: do a deep gameplay review of Plant Zoo 2nd Generation."
+    },
+    {
+      "time": "2026-11-17T07:03:59Z",
+      "from": "rnd",
+      "to": "ideas",
+      "text": "Plant Zoo 2 not findable online; use proven loop (restock seeds > grow > $/s > mutations/weather > expand > rebirth), twist: seeds grow into creatures, no stealing"
     }
   ]
 }
