@@ -55,3 +55,4 @@ Check your tools for a Roblox Studio MCP (e.g. `run_code`, `insert_model`, `get_
   60 seconds work, stop play mode. Errors become issues in CHECK_REPORT.md.
 - Graphics may inspect/tune the built map in Studio, but must copy any change back into code.
 If no Studio MCP is present, use the normal `.rbxl` flow.
+- `scripts/studio_sync.py <slug>`: if Rojo can't connect, generates Luau chunks in build/studio-sync/<slug>/ — run each with the Studio MCP execute_luau (Edit) to sync all scripts.
