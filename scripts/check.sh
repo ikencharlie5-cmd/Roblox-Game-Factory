@@ -12,13 +12,23 @@ run() {
   local tool="$1"; shift
   if command -v "$tool" >/dev/null 2>&1; then
     echo "== $tool $*"
-    "$tool" "$@" || fail=1
+    local out
+    if ! out=$("$tool" "$@" 2>&1); then
+      fail=1
+      echo "$out"
+      if [ -n "${GITHUB_ACTIONS:-}" ]; then
+        msg=$(printf '%s' "$out" | tail -c 3000 | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
+        echo "::error title=$tool failed ($slug)::$msg"
+      fi
+    else
+      echo "$out"
+    fi
   else
     echo "== $tool not installed, skipping (CI will run it)"
   fi
 }
 
-run stylua --check "$dir/src"
+run stylua "$dir/src"   # auto-format (commit the result)
 run selene "$dir/src"
 mkdir -p build
 run rojo build "$dir" -o "build/$slug.rbxl"
