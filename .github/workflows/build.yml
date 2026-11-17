@@ -1,0 +1,34 @@
+name: Build games
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ok-nick/setup-aftman@v0.4.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check + build template and every game
+        run: |
+          set -e
+          mkdir -p build
+          for dir in template games/*/; do
+            dir="${dir%/}"
+            [ -f "$dir/default.project.json" ] || continue
+            slug=$( [ "$dir" = "template" ] && echo template || basename "$dir" )
+            echo "::group::$slug"
+            bash scripts/check.sh "$slug"
+            echo "::endgroup::"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: places
+          path: build/*.rbxl
+          if-no-files-found: ignore
