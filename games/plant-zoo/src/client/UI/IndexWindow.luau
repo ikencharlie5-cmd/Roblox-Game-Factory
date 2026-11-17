@@ -75,7 +75,9 @@ function IndexWindow.Render(force: boolean?)
 			local badges = ""
 			if type(entry) == "table" then
 				for mut in entry do
-					badges ..= BADGES[mut] or ""
+					if type(mut) == "string" and mut ~= "" and string.lower(mut) ~= "none" then
+						badges ..= BADGES[mut] or ""
+					end
 				end
 			end
 			Kit.Label(c, badges, { Size = UDim2.new(1, -8, 0.2, 0), Position = UDim2.new(0, 4, 0.76, 0) })

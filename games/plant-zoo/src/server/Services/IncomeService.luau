@@ -118,6 +118,7 @@ end
 
 -- If Graphics didn't tag a TipJar for a pad, make a simple one at the pad's front edge.
 local function ensureJars(plot: number)
+	PlotService.WaitWorldReady()
 	for pad = 1, #Config.PadCosts do
 		local key = plot .. "_" .. pad
 		if not PlotService.FindJar(plot, pad) and not fallbackJars[key] then
@@ -197,7 +198,17 @@ function IncomeService.Start()
 	for _, jar in CollectionService:GetTagged("TipJar") do
 		hookJar(jar)
 	end
-	CollectionService:GetInstanceAddedSignal("TipJar"):Connect(hookJar)
+	CollectionService:GetInstanceAddedSignal("TipJar"):Connect(function(jar)
+		hookJar(jar)
+		-- a real jar showed up late: drop our stand-in so there's never two
+		local key = tostring(jar:GetAttribute("PlotIndex")) .. "_" .. tostring(jar:GetAttribute("PadIndex"))
+		local fb = fallbackJars[key]
+		if fb and fb ~= jar then
+			fallbackJars[key] = nil
+			hooked[fb] = nil
+			fb:Destroy()
+		end
+	end)
 
 	local lastAuto = os.clock()
 	while true do

@@ -163,12 +163,20 @@ function Derived.AllCreatures(): { { item: any, placed: boolean } }
 	return out
 end
 
+-- "None", "", nil and false all mean "no mutation" (the server stores "None").
+function Derived.IsMutation(v: any): boolean
+	return type(v) == "string" and v ~= "" and string.lower(v) ~= "none"
+end
+
 function Derived.Mutations(item: any): string
 	local parts = {}
-	if type(item.color) == "string" and item.color ~= "" then
+	if type(item) ~= "table" then
+		return ""
+	end
+	if Derived.IsMutation(item.color) then
 		table.insert(parts, item.color)
 	end
-	if type(item.weather) == "string" and item.weather ~= "" then
+	if Derived.IsMutation(item.weather) then
 		table.insert(parts, item.weather)
 	end
 	return table.concat(parts, " ")

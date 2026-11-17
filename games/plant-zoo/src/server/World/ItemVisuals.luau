@@ -22,10 +22,12 @@ local onCounts: (plotIndex: number) -> () = function(_: number) end
 local REBUILD = { Stage = true, Species = true, DecorKind = true, Kind = true }
 local RELOOK = { Color = true, Weather = true, Thriving = true }
 
-local function noQuery(m: Model)
+-- Visual parts stay raycastable (CanQuery) so tapping the creature you see resolves, via
+-- Plots.ItemFromHit, up to the parent ZooItems Model (which carries ItemId). FX parts that set
+-- CanQuery=false themselves (glows, rings) are left alone. Non-colliding, non-touching.
+local function prepParts(m: Model)
 	for _, d in m:GetDescendants() do
 		if d:IsA("BasePart") then
-			d.CanQuery = false
 			d.CanTouch = false
 			d.CanCollide = false
 		end
@@ -67,7 +69,7 @@ local function render(item: Model, pop: boolean)
 	local v = visual :: Model
 	v.Name = "Visual"
 	v:PivotTo(base)
-	noQuery(v)
+	prepParts(v)
 	v.Parent = item
 	if isPlant then
 		rainbow[v] = if v:GetAttribute("Rainbow") then true else nil
@@ -97,7 +99,7 @@ local function relook(item: Model)
 		Weather = item:GetAttribute("Weather") or false,
 		Thriving = item:GetAttribute("Thriving") == true,
 	})
-	noQuery(v)
+	prepParts(v)
 	rainbow[v] = if v:GetAttribute("Rainbow") then true else nil
 end
 

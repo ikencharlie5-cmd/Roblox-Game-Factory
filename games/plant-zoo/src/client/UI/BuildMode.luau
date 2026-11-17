@@ -105,8 +105,13 @@ function BuildMode.Stop()
 	changedSignal:Fire(false)
 end
 
+local busy = false -- blocks double clicks while a place/buy request is in flight
+
 local function confirm()
 	local opts = active
+	if busy then
+		return
+	end
 	if not opts or not selPad or not selCell then
 		Kit.Sound("Error")
 		return
@@ -116,6 +121,7 @@ local function confirm()
 		return
 	end
 	local ok
+	busy = true
 	if opts.mode == "seed" or opts.mode == "creature" or opts.mode == "decor" then
 		ok = Net.Do("PlaceItem", nil, opts.mode, opts.ref, selPad, selCell, rot * 90)
 	elseif opts.mode == "buydecor" then
@@ -123,14 +129,12 @@ local function confirm()
 	elseif opts.mode == "move" then
 		ok = Net.Do("MoveItem", nil, opts.ref, selPad, selCell, rot * 90)
 	end
-	if ok then
+	busy = false
+	if ok and active == opts then
 		BuildGhost.Pop()
-		-- Decor bought from the shop stays in build mode so you can place several.
-		if opts.mode ~= "buydecor" then
-			BuildMode.Stop()
-		else
-			drawGhost()
-		end
+		-- Every successful placement (incl. paid decor) exits build mode, so stray clicks can
+		-- never buy extra decor. Players reopen Build to buy another.
+		BuildMode.Stop()
 	end
 end
 

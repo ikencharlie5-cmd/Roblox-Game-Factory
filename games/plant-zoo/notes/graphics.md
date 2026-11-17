@@ -50,10 +50,10 @@ Anchored everywhere except creature/visitor parts, which are welded (unanchored,
 | `HubCenter` | fountain spray Part | | |
 | `NightLight` / `Fireflies` | lantern parts / firefly volumes | | toggled by the day/night cycle |
 
-Other attributes: `Lighting.IsNight` (ClockTime ≥ 18 or < 6), `workspace.WorldReady` = true after Init, `workspace.Lightning` (os.clock of each flash, for audio).
+Other attributes: `Lighting.IsNight` (ClockTime ≥ 18 or < 6), `workspace.WorldReady` = true (also `WorldService.Ready`) once WorldService.Init has built the hub, all plots, exhibit pads and tip jars (Scenery keeps filling in async; it is decorative only). Gameplay/client can `if not workspace:GetAttribute("WorldReady") then workspace:GetAttributeChangedSignal("WorldReady"):Wait() end`. `workspace.Lightning` (os.clock of each flash, for audio).
 
 ## What Graphics reads from Gameplay
-- `workspace.ZooItems.Plot<n>.<id>` item Models. For each one, Graphics adds a child Model `Visual` aligned to the bottom of the `Hitbox`. Visual parts have CanQuery off, so taps hit the Hitbox.
+- `workspace.ZooItems.Plot<n>.<id>` item Models. For each one, Graphics adds a child Model `Visual` aligned to the bottom of the `Hitbox`. Visual parts keep CanQuery on (CanCollide/CanTouch off), so a tap on the visible creature hits a Visual part and `Plots.ItemFromHit` walks up to the item Model (ItemId). FX parts (glows/rings) are CanQuery off. Grown creatures wander only ±1.2 studs from their cell.
   - `Kind`="plant": `CreatureModels.Build(Species, Stage, {Color, Weather, Thriving})`. Changes to Stage/Species rebuild it with a pop. Changes to Color/Weather/Thriving re-skin it in place. Grown creatures bob and wander ±2.5 studs inside the pad.
   - `Kind`="decor": `Decor.Build(DecorKind)`. The model is rebuilt if the Hitbox moves.
 - `ReplicatedStorage.GameState`:

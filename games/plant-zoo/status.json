@@ -4,11 +4,11 @@
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
   "stage": "branches",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-17T23:43:35Z",
+  "updated": "2026-11-17T23:45:13Z",
   "branches": {
-    "gameplay": "working",
-    "graphics": "working",
-    "ui": "working",
+    "gameplay": "done",
+    "graphics": "done",
+    "ui": "done",
     "audio": "done"
   },
   "log": [
@@ -131,6 +131,24 @@
       "from": "checker",
       "to": "all",
       "text": "FAIL: 13 issues (2 high) \u2014 sent to branches"
+    },
+    {
+      "time": "2026-11-17T23:44:23Z",
+      "from": "graphics",
+      "to": "all",
+      "text": "creature Visual parts now CanQuery=true (taps resolve to item), wander cut to +-1.2; WorldReady documented"
+    },
+    {
+      "time": "2026-11-17T23:44:59Z",
+      "from": "ui",
+      "to": "all",
+      "text": "Fixed [ui] issues: None mutations hidden, buy-decor exits after purchase, no Thriving splash on join"
+    },
+    {
+      "time": "2026-11-17T23:45:13Z",
+      "from": "gameplay",
+      "to": "all",
+      "text": "Round 1 fixes: Studio data fallback, WorldReady race, pad1 on leave, VIP tag, shutdown saves, rate-limit feedback"
     }
   ]
 }

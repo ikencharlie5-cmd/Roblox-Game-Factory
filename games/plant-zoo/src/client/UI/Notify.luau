@@ -41,10 +41,17 @@ function Notify.Init()
 	Kit.Make("UISizeConstraint", { MinSize = Vector2.new(300, 36) }, announceHolder)
 end
 
+-- Defensive: never show a "None" mutation word (e.g. "NONE NONE Sproutling") in server text.
+local function clean(text: string): string
+	local out = string.gsub(text, "%f[%w]None None ", "")
+	return (string.gsub(out, "%f[%w]NONE ", ""))
+end
+
 function Notify.Toast(text: string, kind: string?)
 	if not stack then
 		return
 	end
+	text = clean(text)
 	local k = kind or "info"
 	-- Errors: the server (or Net.Do) already plays "Error", so no second sound here.
 	if k ~= "error" and k ~= "cash" then
@@ -98,6 +105,7 @@ function Notify.Announce(text: string, rarity: string?)
 	if not announceHolder then
 		return
 	end
+	text = clean(text)
 	Kit.Sound("Announce")
 	Kit.Clear(announceHolder)
 	local r = Style.NormRarity(rarity or "Legendary")

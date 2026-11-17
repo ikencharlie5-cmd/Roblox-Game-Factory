@@ -89,11 +89,16 @@ function SocialService.Init()
 	local function applyTag(p: Player)
 		p:SetAttribute("ChatTag", if p:GetAttribute("Pass_VIP") then "[VIP]" else nil)
 	end
-	Players.PlayerAdded:Connect(function(p)
+	local function watchTag(p: Player)
 		p:GetAttributeChangedSignal("Pass_VIP"):Connect(function()
 			applyTag(p)
 		end)
-	end)
+		applyTag(p)
+	end
+	Players.PlayerAdded:Connect(watchTag)
+	for _, p in Players:GetPlayers() do
+		watchTag(p)
+	end
 end
 
 function SocialService.Start()

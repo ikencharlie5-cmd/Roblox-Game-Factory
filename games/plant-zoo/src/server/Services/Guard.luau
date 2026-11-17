@@ -12,10 +12,21 @@ local DataService = require(script.Parent:WaitForChild("DataService"))
 local Guard = {}
 
 local last: { [Player]: { [string]: number } } = {}
+local lastSoftNotify: { [Player]: number } = {}
 
 Players.PlayerRemoving:Connect(function(p)
 	last[p] = nil
+	lastSoftNotify[p] = nil
 end)
+
+-- Rate-limit / loading feedback: a quiet info toast (no Error sound), at most once per second.
+local function softNotify(player: Player, msg: string)
+	local now = os.clock()
+	if now - (lastSoftNotify[player] or 0) >= 1 then
+		lastSoftNotify[player] = now
+		Remotes.Event("Notify"):FireClient(player, msg, "info")
+	end
+end
 
 function Guard.Notify(player: Player, text: string, kind: string?)
 	Remotes.Event("Notify"):FireClient(player, text, kind or "info")
@@ -65,17 +76,19 @@ function Guard.Bind(name: string, handler: (Player, any, ...any) -> (boolean, an
 		end
 		local now = os.clock()
 		if now - (t[name] or 0) < Config.RemoteCooldown then
+			softNotify(player, "Slow down!")
 			return false, "Slow down!"
 		end
 		t[name] = now
 		local data = DataService.Get(player)
 		if not data then
+			softNotify(player, "Still loading...")
 			return false, "Still loading..."
 		end
 		local ok, a, b = pcall(handler, player, data, ...)
 		if not ok then
 			warn("[Guard]", name, "error:", a)
-			return false, "Something went wrong"
+			return Guard.Fail(player, "Something went wrong")
 		end
 		return a, b
 	end

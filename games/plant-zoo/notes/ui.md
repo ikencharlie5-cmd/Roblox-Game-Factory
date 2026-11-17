@@ -61,3 +61,8 @@ the UI doesn't repeat them. Server also toasts its own failures, so `Net.Do` onl
 - Needs on the card come from `Shared/Needs.ForPad` on synced data (same math the server caches).
 - Settings are not saved between sessions (see QUESTIONS.md).
 - Camera: FOV 72, max zoom 70 (90 during build mode); Scriptable only for the 3 s Release cutscene.
+
+## Checker fixes (round 2)
+- `Derived.Mutations` / new `Derived.IsMutation`: "None", "", nil and false count as no mutation, so names never read "None None Sproutling" (card, Bag, Release, confirm). Index badges skip "None"; Notify toasts/announcements strip a stray "None None " / "NONE " word defensively.
+- BuildMode: every successful placement, including paid `buydecor`, now exits build mode (no more repeat buys from hover+click). A `busy` flag blocks double clicks while the request is in flight.
+- Thriving splash only fires 3 s after the first data load, so returning players don't get it on join.

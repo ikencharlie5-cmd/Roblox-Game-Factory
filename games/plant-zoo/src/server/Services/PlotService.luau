@@ -51,6 +51,15 @@ function PlotService.GetOwner(plot: number): Player?
 	return owners[plot]
 end
 
+-- Yields until WorldService has built the plots (workspace.WorldReady), up to Config.WorldReadyTimeout.
+function PlotService.WaitWorldReady(): boolean
+	local t0 = os.clock()
+	while not workspace:GetAttribute("WorldReady") and os.clock() - t0 < Config.WorldReadyTimeout do
+		task.wait(0.1)
+	end
+	return workspace:GetAttribute("WorldReady") == true
+end
+
 function PlotService.OnAssigned(fn: (Player, number) -> ())
 	table.insert(assignedCbs, fn)
 end
@@ -134,7 +143,7 @@ local function setPlotAttrs(plot: number, player: Player?, data: any?)
 	-- Per pad: Biome, Unlocked, Price (on the ExhibitPad part and mirrored in GameState).
 	for pad = 1, #Config.PadCosts do
 		local biome = if data then data.padBiome[pad] else "Meadow"
-		local unlocked = data ~= nil and pad <= data.padsOwned
+		local unlocked = if data then pad <= data.padsOwned else pad == 1
 		local padInst = findTagged("ExhibitPad", plot, pad)
 		if padInst then
 			padInst:SetAttribute("Biome", biome)
@@ -157,6 +166,12 @@ function PlotService.RefreshPlotAttrs(player: Player)
 end
 
 local function assign(player: Player, data: any)
+	if not PlotService.WaitWorldReady() then
+		warnOnce("worldready", "workspace.WorldReady never set; assigning with fallback positions")
+	end
+	if not player.Parent or plotOf[player] then
+		return
+	end
 	for i = 1, Config.Grid.PlotCount do
 		if not owners[i] then
 			owners[i] = player

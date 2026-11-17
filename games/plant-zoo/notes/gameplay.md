@@ -14,7 +14,8 @@ Biome names: `Meadow`, `Pond`, `Desert`, `Canopy`, `Fungus Cave`, `Frost Garden`
 
 ## Remotes
 All RemoteFunctions return `(ok: boolean, result)`. On failure `result` is an error string AND the server already
-fired `Notify(text, "error")` + `PlaySound("Error")`, so UI only needs to refresh. Rate limit 0.2 s per remote.
+fired `Notify(text, "error")` + `PlaySound("Error")`, so UI only needs to refresh. Rate limit 0.2 s per remote;
+"Slow down!" / "Still loading..." fire a quiet `Notify(text, "info")` (no Error sound, max 1/s per player).
 
 | RemoteFunction | Args | Result on success | Notes |
 |---|---|---|---|
@@ -119,3 +120,20 @@ Attributes on every item: `ItemId`, `OwnerUserId`, `PlotIndex`, `PadIndex`, `Cel
 - Audio: my biome names are `Fungus Cave` / `Frost Garden` (Config.BiomeOrder); `Sounds.BiomeAmbience` uses `Fungus`/`Frost`
   keys, so those pads fall back to Meadow ambience - please add the full-name keys. Weather names have spaces
   ("Snow Flurry", "Bloom Season"); MusicDirector already strips spaces, so that works.
+
+## Check round 1 fixes
+- **Studio data fallback**: if `GetAsync` fails 3x and `RunService:IsStudio()`, the player gets a deep copy of
+  `Config.DefaultData`, one warning is printed (enable Studio Access to API Services), and that player is never saved.
+  Live servers still kick.
+- **World-ready ordering**: DataService now starts loading players in `Start()` (after every Service's `Init`, incl.
+  WorldService's build, so all `OnLoaded` hooks are registered). `onJoin` also waits for `workspace.WorldReady`
+  (timeout `Config.WorldReadyTimeout` = 20 s) before caching data/firing hooks. `PlotService.WaitWorldReady()` is
+  called in `assign` and IncomeService `ensureJars` as a second guard. If a real `TipJar` is tagged after a fallback
+  jar was made, the fallback is destroyed (never two jars).
+- Free plots (owner left) show pad 1 Unlocked=true, others locked (matches fresh server).
+- VIP `ChatTag` applied immediately on join and for players already in game, plus on `Pass_VIP` change.
+- BindToClose waits for all in-flight saves (leave + shutdown) up to `Config.ShutdownSaveTimeout` = 25 s.
+  Session locking (UpdateAsync) is still v2.
+- Handler errors now go through `Guard.Fail` ("Something went wrong" toast + Error sound).
+- Graphics: notes/graphics.md lists `WorldService.WaitReady()` but it isn't implemented; gameplay uses the
+  `workspace.WorldReady` attribute, which is.

@@ -157,10 +157,19 @@ task.spawn(function()
 end)
 
 -- "Thriving!" splash whenever the server reports more Thriving creatures than before.
+-- Changes before data has loaded (+3 s settle) only seed the count, so returning players
+-- don't get a splash on every join.
 local lastThriving = player:GetAttribute("ThrivingCount") or 0
+local thrivingArmedAt: number? = if State.loaded then os.clock() + 3 else nil
+State.OnChange(function(what)
+	if what == "data" and not thrivingArmedAt then
+		thrivingArmedAt = os.clock() + 3
+	end
+end)
 player:GetAttributeChangedSignal("ThrivingCount"):Connect(function()
 	local n = player:GetAttribute("ThrivingCount") or 0
-	if type(n) == "number" and type(lastThriving) == "number" and n > lastThriving then
+	local armed = thrivingArmedAt ~= nil and os.clock() >= thrivingArmedAt
+	if armed and type(n) == "number" and type(lastThriving) == "number" and n > lastThriving then
 		Notify.Splash("✨ Thriving! x1.5 ✨", Style.Color.Leaf)
 	end
 	lastThriving = n

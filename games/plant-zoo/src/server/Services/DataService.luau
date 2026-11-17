@@ -3,6 +3,7 @@
 -- Also owns the Total Earned OrderedDataStore (hub leaderboard).
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -17,6 +18,11 @@ local cache: { [Player]: { [string]: any } } = {}
 local dirty: { [Player]: boolean } = {}
 local loadedCbs: { (Player, any) -> () } = {}
 local leavingCbs: { (Player, any) -> () } = {}
+-- Studio only: players whose load failed (e.g. API access off) play on DefaultData, never saved.
+local noSave: { [Player]: boolean } = {}
+local studioWarned = false
+local pendingSaves = 0
+local started = false
 
 -- Called (player, data) after data loads (runs in its own thread).
 function DataService.OnLoaded(fn: (Player, any) -> ())
@@ -78,10 +84,11 @@ end
 
 local function save(player: Player)
 	local data = cache[player]
-	if not data then
+	if not data or noSave[player] then
 		return
 	end
 	data.lastOnline = os.time()
+	pendingSaves += 1 -- retry() pcalls each attempt, so this always gets decremented
 	retry(function()
 		store:SetAsync("u_" .. player.UserId, data)
 		return true
@@ -90,6 +97,18 @@ local function save(player: Player)
 		board:SetAsync(tostring(player.UserId), math.floor(math.min(data.totalEarned or 0, 2 ^ 52)))
 		return true
 	end)
+	pendingSaves -= 1
+end
+
+-- Plots/pads/jars are built by WorldService.Init; don't hand out data until they exist.
+local function waitWorldReady()
+	local t0 = os.clock()
+	while not workspace:GetAttribute("WorldReady") and os.clock() - t0 < Config.WorldReadyTimeout do
+		task.wait(0.1)
+	end
+	if not workspace:GetAttribute("WorldReady") then
+		warn("[DataService] workspace.WorldReady not set after", Config.WorldReadyTimeout, "s; continuing")
+	end
 end
 
 local function onJoin(player: Player)
@@ -97,12 +116,25 @@ local function onJoin(player: Player)
 		return store:GetAsync("u_" .. player.UserId)
 	end)
 	if not ok then
-		player:Kick("Couldn't load your data. Please rejoin.")
-		return
+		if not RunService:IsStudio() then
+			player:Kick("Couldn't load your data. Please rejoin.")
+			return
+		end
+		if not studioWarned then
+			studioWarned = true
+			warn(
+				"[DataService] DataStore unavailable in Studio (enable Game Settings > Security > "
+					.. "Studio Access to API Services). Using default data; this session will NOT be saved."
+			)
+		end
+		noSave[player] = true
+		saved = nil
 	end
 	local data = (saved :: any) or deepCopy(Config.DefaultData)
 	reconcile(data, Config.DefaultData :: any, 0)
+	waitWorldReady()
 	if not player.Parent then
+		noSave[player] = nil
 		return
 	end
 	cache[player] = data
@@ -208,11 +240,20 @@ function DataService.GetTopEarned(n: number): { { userId: number, value: number 
 	return out
 end
 
-function DataService.Init()
+local function startLoading()
+	if started then
+		return
+	end
+	started = true
 	Players.PlayerAdded:Connect(onJoin)
 	for _, p in Players:GetPlayers() do
 		task.spawn(onJoin, p)
 	end
+end
+
+-- Players are loaded from Start() (after every Service's Init, incl. WorldService's build),
+-- so every OnLoaded hook is registered and the plots exist before the first player loads.
+function DataService.Init()
 	Players.PlayerRemoving:Connect(function(p)
 		if cache[p] then
 			for _, fn in leavingCbs do
@@ -225,16 +266,23 @@ function DataService.Init()
 		save(p)
 		cache[p] = nil
 		dirty[p] = nil
+		noSave[p] = nil
 	end)
 	game:BindToClose(function()
 		for _, p in Players:GetPlayers() do
 			task.spawn(save, p)
 		end
-		task.wait(3)
+		-- wait for every in-flight save (leave saves included), up to the timeout
+		local t0 = os.clock()
+		task.wait()
+		while pendingSaves > 0 and os.clock() - t0 < Config.ShutdownSaveTimeout do
+			task.wait(0.2)
+		end
 	end)
 end
 
 function DataService.Start()
+	startLoading()
 	task.spawn(function()
 		while true do
 			task.wait(Config.DataSyncInterval)

@@ -11,6 +11,8 @@ Config.DataStoreName = "plant-zoo_v1"
 Config.LeaderboardStoreName = "plant-zoo_totalEarned_v1"
 Config.AutosaveSeconds = 120
 Config.RemoteCooldown = 0.2
+Config.WorldReadyTimeout = 20 -- max seconds to wait for workspace.WorldReady before assigning plots
+Config.ShutdownSaveTimeout = 25 -- BindToClose waits for pending saves up to this long
 Config.DataSyncInterval = 0.25 -- DataChanged is batched to at most once per this many seconds
 
 -- leaderstats: display name -> data key

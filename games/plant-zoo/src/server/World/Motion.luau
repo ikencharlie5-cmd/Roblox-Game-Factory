@@ -14,6 +14,9 @@ local rng = Random.new()
 local PAD_HALF = 10
 local MARGIN = 1.8
 
+-- Small wander keeps the creature near its Hitbox (taps still land on Visual parts anyway).
+local WANDER = 1.2
+
 -- Starts bob + wander for a Grown creature. padTop = pad top-center CFrame, home = its cell CFrame.
 function Motion.Creature(model: Model, padTop: CFrame, home: CFrame, half: number?)
 	local root = model.PrimaryPart
@@ -41,8 +44,8 @@ function Motion.Creature(model: Model, padTop: CFrame, home: CFrame, half: numbe
 				break
 			end
 			local lim = (half or PAD_HALF) - MARGIN
-			local x = math.clamp(homeLocal.X + rng:NextNumber(-2.5, 2.5), -lim, lim)
-			local z = math.clamp(homeLocal.Z + rng:NextNumber(-2.5, 2.5), -lim, lim)
+			local x = math.clamp(homeLocal.X + rng:NextNumber(-WANDER, WANDER), -lim, lim)
+			local z = math.clamp(homeLocal.Z + rng:NextNumber(-WANDER, WANDER), -lim, lim)
 			local target = (padTop * C(x, 0, z)).Position
 			local from = root.Position
 			local flat = V(target.X - from.X, 0, target.Z - from.Z)
