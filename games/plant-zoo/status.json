@@ -1,10 +1,10 @@
 {
-  "name": "Plant Zoo (working title)",
+  "name": "\ud83c\udf31 Sprout Zoo",
   "slug": "plant-zoo",
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
-  "stage": "ideas",
+  "stage": "approval",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-17T07:11:47Z",
+  "updated": "2026-11-17T07:15:01Z",
   "branches": {
     "gameplay": "waiting",
     "graphics": "waiting",
@@ -41,6 +41,18 @@
       "from": "system",
       "to": "all",
       "text": "Stage \u2192 ideas"
+    },
+    {
+      "time": "2026-11-17T07:14:47Z",
+      "from": "ideas",
+      "to": "charlie",
+      "text": "Sprout Zoo: buy random-rarity seeds, grow 28 plant-creatures, match biomes for Thriving x1.5, earn $/s, Release to the Wild to prestige"
+    },
+    {
+      "time": "2026-11-17T07:15:01Z",
+      "from": "system",
+      "to": "all",
+      "text": "Stage \u2192 approval"
     }
   ]
 }
