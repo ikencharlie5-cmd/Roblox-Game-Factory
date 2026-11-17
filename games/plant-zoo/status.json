@@ -2,13 +2,13 @@
   "name": "\ud83c\udf31 Sprout Zoo",
   "slug": "plant-zoo",
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
-  "stage": "checker",
+  "stage": "branches",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-17T07:42:57Z",
+  "updated": "2026-11-17T23:43:35Z",
   "branches": {
-    "gameplay": "blocked",
-    "graphics": "done",
-    "ui": "done",
+    "gameplay": "working",
+    "graphics": "working",
+    "ui": "working",
     "audio": "done"
   },
   "log": [
@@ -113,6 +113,24 @@
       "from": "system",
       "to": "all",
       "text": "Stage \u2192 checker"
+    },
+    {
+      "time": "2026-11-17T07:50:27Z",
+      "from": "checker",
+      "to": "all",
+      "text": "FAIL: 13 issues"
+    },
+    {
+      "time": "2026-11-17T23:43:35Z",
+      "from": "system",
+      "to": "all",
+      "text": "Stage \u2192 branches"
+    },
+    {
+      "time": "2026-11-17T23:43:35Z",
+      "from": "checker",
+      "to": "all",
+      "text": "FAIL: 13 issues (2 high) \u2014 sent to branches"
     }
   ]
 }
