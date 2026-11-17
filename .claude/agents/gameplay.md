@@ -14,6 +14,7 @@ Don't edit files you don't own; if you need something from another branch, write
 2. Read `research/RESEARCH.md` (your section + links), SPEC.md (esp. `## For Gameplay`), `docs/ROBLOX_RULES.md`, `CLAUDE.md`.
 3. Build: Config numbers → DataService defaults → one Service per system → remotes
    (declare in Remotes.luau) → monetization handlers. Validate every remote server-side.
+   For sounds triggered by server events, fire `PlaySound` with a name (Audio owns the IDs).
 4. Write `games/<slug>/notes/gameplay.md`: what you built, every remote name + args +
    what it does (UI needs this), every Attribute you set, anything you need from others.
 5. If something in the spec is unclear or conflicting, DON'T stop: pick the safest option,

@@ -12,10 +12,11 @@ Input: a slug and an idea.
    view them; links in .md/.txt files: fetch them). Pull concrete ideas from them.
 2. Research 1–3 similar top Roblox games if useful.
 3. Fill `games/<slug>/SPEC.md` (template: `docs/SPEC_TEMPLATE.md`). Be decisive: real numbers,
-   real names, real upgrade tables. Then add three hand-off sections at the bottom:
+   real names, real upgrade tables. Then add four hand-off sections at the bottom:
    - `## For Gameplay` — systems, formulas, data fields, remotes needed
    - `## For Graphics` — map layout, zones, color palette, props, effects, lighting mood
    - `## For UI` — every screen/menu, HUD elements, what the player sees in the first 60s
+   - `## For Audio` — music mood per zone/menu, key moments that need a sound
 4. Log it: `python3 scripts/status.py <slug> log ideas charlie "<one-line pitch>"`
 
 ## Job B — Solve a Manager decision

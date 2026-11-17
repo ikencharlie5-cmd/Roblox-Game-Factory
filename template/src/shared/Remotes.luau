@@ -7,6 +7,7 @@ local EVENTS = {
 	"DataChanged", -- server -> client: (data)
 	"Notify", -- server -> client: (text)
 	"ClaimDaily", -- client -> server: ()
+	"PlaySound", -- server -> client: (soundName)
 }
 
 local FUNCTIONS: { string } = {}

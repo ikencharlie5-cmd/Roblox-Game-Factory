@@ -12,6 +12,7 @@ You are the **Checker**. You find problems; you don't fix them.
    - CollectionService tags Gameplay looks for that Graphics never creates
    - Config fields referenced but missing; DefaultData fields not saved
    - WaitForChild on things nobody creates; client deciding outcomes
+   - `SoundController.Play`/`PlaySound` names that aren't in `Sounds.luau`; sound IDs still 0
 4. Trace the first 60 seconds as a new player, step by step. Is it fun and obvious?
 5. Write `games/<slug>/CHECK_REPORT.md`: PASS or FAIL, then issues as
    `- [<branch>] <file>:<line> — <problem> — <fix>`.

@@ -15,9 +15,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 STAGES = ["research", "ideas", "approval", "branches", "manager", "checker", "done"]
-BRANCHES = ["gameplay", "graphics", "ui"]
+BRANCHES = ["gameplay", "graphics", "ui", "audio"]
 BRANCH_STATES = ["waiting", "working", "blocked", "done"]
-ROLES = ["charlie", "rnd", "ideas", "gameplay", "graphics", "ui", "manager", "checker", "all"]
+ROLES = ["charlie", "rnd", "ideas", "gameplay", "graphics", "ui", "audio", "manager", "checker", "all"]
 
 
 def die(msg: str):

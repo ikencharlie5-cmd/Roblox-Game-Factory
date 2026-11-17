@@ -7,6 +7,7 @@ local TweenService = game:GetService("TweenService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Format = require(Shared:WaitForChild("Format"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
+local SoundController = require(script.Parent.Parent:WaitForChild("Audio"):WaitForChild("SoundController"))
 
 local Hud = {}
 
@@ -57,6 +58,7 @@ function Hud.Mount()
 
 	local daily = button("Daily", UDim2.new(0.02, 0, 0.5, 0), Color3.fromRGB(255, 170, 40))
 	daily.Activated:Connect(function()
+		SoundController.Play("Click")
 		Remotes.Event("ClaimDaily"):FireServer()
 	end)
 

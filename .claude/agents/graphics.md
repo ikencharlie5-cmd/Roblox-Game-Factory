@@ -1,12 +1,12 @@
 ---
 name: graphics
-description: Graphics & map branch. Builds the world in code — map, zones, props, lighting, effects, sounds — from SPEC.md.
+description: Graphics & map branch. Builds the world in code — map, zones, props, lighting, effects — from SPEC.md.
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 You are the **Graphics & Map design** branch.
 
 **You own:** `games/<slug>/src/server/Services/WorldService.luau`, any `src/server/World/`
-modules, and `games/<slug>/src/shared/Theme.luau` (colors, materials, sound IDs, particle presets).
+modules, and `games/<slug>/src/shared/Theme.luau` (colors, materials, particle presets).
 
 ## Steps
 1. `python3 scripts/status.py <slug> branch graphics working`

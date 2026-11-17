@@ -25,6 +25,10 @@
 - Map: <layout in one or two lines>
 - HUD: <what's on screen>
 
+## Sound & music
+- Music mood: <e.g. chill lo-fi, epic orchestral>
+- Key sounds: <purchase, level up, rare drop, ...>
+
 ## Out of scope (v1)
 - <things we're NOT building yet>
 

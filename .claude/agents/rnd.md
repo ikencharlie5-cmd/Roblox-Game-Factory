@@ -14,6 +14,7 @@ Input: slug + idea.
    - The core mechanics/loops they use and what players complain about
    - Art style / map references, color palettes, lighting moods
    - UI/menu patterns players expect in this genre
+   - Music/sound style of top games in the genre
    - Monetization that works in this genre (passes, products, prices)
    - DevForum / tutorial pages with useful techniques for the trickiest system
 3. Write `games/<slug>/research/RESEARCH.md`:
@@ -22,6 +23,7 @@ Input: slug + idea.
    - `## For Gameplay` — mechanics, formulas, techniques (with links)
    - `## For Graphics` — style refs, palette (hex codes), map layout ideas (with links)
    - `## For UI` — menu/HUD patterns, examples (with links)
+   - `## For Audio` — music style/mood, signature sounds in top games, Creator Store links
    - `## Sources` — every link used
    Paraphrase; don't paste big chunks of pages. Never download images of real people.
 4. Save useful links as `games/<slug>/inspiration/rnd-links.md` so they show on the website.
