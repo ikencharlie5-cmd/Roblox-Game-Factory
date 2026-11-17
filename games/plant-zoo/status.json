@@ -2,9 +2,9 @@
   "name": "\ud83c\udf31 Sprout Zoo",
   "slug": "plant-zoo",
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
-  "stage": "approval",
+  "stage": "branches",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-17T07:15:01Z",
+  "updated": "2026-11-17T07:16:55Z",
   "branches": {
     "gameplay": "waiting",
     "graphics": "waiting",
@@ -53,6 +53,18 @@
       "from": "system",
       "to": "all",
       "text": "Stage \u2192 approval"
+    },
+    {
+      "time": "2026-11-17T07:16:54Z",
+      "from": "charlie",
+      "to": "ideas",
+      "text": "Approved spec: name Sprout Zoo, Super Luck pass yes"
+    },
+    {
+      "time": "2026-11-17T07:16:54Z",
+      "from": "system",
+      "to": "all",
+      "text": "Stage \u2192 branches"
     }
   ]
 }
