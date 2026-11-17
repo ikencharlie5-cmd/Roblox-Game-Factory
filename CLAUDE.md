@@ -13,7 +13,9 @@ builds complete, publishable Roblox games with minimal input from Charlie.
  [GAMEPLAY] [GRAPHICS]     [UI]     [AUDIO]   ← run in parallel
      └──── questions ──→ [MANAGER] ──decision──→ [IDEAS] ──solution──→ back to branches
                    ↓
-              [ CHECKER ] ──issues──→ branches (loop) ──PASS──→ done
+              [ CHECKER ] ──issues──→ branches (loop)
+                   ↓ PASS
+              [ MANAGER sign-off ] ── docs/GOOD_GAME_CHECKLIST.md ──❌──→ branches (loop) ──✅──→ done
 ```
 You are the orchestrator: you run the stages, launch subagents, and keep `status.json`
 up to date with `scripts/status.py` so Charlie can watch on the website (`site/`).
@@ -26,7 +28,7 @@ publishing) goes in the game README's "Charlie TODO".
 
 ## Commands
 - `/new-game <idea>` — R&D → Ideas, stops for approval
-- `/build <slug>` — Branches → Manager loop → Checker → done
+- `/build <slug>` — Branches → Manager loop → Checker → Manager sign-off → done
 
 ## Checks
 `bash scripts/check.sh <slug>` (stylua, selene, rojo build). Missing tools are skipped

@@ -17,3 +17,13 @@ You are the **Manager**. Your job is to make calls, not ask questions.
 
 Never escalate to Charlie unless it needs money, a Roblox account action, or real-world IDs —
 those go in the game README's "Charlie TODO" instead.
+
+## Final sign-off (after the Checker passes)
+1. Copy `docs/GOOD_GAME_CHECKLIST.md` to `games/<slug>/SIGNOFF.md`.
+2. Go through EVERY item by reading the code, notes, and CHECK_REPORT.md (and playtesting
+   in Studio if a Studio MCP is connected). Mark each `✅`, `❌ <what's missing>`, or
+   `➖ <why it doesn't apply>`. Be strict — "probably fine" is ❌.
+3. At the top write `**Result: APPROVED**` or `**Result: NEEDS WORK — <n> items**`.
+4. For every ❌, add `- [<branch>] <what to fix>` to QUESTIONS.md so it goes back to that branch.
+5. Log: `python3 scripts/status.py <slug> log manager all "Sign-off: APPROVED"` or
+   `"Sign-off: <n> items need work"`.

@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "_site"
 IMG = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
-DOCS = ["SPEC.md", "QUESTIONS.md", "DECISIONS.md", "CHECK_REPORT.md", "README.md"]
+DOCS = ["SPEC.md", "QUESTIONS.md", "DECISIONS.md", "CHECK_REPORT.md", "SIGNOFF.md", "README.md"]
 
 
 def read(p: Path) -> str:

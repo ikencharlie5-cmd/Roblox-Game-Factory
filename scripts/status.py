@@ -2,7 +2,7 @@
 """Update a game's pipeline status (shown on the website).
 
 Usage:
-  python3 scripts/status.py <slug> stage <research|ideas|approval|branches|manager|checker|done>
+  python3 scripts/status.py <slug> stage <research|ideas|approval|branches|manager|checker|signoff|done>
   python3 scripts/status.py <slug> branch <gameplay|graphics|ui> <waiting|working|blocked|done>
   python3 scripts/status.py <slug> log <from> <to> "<message>"
 
@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-STAGES = ["research", "ideas", "approval", "branches", "manager", "checker", "done"]
+STAGES = ["research", "ideas", "approval", "branches", "manager", "checker", "signoff", "done"]
 BRANCHES = ["gameplay", "graphics", "ui", "audio"]
 BRANCH_STATES = ["waiting", "working", "blocked", "done"]
 ROLES = ["charlie", "rnd", "ideas", "gameplay", "graphics", "ui", "audio", "manager", "checker", "all"]

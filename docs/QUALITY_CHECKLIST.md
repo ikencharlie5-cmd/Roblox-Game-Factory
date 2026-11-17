@@ -1,4 +1,4 @@
-# Quality checklist (all must be true before "done")
+# Quality checklist (Checker — technical). The Manager also signs off with docs/GOOD_GAME_CHECKLIST.md.
 
 ## Works
 - [ ] `scripts/check.sh <slug>` passes (format, lint, build)
