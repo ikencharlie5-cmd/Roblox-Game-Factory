@@ -1,0 +1,28 @@
+{
+  "name": "Plant Zoo (working title)",
+  "slug": "plant-zoo",
+  "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
+  "stage": "research",
+  "created": "2026-11-17T06:59:14Z",
+  "updated": "2026-11-17T06:59:14Z",
+  "branches": {
+    "gameplay": "waiting",
+    "graphics": "waiting",
+    "ui": "waiting",
+    "audio": "waiting"
+  },
+  "log": [
+    {
+      "time": "2026-11-17T06:59:14Z",
+      "from": "charlie",
+      "to": "rnd",
+      "text": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation"
+    },
+    {
+      "time": "2026-11-17T06:59:14Z",
+      "from": "charlie",
+      "to": "rnd",
+      "text": "Brief uploaded. R&D: do a deep gameplay review of Plant Zoo 2nd Generation."
+    }
+  ]
+}
