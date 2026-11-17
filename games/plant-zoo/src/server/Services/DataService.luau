@@ -1,5 +1,6 @@
 --!strict
 -- The ONLY place that touches DataStores. Session-cached, autosaved, saved on leave/shutdown.
+-- Also owns the Total Earned OrderedDataStore (hub leaderboard).
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -11,8 +12,21 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 local DataService = {}
 
 local store = DataStoreService:GetDataStore(Config.DataStoreName)
+local board = DataStoreService:GetOrderedDataStore(Config.LeaderboardStoreName)
 local cache: { [Player]: { [string]: any } } = {}
-local loadedSignal = Instance.new("BindableEvent")
+local dirty: { [Player]: boolean } = {}
+local loadedCbs: { (Player, any) -> () } = {}
+local leavingCbs: { (Player, any) -> () } = {}
+
+-- Called (player, data) after data loads (runs in its own thread).
+function DataService.OnLoaded(fn: (Player, any) -> ())
+	table.insert(loadedCbs, fn)
+end
+
+-- Called (player, data) synchronously on leave, BEFORE the final save. Don't yield.
+function DataService.OnLeaving(fn: (Player, any) -> ())
+	table.insert(leavingCbs, fn)
+end
 
 local function deepCopy(t: any): any
 	if type(t) ~= "table" then
@@ -25,10 +39,13 @@ local function deepCopy(t: any): any
 	return c
 end
 
-local function reconcile(data: { [string]: any })
-	for k, v in Config.DefaultData :: any do
+-- Fill missing keys (recursively for nested dictionaries) from defaults.
+local function reconcile(data: { [string]: any }, defaults: { [string]: any })
+	for k, v in defaults do
 		if data[k] == nil then
 			data[k] = deepCopy(v)
+		elseif type(v) == "table" and type(data[k]) == "table" and next(v) ~= nil and #v == 0 then
+			reconcile(data[k], v)
 		end
 	end
 end
@@ -50,10 +67,10 @@ local function syncLeaderstats(player: Player, data: { [string]: any })
 	if not ls then
 		return
 	end
-	for _, key in Config.Leaderstats do
-		local v = ls:FindFirstChild(key) :: NumberValue?
+	for _, entry in Config.Leaderstats do
+		local v = ls:FindFirstChild(entry.Name) :: NumberValue?
 		if v then
-			v.Value = data[key]
+			v.Value = data[entry.Key] or 0
 		end
 	end
 end
@@ -63,8 +80,13 @@ local function save(player: Player)
 	if not data then
 		return
 	end
+	data.lastOnline = os.time()
 	retry(function()
 		store:SetAsync("u_" .. player.UserId, data)
+		return true
+	end)
+	retry(function()
+		board:SetAsync(tostring(player.UserId), math.floor(math.min(data.totalEarned or 0, 2 ^ 52)))
 		return true
 	end)
 end
@@ -78,7 +100,7 @@ local function onJoin(player: Player)
 		return
 	end
 	local data = (saved :: any) or deepCopy(Config.DefaultData)
-	reconcile(data)
+	reconcile(data, Config.DefaultData :: any)
 	if not player.Parent then
 		return
 	end
@@ -86,15 +108,17 @@ local function onJoin(player: Player)
 
 	local ls = Instance.new("Folder")
 	ls.Name = "leaderstats"
-	for _, key in Config.Leaderstats do
+	for _, entry in Config.Leaderstats do
 		local v = Instance.new("NumberValue")
-		v.Name = key
+		v.Name = entry.Name
 		v.Parent = ls
 	end
 	ls.Parent = player
 	syncLeaderstats(player, data)
 	Remotes.Event("DataChanged"):FireClient(player, data)
-	loadedSignal:Fire(player)
+	for _, fn in loadedCbs do
+		task.spawn(fn, player, data)
+	end
 end
 
 -- Returns the live data table (read-only use) or nil if not loaded.
@@ -105,12 +129,12 @@ end
 -- Yields until the player's data is loaded (or they leave).
 function DataService.WaitFor(player: Player): { [string]: any }?
 	while not cache[player] and player.Parent do
-		loadedSignal.Event:Wait()
+		task.wait(0.1)
 	end
 	return cache[player]
 end
 
--- All writes go through here so leaderstats + client stay in sync.
+-- All writes go through here so leaderstats + client stay in sync (client sync is batched).
 function DataService.Update(player: Player, fn: (data: { [string]: any }) -> ())
 	local data = cache[player]
 	if not data then
@@ -118,24 +142,69 @@ function DataService.Update(player: Player, fn: (data: { [string]: any }) -> ())
 	end
 	fn(data)
 	syncLeaderstats(player, data)
-	Remotes.Event("DataChanged"):FireClient(player, data)
+	dirty[player] = true
 end
 
-function DataService.AddCash(player: Player, amount: number)
+-- For per-second internal bookkeeping (jar fill, growth shifts) that the client
+-- doesn't need instantly; saved normally, synced on the next real Update.
+function DataService.UpdateQuiet(player: Player, fn: (data: { [string]: any }) -> ())
+	local data = cache[player]
+	if data then
+		fn(data)
+	end
+end
+
+function DataService.AddCash(player: Player, amount: number, earned: boolean?)
 	DataService.Update(player, function(d)
-		d.Cash += amount
+		d.cash += amount
+		if earned then
+			d.totalEarned += amount
+		end
 	end)
 end
 
 function DataService.TrySpend(player: Player, amount: number): boolean
 	local data = cache[player]
-	if not data or amount < 0 or data.Cash < amount then
+	if not data or amount < 0 or data.cash < amount then
 		return false
 	end
 	DataService.Update(player, function(d)
-		d.Cash -= amount
+		d.cash -= amount
 	end)
 	return true
+end
+
+function DataService.TrySpendHope(player: Player, amount: number): boolean
+	local data = cache[player]
+	if not data or amount < 0 or data.hope < amount then
+		return false
+	end
+	DataService.Update(player, function(d)
+		d.hope -= amount
+	end)
+	return true
+end
+
+function DataService.NewId(player: Player): number
+	local data = cache[player]
+	assert(data, "data not loaded")
+	local id = data.nextId
+	data.nextId += 1
+	return id
+end
+
+-- Top N of Total Earned: { {userId, value} }. Yields; call from a loop.
+function DataService.GetTopEarned(n: number): { { userId: number, value: number } }
+	local out = {}
+	local ok, pages = pcall(function()
+		return board:GetSortedAsync(false, n)
+	end)
+	if ok and pages then
+		for _, entry in (pages :: any):GetCurrentPage() do
+			table.insert(out, { userId = tonumber(entry.key) or 0, value = entry.value })
+		end
+	end
+	return out
 end
 
 function DataService.Init()
@@ -144,8 +213,17 @@ function DataService.Init()
 		task.spawn(onJoin, p)
 	end
 	Players.PlayerRemoving:Connect(function(p)
+		if cache[p] then
+			for _, fn in leavingCbs do
+				local ok, err = pcall(fn, p, cache[p])
+				if not ok then
+					warn("[DataService] leaving callback failed:", err)
+				end
+			end
+		end
 		save(p)
 		cache[p] = nil
+		dirty[p] = nil
 	end)
 	game:BindToClose(function()
 		for _, p in Players:GetPlayers() do
@@ -156,6 +234,18 @@ function DataService.Init()
 end
 
 function DataService.Start()
+	task.spawn(function()
+		while true do
+			task.wait(Config.DataSyncInterval)
+			for p in dirty do
+				dirty[p] = nil
+				local d = cache[p]
+				if d and p.Parent then
+					Remotes.Event("DataChanged"):FireClient(p, d)
+				end
+			end
+		end
+	end)
 	while true do
 		task.wait(Config.AutosaveSeconds)
 		for _, p in Players:GetPlayers() do

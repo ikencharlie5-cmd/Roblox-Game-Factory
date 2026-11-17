@@ -1,16 +1,44 @@
 --!strict
 -- Declare every remote here. Server creates them; client waits for them.
+-- Args + return values are documented in notes/gameplay.md.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+-- RemoteEvents (server -> client unless noted)
 local EVENTS = {
-	"DataChanged", -- server -> client: (data)
-	"Notify", -- server -> client: (text)
-	"ClaimDaily", -- client -> server: ()
-	"PlaySound", -- server -> client: (soundName)
+	"DataChanged", -- (data)
+	"StockChanged", -- (stock)
+	"WeatherChanged", -- (info)
+	"Announce", -- (text, rarity?)
+	"Notify", -- (text, kind?)
+	"OfflineEarnings", -- (amount, seconds)
+	"PlaySound", -- (soundName, extra?)
+	"OpenScreen", -- (screenName)
 }
 
-local FUNCTIONS: { string } = {}
+-- RemoteFunctions (client -> server). All return (ok: boolean, resultOrError: any)
+local FUNCTIONS: { string } = {
+	"GetStock",
+	"BuySeed",
+	"PlaceItem",
+	"MoveItem",
+	"RemoveItem",
+	"SellCreature",
+	"Water",
+	"BuyPad",
+	"SetPadBiome",
+	"UnlockBiome",
+	"BuyDecor",
+	"BuyUpgrade",
+	"Release",
+	"ClaimDaily",
+	"ClaimQuest",
+	"UseHopeItem",
+	"BuyHopeItem",
+	"VisitPlot",
+	"LikeZoo",
+	"GoHome",
+}
 
 local Remotes = {}
 
