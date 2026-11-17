@@ -2,9 +2,9 @@
   "name": "\ud83c\udf31 Sprout Zoo",
   "slug": "plant-zoo",
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
-  "stage": "manager",
+  "stage": "checker",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-17T07:41:58Z",
+  "updated": "2026-11-17T07:42:57Z",
   "branches": {
     "gameplay": "blocked",
     "graphics": "done",
@@ -95,6 +95,24 @@
       "from": "system",
       "to": "all",
       "text": "Stage \u2192 manager"
+    },
+    {
+      "time": "2026-11-17T07:42:41Z",
+      "from": "manager",
+      "to": "ideas",
+      "text": "Decided 16 items: all keep-as-built except [audio] map 'Fungus Cave'/'Frost Garden' ambience keys. Weather names already match (audio strips spaces)."
+    },
+    {
+      "time": "2026-11-17T07:42:57Z",
+      "from": "ideas",
+      "to": "audio",
+      "text": "Manager decision applied: Fungus Cave/Frost Garden mapped to ambience"
+    },
+    {
+      "time": "2026-11-17T07:42:57Z",
+      "from": "system",
+      "to": "all",
+      "text": "Stage \u2192 checker"
     }
   ]
 }

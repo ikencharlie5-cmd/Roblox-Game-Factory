@@ -104,6 +104,8 @@ local BiomeAmbience: { [string]: string } = {
 	Canopy = "AmbCanopy",
 	Fungus = "AmbFungus",
 	Frost = "AmbFrost",
+	["Fungus Cave"] = "AmbFungus",
+	["Frost Garden"] = "AmbFrost",
 }
 
 local WeatherStart: { [string]: string } = {
