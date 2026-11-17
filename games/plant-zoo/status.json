@@ -2,9 +2,9 @@
   "name": "Plant Zoo (working title)",
   "slug": "plant-zoo",
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
-  "stage": "research",
+  "stage": "ideas",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-17T07:03:59Z",
+  "updated": "2026-11-17T07:11:47Z",
   "branches": {
     "gameplay": "waiting",
     "graphics": "waiting",
@@ -29,6 +29,18 @@
       "from": "rnd",
       "to": "ideas",
       "text": "Plant Zoo 2 not findable online; use proven loop (restock seeds > grow > $/s > mutations/weather > expand > rebirth), twist: seeds grow into creatures, no stealing"
+    },
+    {
+      "time": "2026-11-17T07:11:22Z",
+      "from": "rnd",
+      "to": "ideas",
+      "text": "Planet Zoo 2 review done: copy its loop (biome needs->Thriving x1.5, cross-pollination genes, Release to the Wild = rebirth w/ permanent bonus + World Reserve, photo quests, Seeds of Hope market) but cut its friction (grid build, 1-tap fixes) - menus/micromanagement/bugs made Steam Mixed 63%"
+    },
+    {
+      "time": "2026-11-17T07:11:47Z",
+      "from": "system",
+      "to": "all",
+      "text": "Stage \u2192 ideas"
     }
   ]
 }
