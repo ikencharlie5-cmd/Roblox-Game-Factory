@@ -55,14 +55,8 @@ local function zoneVolume(parent: Instance, z: Layout.ZoneDef): Part
 	local attrs = { Zone = z.Id, ZoneKey = z.Key, DisplayName = look.DisplayName, Biome = look.Biome, ZoneIndex = z.Index }
 	Kit.Tag(v, "WorldZone", attrs)
 	v:AddTag("ZoneArea")
-	-- Audio reads Zone = Theme key ("MeadowEdge"...), so it gets its own twin volume.
-	local a = v:Clone()
-	a.Name = z.Key .. "Audio"
-	a:RemoveTag("WorldZone")
-	a:RemoveTag("ZoneArea")
-	a:SetAttribute("Zone", z.Key)
-	a:AddTag("AudioZone")
-	a.Parent = parent
+	-- Audio reads the same volume: Zone = Config id (Meadow/Hollow/Glade).
+	v:AddTag("AudioZone")
 	return v
 end
 

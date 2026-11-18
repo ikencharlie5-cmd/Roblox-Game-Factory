@@ -18,6 +18,11 @@ local EVENTS = {
 	"CaptureState", -- (wildId, state) state: {trust, claimedBy, attemptsLeft} or nil
 }
 
+-- client -> server RemoteEvents (fire-and-forget, validated + rate-limited)
+local CLIENT_EVENTS = {
+	"SaveSettings", -- ({music, sfx, musicOn, sfxOn}) saved to data.settings, sets player attrs
+}
+
 -- client -> server (RemoteFunction, all validated + rate-limited)
 local FUNCTIONS = {
 	"PlaceItem", -- (itemId, cellX, cellZ, rot)
@@ -59,6 +64,11 @@ if RunService:IsServer() then
 	folder = Instance.new("Folder")
 	folder.Name = "Remotes"
 	for _, name in EVENTS do
+		local r = Instance.new("RemoteEvent")
+		r.Name = name
+		r.Parent = folder
+	end
+	for _, name in CLIENT_EVENTS do
 		local r = Instance.new("RemoteEvent")
 		r.Name = name
 		r.Parent = folder

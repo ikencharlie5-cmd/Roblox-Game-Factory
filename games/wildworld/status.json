@@ -2,11 +2,11 @@
   "name": "Wildworld",
   "slug": "wildworld",
   "idea": "Multiplayer wildlife park + creature collection/breeding sim (Planet Zoo x Slime Rancher x Pokemon inspired, all original). Explore, capture original creatures, build habitats, breed for genetics + rare mutations, earn from visitors, visit/trade securely.",
-  "stage": "manager",
+  "stage": "branches",
   "created": "2026-11-18T03:02:43Z",
-  "updated": "2026-11-18T04:52:09Z",
+  "updated": "2026-11-18T04:54:55Z",
   "branches": {
-    "gameplay": "blocked",
+    "gameplay": "done",
     "graphics": "done",
     "ui": "done",
     "audio": "done",
@@ -126,6 +126,30 @@
       "from": "manager",
       "to": "ideas",
       "text": "Decided 19 open items: zone ids Meadow/Hollow/Glade(+Park); wild creatures tagged Creature; settings saved via SaveSettings; Capture Moment + plot Tips signals from gameplay; client-only egg burst; Graphics owns CreatureBuilder; LikeBonusCap 10; favourites skipped v1"
+    },
+    {
+      "time": "2026-11-18T04:52:33Z",
+      "from": "system",
+      "to": "all",
+      "text": "Stage \u2192 branches"
+    },
+    {
+      "time": "2026-11-18T04:53:11Z",
+      "from": "ui",
+      "to": "all",
+      "text": "Round-1 decisions applied: zone names from Config.Zones, DailyDay semantics, no favourites"
+    },
+    {
+      "time": "2026-11-18T04:53:26Z",
+      "from": "graphics",
+      "to": "all",
+      "text": "round-1 decisions applied: AudioZone ids unified, SandPatch prop id fixed, waterfall TODO"
+    },
+    {
+      "time": "2026-11-18T04:54:55Z",
+      "from": "gameplay",
+      "to": "all",
+      "text": "Round-1 fixes in: wild Creature tag, SaveSettings, capture Moments, plot Tips, Goal range slack, workspace Weather, LikeBonusCap 10"
     }
   ]
 }

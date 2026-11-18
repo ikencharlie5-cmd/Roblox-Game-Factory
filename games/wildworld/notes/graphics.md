@@ -27,7 +27,7 @@ Everything is built in code by `WorldService.Init()` and works straight from `ro
 | `PlotSpawn` | invisible part inside each gate, facing in | `PlotIndex` |
 | `HubSpawn` | SpawnLocation | – |
 | `WorldZone` + `ZoneArea` | invisible zone volume (400 x 120 x depth) | `Zone` = gameplay Id (`Meadow`/`Hollow`/`Glade`), `ZoneKey` (`MeadowEdge`…), `DisplayName`, `Biome`, `ZoneIndex` |
-| `AudioZone` | twin volumes for the forest zones + hub + each plot | `Zone` = `MeadowEdge`/`MossyHollow`/`WaterfallGlade`/`Hub`/`Park` (+`PlotIndex`) |
+| `AudioZone` | forest zone volumes (same parts as `WorldZone`) + hub + each plot | `Zone` = `Meadow`/`Hollow`/`Glade`/`Hub`/`Park` (+`PlotIndex`) |
 | `ZoneGate` | invisible `GateAnchor` part at the ground on each gate line (Meadow at the ForestGate, Hollow at z -640, Glade at z -900) | `Zone` (Id), `ZoneKey`, `ZoneIndex`, `RequiredLevel`, `Cost` (read from Config.Zones by Id). The arch also has a walk-through ForceField "Barrier" veil (visual only). |
 | `ForestGate` | park → forest arch model | `Zone` = `Meadow` |
 | `WildSpawn` | invisible 2x1x2 part at ground (16 Meadow, 16 Hollow, 14 Glade; never on the road or in the lake) | `Zone` (Id), `ZoneKey`, `ZoneIndex` |

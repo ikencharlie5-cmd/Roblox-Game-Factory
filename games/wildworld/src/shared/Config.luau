@@ -27,6 +27,7 @@ Config.Leaderstats = {
 
 -- Remotes: seconds between calls per player per remote (default RemoteCooldown).
 Config.RemoteCooldown = 0.2
+Config.SettingsSaveCooldown = 0.5 -- SaveSettings RemoteEvent (client debounces 1 s)
 Config.RemoteLimits = {
 	PlaceItem = 0.1,
 	RotateItem = 0.1,
@@ -64,6 +65,7 @@ Config.Needs = {
 	HappyLowThreshold = 30, -- below: income x0.5
 	OfflineFloor = 20,
 	InteractRange = 30, -- studs from creature to feed/pet
+	GoalSlack = 6, -- extra studs when range checks measure to the creature's Goal (feed/pet/bait/capture)
 	Weights = { Hunger = 0.3, Habitat = 0.4, Social = 0.15, Enrichment = 0.15 },
 }
 Config.Growth = { BabySeconds = 600, FeedingsToAdult = 3, BabyIncomeMult = 0.5, BabyScale = 0.6 }
@@ -153,6 +155,7 @@ Config.Capture = {
 	TrustDecayPerSecond = 0.5,
 	ClaimSeconds = 25, -- baiting player owns the wild for this long
 	CaptureRange = 30, -- player to wild
+	CapturedMomentSeconds = 0.9, -- caught wild stays visible for the "Captured" moment
 	Green = { Common = 0.35, Uncommon = 0.25, Rare = 0.2, Epic = 0.15, Legendary = 0.12 },
 	CalmNetBonus = 0.05,
 	TrustBonusMax = 0.1, -- extra green at 100 trust
@@ -209,7 +212,7 @@ Config.Economy = {
 		{ Name = "Legendary", Min = 90, Bonus = 0.5 },
 	},
 	DecorBonusMax = 10,
-	LikeBonusCap = 20,
+	LikeBonusCap = 10,
 }
 Config.XP = { Hatch = 20, Catch = 30, Breed = 25, Place = 2, Quest = 50, Base = 100, Exp = 1.4 }
 Config.RP = { Discovery = 25, DiscoveryCoins = 100, Breed = 2, Mutation = 10, JournalStep = 5 }

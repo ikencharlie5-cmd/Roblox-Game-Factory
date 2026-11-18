@@ -165,7 +165,9 @@ local function spawnOne()
 	m:SetAttribute("Goal", start)
 	m:SetAttribute("State", "Idle")
 	m:SetAttribute("Speed", 0)
+	m:SetAttribute("Stage", "Adult")
 	CollectionService:AddTag(m, "WildCreature")
+	CollectionService:AddTag(m, "Creature")
 	m.Parent = folder
 	local agent = {
 		model = m,
@@ -217,15 +219,24 @@ function WildService.Position(w: Wild): Vector3
 	return CreatureAI.Position(w.agent)
 end
 
--- Removes a wild (captured) and schedules a respawn.
-function WildService.Despawn(id: string)
+-- Removes a wild (captured) and schedules a respawn. `delay` keeps the model visible (not interactable)
+-- for that many seconds so the client can play the "Captured" moment.
+function WildService.Despawn(id: string, delay: number?)
 	local w = wilds[id]
 	if not w then
 		return
 	end
 	wilds[id] = nil
 	CreatureAI.Remove(w.model)
-	w.model:Destroy()
+	local model = w.model
+	if delay and delay > 0 then
+		model:SetAttribute("Wild", false)
+		task.delay(delay, function()
+			model:Destroy()
+		end)
+	else
+		model:Destroy()
+	end
 	pendingRespawns += 1
 	task.delay(Config.Capture.RespawnSeconds, function()
 		pendingRespawns -= 1

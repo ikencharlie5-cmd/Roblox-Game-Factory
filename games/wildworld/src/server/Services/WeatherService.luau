@@ -12,6 +12,8 @@ local WeatherService = {}
 
 -- Graphics' sky/atmosphere tint (optional; names without spaces: "Rain", "RainbowShower", "Sunny").
 local function worldWeather(name: string?)
+	-- workspace "Weather" (no spaces: "Clear" | "Sunny" | "Rain" | "RainbowShower") for Audio/Animation
+	workspace:SetAttribute("Weather", if name then (string.gsub(name, " ", "")) else "Clear")
 	local ws = script.Parent:FindFirstChild("WorldService")
 	if ws then
 		local ok, mod = pcall(require, ws)
@@ -52,6 +54,7 @@ function WeatherService.Init()
 	local s = Guard.State()
 	s:SetAttribute("Weather", "Clear")
 	s:SetAttribute("WeatherEndsAt", 0)
+	workspace:SetAttribute("Weather", "Clear")
 end
 
 function WeatherService.Start()

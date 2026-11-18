@@ -44,6 +44,11 @@ function EconomyService.VisitorTip(player: Player, amount: number)
 	if not pos and plot then
 		pos = PlotService.ToWorld(plot, 0, 0).Position
 	end
+	local plotInst = if plot then PlotService.PlotPart(plot) else nil
+	if plotInst then -- client Visitors coin fountain: TipAmount first, then bump Tips
+		plotInst:SetAttribute("TipAmount", amount)
+		plotInst:SetAttribute("Tips", ((plotInst:GetAttribute("Tips") :: number?) or 0) + 1)
+	end
 	Remotes.Event("VisitorTip"):FireClient(player, amount, pos)
 	Signals.Fire("Earn", player, amount)
 end

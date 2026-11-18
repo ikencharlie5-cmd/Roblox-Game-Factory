@@ -22,6 +22,12 @@ local CaptureService = {}
 local rng = Random.new()
 local C = Config.Capture
 
+-- Animation hook: "Name:<n>" with a per-creature counter so the attribute always changes.
+local function moment(w: any, name: string)
+	w.momentN = (w.momentN or 0) + 1
+	w.model:SetAttribute("Moment", name .. ":" .. w.momentN)
+end
+
 local function claimedByOther(w: any, player: Player): boolean
 	return w.claimedBy ~= nil and w.claimedBy ~= player and os.clock() < w.claimUntil and w.claimedBy.Parent ~= nil
 end
@@ -66,7 +72,7 @@ local function throwBait(player: Player, data: any, pos: any, baitId: any)
 	-- nearest unclaimed wild in an unlocked zone
 	local best, bestD = nil, C.BaitAttract
 	for _, w in WildService.All() do
-		local d = (WildService.Position(w) - pos).Magnitude
+		local d = CreatureAI.Distance(w.agent, pos)
 		if d <= bestD and not claimedByOther(w, player) and WildService.ZoneUnlocked(data, w.zone) and not w.window then
 			best, bestD = w, d
 		end
@@ -110,6 +116,7 @@ local function miss(player: Player, w: any)
 	else
 		Guard.Toast(player, "Missed! " .. w.attempts .. " tries left", "error")
 	end
+	moment(w, "CaptureFail")
 	Guard.Sound(player, "CaptureFail", { position = pos })
 	sendState(player, w)
 end
@@ -133,7 +140,7 @@ local function captureStart(player: Player, data: any, wildId: any)
 		end
 	end
 	local root = Guard.RootPos(player)
-	if not root or (root - WildService.Position(w)).Magnitude > C.CaptureRange then
+	if not root or CreatureAI.Distance(w.agent, root) > C.CaptureRange then
 		return Guard.Fail(player, "Get closer")
 	end
 	if w.trust < C.TrustNeeded then
@@ -188,7 +195,8 @@ local function captureRelease(player: Player, data: any, wildId: any)
 		source = "wild",
 		seed = w.seed,
 	})
-	WildService.Despawn(w.id)
+	moment(w, "Captured")
+	WildService.Despawn(w.id, C.CapturedMomentSeconds)
 	DataService.Update(player, function(d)
 		d.pity[w.species] = 0
 		d.stats.caught += 1

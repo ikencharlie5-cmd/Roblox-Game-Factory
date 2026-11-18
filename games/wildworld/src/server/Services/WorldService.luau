@@ -174,7 +174,7 @@ local function inside(part: BasePart, pos: Vector3): boolean
 	return math.abs(lp.X) <= h.X and math.abs(lp.Y) <= h.Y and math.abs(lp.Z) <= h.Z
 end
 
--- "Hub" | "Park" (+ plot index) | "MeadowEdge" | "MossyHollow" | "WaterfallGlade" | "Wild" (anywhere else).
+-- "Hub" | "Park" (+ plot index) | "Meadow" | "Hollow" | "Glade" | "Wild" (anywhere else).
 function WorldService.ZoneAt(pos: Vector3): (string, number?)
 	for _, v in CollectionService:GetTagged("WorldZone") do
 		if v:IsA("BasePart") and inside(v, pos) then

@@ -63,6 +63,6 @@ arrow), plot = tag `Plot` part with `OwnerId`, forest arch tag `ForestGate`. Cre
 `Shared/CreatureBuilder.Build(species, {genes, mutations, stage})`.
 
 ## Assumptions
-- `DailyDay` = the day number the next claim gives (tile shows "Claimed" when `DailyReady` is false).
+- `DailyDay` = when `DailyReady` true, the day the claim gives; when false, the day already claimed today (that tile shows "Claimed"; next = DailyDay % 7 + 1). HUD zone chip shows `Config.Zones[].Name` looked up by `Zone` Id (Park -> "My Park", Hub -> "Plaza").
 - Tutorial step 3 highlights `TreeOak` in the build tray.
-- Favourite star on cards skipped (no remote). Move action skipped (Remove + Place covers it; MoveItem exists).
+- No favourites in v1 (Manager decision). Move action skipped (Remove + Place covers it; MoveItem exists).

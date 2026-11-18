@@ -2,7 +2,7 @@
 -- Zone music (with 20-60 s silences between tracks), ambience beds + random 3D one-shots, rain layer,
 -- waterfall loops and per-zone reverb. Owned by Audio.
 -- World contract (all optional, see notes/audio.md):
---   LocalPlayer Attribute `Zone` = "Hub" | "Park" | "MeadowEdge" | "MossyHollow" | "WaterfallGlade"
+--   LocalPlayer Attribute `Zone` = "Park" (default) | "Meadow" | "Hollow" | "Glade" | "Hub" (set by WildService)
 --   or parts tagged `AudioZone` with Attribute `Zone` (character inside the part's box).
 --   Night: workspace Attribute `IsNight` (bool) or Lighting.ClockTime < 6 / >= 18.
 --   Rain: workspace Attribute `Weather` == "Rain" (also "Storm"). Tag `WaterfallSound` = 3D waterfall loop.

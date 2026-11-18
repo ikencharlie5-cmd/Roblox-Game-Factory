@@ -15,3 +15,4 @@ TBD
 - [ ] Create Game Passes / Dev Products and paste their IDs into `src/shared/Config.luau`
 - [ ] Audio: in Studio Toolbox > Audio, fill every `Id = 0` in `src/shared/Sounds.luau` (creature voices, egg crack, feed munch, mutation riser, night/waterfall/forest one-shots). Search terms in `notes/audio.md`. Missing ones are just silent.
 - [ ] Audio: listen to and keep or swap the "verify" tracks (Music_Forest, Music_Glade, Music_Menu, LevelUp) and check `rbxasset://sounds/swoosh.wav` plays.
+- [ ] (Optional) Waterfall: upload a vertical water-streak texture and note its id here; Graphics then adds a scrolling Beam to `src/server/World/Waterfall.luau` (part sheets + particles work fine without it).

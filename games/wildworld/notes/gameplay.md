@@ -18,7 +18,7 @@ server/Services: `DataService` (only DataStore user, session lock), `DataSchema`
 `CreatureService` + `CreatureCare` + `CreatureAI` (brains), `Models` (calls Graphics builders), `GeneticsService`
 (breed/eggs/hatch/scan/starter egg), `Journal`, `WildService` (spawns + zone gating), `CaptureService`,
 `EconomyService` (tips, offline, XP/levels, upgrades, zones), `QuestService` (tutorial + dailies), `DailyRewardService`,
-`ShopService`, `WeatherService`, `VisitService`, `MonetizationService`.
+`ShopService`, `WeatherService`, `VisitService`, `MonetizationService`, `SettingsService` (audio settings).
 
 ## Remotes
 Every client->server remote is a **RemoteFunction** returning `(ok: boolean, result)`. On failure `result` is a message
@@ -70,6 +70,13 @@ RotateItem / MoveItem / RemoveItem 0.1 s, ThrowBait / CaptureStart / CaptureRele
 | ShopChanged | ({restockId, nextRestockAt (os.time), slots = [{slot, kind "bait"\|"decor", ref, name, price, stock, left}]}) |
 | CaptureState | (wildId, {trust, attemptsLeft, claimedBy (userId), needed}) |
 
+| RemoteEvent (client -> server) | Args |
+|---|---|
+| SaveSettings | ({music 0..1, sfx 0..1, musicOn bool, sfxOn bool}) -> clamped, bad fields ignored, max 1 per 0.5 s (extra calls dropped), saved to `data.settings`; server re-sets the 4 player attributes |
+
+**Range checks** (Feed/Pet/ThrowBait attract/CaptureStart) use the nearer of the creature's server position and its
+`Goal`, with `Config.Needs.GoalSlack` (6) studs of slack on the Goal distance.
+
 **Reveal kinds:** `Hatch` {uid, species, mutations, label, rarity, firstDiscovery, starter, padId} ·
 `Capture` (same fields) · `Discovery` {species, rarity, blurb, rp, coins} (first time a species is owned; fires
 right after Hatch/Capture) · `LevelUp` {level, unlocks[]} · `Tier` {tier, rating, bonus} · `Offline` {coins, seconds,
@@ -101,20 +108,25 @@ Incubators = `Formulas.Incubators(upgrades.Incubators, Pass_ExtraIncubator)`.
 - **Player:** `PlotIndex`, `DataLoaded`, `Level`, `ParkRating` (0..100), `ParkTier` ("Poor".."Legendary"), `ParkTierIndex`,
   `IncomePerMin`, `TutorialStep` (1..5, 6 = done), `TutorialText`, `DailyReady` (bool), `DailyDay` (1..7),
   `Zone` ("Park" or "Meadow"/"Hollow"/"Glade"), `Pass_VIP` / `Pass_ExtraIncubator` / `Pass_AutoFeeder` /
-  `Pass_CrystalGrotto`, `VIP` (bool — UI: gold name + chat tag).
+  `Pass_CrystalGrotto`, `VIP` (bool — UI: gold name + chat tag), `MusicVolume` / `SFXVolume` (0..1) /
+  `MusicOn` / `SFXOn` (bool) from `data.settings` on load.
 - **Park creature model** (workspace.Creatures, tag `Creature`): `Uid, Species, OwnerId, Personality, Stage, Mutations`
   ("Golden,Crystal"), `MutationLabel, Rarity, AltColor, Spots, Glow, Hue, Wild=false, Hunger, Happy, Nickname, PadUid, Bow,
   State, Goal (Vector3), Speed, LastFed, LastPet` (GetServerTimeNow stamps for munch/heart moments).
   States: Idle, Wander, Eat, Drink, Sleep, Play, Socialize, ReactToPlayer. Server never moves parts after spawn;
   clients move the model toward `Goal` at `Speed`.
-- **Wild creature model** (workspace.WildCreatures, tag `WildCreature`): `Wild=true, WildId, Species, Zone, Mutations,
-  MutationLabel, Rarity, Trust, ClaimedBy (userId), State (also "Flee", "Calm" while the ring is up), Goal, Speed`.
+- **Wild creature model** (workspace.WildCreatures, tags `WildCreature` + `Creature`): `Wild=true, WildId, Species, Zone,
+  Mutations, MutationLabel, Rarity, Stage="Adult", Trust, ClaimedBy (userId), State (also "Flee", "Calm" while the ring
+  is up), Goal, Speed, Moment` ("CaptureFail:<n>" on a miss; "Captured:<n>" on a catch — the model then stays 0.9 s
+  (`Config.Capture.CapturedMomentSeconds`) with `Wild=false` and is no longer interactable before it's destroyed).
 - **Placed item models** (workspace.ParkObjects.Plot_<i>, tag `ParkItem`): `ItemUid, ItemId, Kind, OwnerId, PlotIndex`.
   Pads also tag `HabitatPad` + `PadSize, Capacity, Rating, Stars, Count`.
-- **Plot base part** (Graphics' `Plot` tag): gameplay sets `OwnerId, OwnerName, LandSize, ParkRating, ParkTier`.
+- **Plot base part** (Graphics' `Plot` tag): gameplay sets `OwnerId, OwnerName, LandSize, ParkRating, ParkTier`, and on
+  every visitor payout (incl. the first-60s +25) `TipAmount` (number) then `Tips` (+1 counter -> client coin fountain).
 - **Starter egg** (in the plot folder): `EggId, OwnerId, Starter=true` + ProximityPrompt "Hatch!".
 - **ReplicatedStorage.GameState:** `Weather` ("Clear" | "Sunny" | "Rain" | "Rainbow Shower"), `WeatherEndsAt`,
   `NextWeatherAt`, `ShopRestockAt` (os.time).
+- **workspace:** `Weather` ("Clear" | "Sunny" | "Rain" | "RainbowShower" — no spaces) for Audio/Animation.
 
 ## First 60 seconds (server side)
 New data = Small Habitat Pad + Food Bowl in the plot centre, 5 Berry bait. On first load a starter egg (random
@@ -131,8 +143,7 @@ API access plays on default data and doesn't save (warns once).
 
 ## Needs from other branches
 - **Graphics:** gameplay uses `Shared.Theme.Props.Build(itemId, seed)` for items and `Shared.CreatureBuilder.Build/BuildEgg`.
-  Missing Props (fallback blocks now): `BigRock, VipFountain, CrystalCluster, GrottoArch, GlowShroom, StarterArch, FieldTent,
-  JournalSign, MossStatue, RainbowFlowers, StoneTotem`. Footprints must match `Items.luau` (aligned: Burrow 2x2,
+  Footprints must match `Items.luau` (aligned: Burrow 2x2,
   SandPatch 2x2, Sunspot 2x2, WaterTrough 1x1). Gameplay calls `WorldService.SetWeather(name)` and
   `WorldService.SetTopParks(rows)`. Locked-zone players are teleported to `ZoneGate` CFrame * (0, 3, 6) (+Z must be
   outside the zone).

@@ -67,7 +67,10 @@ end
 function DailyWindow.Next(): (number, boolean, number)
 	local player = Players.LocalPlayer :: Player
 	local can = player:GetAttribute("DailyReady") == true
-	local day = tonumber(player:GetAttribute("DailyDay")) or ((tonumber(State.Tbl("daily").streak) or 0) % 7 + 1)
+	-- DailyDay: if ready, the day the claim gives; else the day already claimed today (next = DailyDay % 7 + 1).
+	local streak = tonumber(State.Tbl("daily").streak) or 0
+	local day = tonumber(player:GetAttribute("DailyDay"))
+		or (if can then streak % 7 + 1 else math.max(streak - 1, 0) % 7 + 1)
 	local left = 86400 - (State.Now() % 86400)
 	return day, can, left
 end

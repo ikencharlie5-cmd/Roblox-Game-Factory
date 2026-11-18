@@ -54,6 +54,13 @@ function CreatureAI.Position(a: Agent, now: number?): Vector3
 	return a.from:Lerp(a.goal, math.clamp(alpha, 0, 1))
 end
 
+-- Distance for range checks: nearest of the server position and the replicated Goal (- GoalSlack),
+-- so clicks on the visible (client-tweened) creature never fail as "too far".
+function CreatureAI.Distance(a: Agent, pos: Vector3): number
+	local d = math.min((CreatureAI.Position(a) - pos).Magnitude, (a.goal - pos).Magnitude - Config.Needs.GoalSlack)
+	return math.max(d, 0)
+end
+
 local rayParams = RaycastParams.new()
 rayParams.FilterType = Enum.RaycastFilterType.Exclude
 

@@ -45,8 +45,15 @@ end
 
 function WorldQuery.Creatures(): { Instance }
 	local out = gather("Creature", { "Creatures" })
+	local seen: { [Instance]: boolean } = {}
+	for _, c in out do
+		seen[c] = true
+	end
 	for _, w in gather("WildCreature", { "WildCreatures" }) do
-		table.insert(out, w)
+		if not seen[w] then
+			seen[w] = true
+			table.insert(out, w)
+		end
 	end
 	return out
 end

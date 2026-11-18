@@ -77,7 +77,7 @@ local ROWS: { { any } } = {
 	{ "Burrow", "Cozy Burrow", "Nature", 1, 1, { "burrow" }, "Shelter", function(m)
 		Decor.SmallBurrow(m, O)
 	end },
-	{ "Sand", "Sand Patch", "Nature", 2, 2, { "sand" }, nil, function(m, rng)
+	{ "SandPatch", "Sand Patch", "Nature", 2, 2, { "sand" }, nil, function(m, rng)
 		Structures.SandPatch(m, O, rng)
 	end },
 	{ "Sunspot", "Sun Stone", "Nature", 1, 1, { "sunspot" }, nil, function(m)

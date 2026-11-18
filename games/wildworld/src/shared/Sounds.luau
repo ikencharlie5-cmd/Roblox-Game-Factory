@@ -141,7 +141,7 @@ local Aliases: { [string]: string } = {
 	DailyReward = "DailyClaim",
 }
 
--- Zone -> music + ambience bed + one-shots {name, minGap, maxGap} + reverb. Night swaps park/hub.
+-- Zone (Config.Zones Id / "Park" default / "Hub") -> music + ambience bed + one-shots {name, minGap, maxGap} + reverb. Night swaps park/hub.
 export type ZoneAudio = {
 	Music: string,
 	NightMusic: string?,
@@ -178,14 +178,14 @@ local Zones: { [string]: ZoneAudio } = {
 		NightOneShots = nightShots,
 		Reverb = Enum.ReverbType.Plain,
 	},
-	MeadowEdge = { Music = "Music_Forest", Bed = "Amb_Forest_Bed", OneShots = forestShots, Reverb = Enum.ReverbType.Forest },
-	MossyHollow = {
+	Meadow = { Music = "Music_Forest", Bed = "Amb_Forest_Bed", OneShots = forestShots, Reverb = Enum.ReverbType.Forest },
+	Hollow = {
 		Music = "Music_Forest",
 		Bed = "Amb_Hollow_Bed",
 		OneShots = forestShots,
 		Reverb = Enum.ReverbType.Forest,
 	},
-	WaterfallGlade = {
+	Glade = {
 		Music = "Music_Glade",
 		Bed = "Amb_Forest_Bed",
 		OneShots = { { "Amb_Bird", 6, 15 }, { "Amb_Splash", 15, 40 }, { "Amb_Rustle", 10, 25 } },

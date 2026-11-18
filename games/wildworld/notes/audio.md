@@ -12,9 +12,10 @@ ambience, reverb), `CreatureVoices.luau` (idle/happy/eat calls). `Id = 0` = sile
 - Server: `Remotes.Event("PlaySound"):FireClient(plr, "Name", opts?)`; opts = number pitch, Instance/Vector3
   (3D), or `{ Pitch, Volume, At }`. Reveal: `FireClient(plr, "Reveal", { Rarity = "Rare", Mutations = {"Crystal"} })`.
 - Music override: `require(Audio.MusicDirector).SetOverride("Music_Breeding")` while Breeding Center is open,
-  `SetOverride(nil)` on close. `MusicDirector.SetZone("MossyHollow")` sets the player's `Zone` attribute.
+  `SetOverride(nil)` on close. `MusicDirector.SetZone("Hollow")` sets the player's `Zone` attribute.
 - Settings (UI): `SetMusicVolume(0..1)`, `SetSFXVolume(0..1)`, `SetMusicOn(bool)`, `SetSFXOn(bool)` -> LocalPlayer
   Attributes `MusicVolume`, `SFXVolume`, `MusicOn`, `SFXOn`. SFX volume covers UI, SFX, stingers, creatures, ambience.
+  DataService sets the 4 Attributes on load; each Set* call fires `SaveSettings({music, sfx, musicOn, sfxOn})` (1 s debounce).
 - Old short names still work: Click, Open, Close, Error, Cash, Notify, Place, Rotate, Remove, Hatch, DailyReward.
 
 ## Mixing rules (built)
@@ -64,14 +65,14 @@ ambience, reverb), `CreatureVoices.luau` (idle/happy/eat calls). `Id = 0` = sile
 |---|---|---|---|---|
 | Hub | Music_Hub 1845197284 "Village Day" / Music_Park_Night 1845208657 "Sleepy Village" | Amb_Park_Bed / Amb_Night_Bed (0) | birds, crowd / owl, frog | Plain |
 | Park | Music_Park_Day 1839620427 "Spring Is Coming Ukulele" / Music_Park_Night | same | same | Plain |
-| MeadowEdge | Music_Forest 9041797490 "Hopeful Horizons" (verify) | Amb_Forest_Bed | birds, rustle, gust, woodpecker | Forest |
-| MossyHollow | Music_Forest | Amb_Hollow_Bed (forest bed, pitch 0.9) | same | Forest |
-| WaterfallGlade | Music_Glade 1844232632 "Rippling River 60" (verify) | Amb_Forest_Bed + Amb_Waterfall (3D) | birds, splash, rustle | Forest |
+| Meadow | Music_Forest 9041797490 "Hopeful Horizons" (verify) | Amb_Forest_Bed | birds, rustle, gust, woodpecker | Forest |
+| Hollow | Music_Forest | Amb_Hollow_Bed (forest bed, pitch 0.9) | same | Forest |
+| Glade | Music_Glade 1844232632 "Rippling River 60" (verify) | Amb_Forest_Bed + Amb_Waterfall (3D) | birds, splash, rustle | Forest |
 Also: Music_Menu 9041800311 "Dandelion Wish" (verify; use via SetOverride on loading), Music_Breeding (0),
 Amb_Rain_Bed 1516791621 layered when workspace `Weather` = "Rain"/"Storm".
 
 ## World contract I read (all optional; defaults to Park)
-- LocalPlayer Attribute `Zone` = Hub | Park | MeadowEdge | MossyHollow | WaterfallGlade, or parts tagged
+- LocalPlayer Attribute `Zone` = Hub | Park | Meadow | Hollow | Glade, or parts tagged
   `AudioZone` with Attribute `Zone`.
 - Night: workspace Attribute `IsNight` (bool), else Lighting.ClockTime < 6 or >= 18.
 - workspace Attribute `Weather`. Tag `WaterfallSound` on the waterfall part (3D loop).

@@ -42,7 +42,7 @@ DataSchema.Default = {
 	receipts = {}, -- recent PurchaseIds (dupe-proof)
 	likes = { day = 0, by = {}, count = 0 },
 	boosts = { starfruit = 0 },
-	settings = { music = 0.5, sfx = 0.7 },
+	settings = { music = 0.5, sfx = 0.7, musicOn = true, sfxOn = true },
 	lastSeen = 0,
 }
 

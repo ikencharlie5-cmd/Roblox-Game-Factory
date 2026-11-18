@@ -15,6 +15,7 @@ local PlacementService = require(script.Parent:WaitForChild("PlacementService"))
 local MonetizationService = require(script.Parent:WaitForChild("MonetizationService"))
 local Guard = require(script.Parent:WaitForChild("Guard"))
 local Signals = require(script.Parent:WaitForChild("Signals"))
+local CreatureAI = require(script.Parent:WaitForChild("CreatureAI"))
 
 local CreatureCare = {}
 
@@ -105,9 +106,10 @@ function CreatureCare.StateDone(player: Player, r: any, state: string, ctx: any)
 end
 
 local function near(player: Player, uid: string): boolean
-	local pos = CS.Position(player, uid)
+	local m = CS.Model(player, uid)
+	local a = m and CreatureAI.Get(m)
 	local root = Guard.RootPos(player)
-	return pos ~= nil and root ~= nil and (pos - root).Magnitude <= Config.Needs.InteractRange
+	return a ~= nil and root ~= nil and CreatureAI.Distance(a, root) <= Config.Needs.InteractRange
 end
 
 local function feed(player: Player, data: any, uid: any)

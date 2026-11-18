@@ -1,7 +1,7 @@
 --!strict
 -- Plays SFX, UI, stingers, creature voices, music and ambience by name (Shared/Sounds). Owned by Audio.
 -- Settings: LocalPlayer Attributes MusicVolume / SFXVolume (0..1, nil = 1) and MusicOn / SFXOn (bool,
--- nil = on). The UI only sets these. Zone music/ambience: MusicDirector. Idle creature calls: CreatureVoices.
+-- nil = on), set by DataService on load. The UI calls the Set* helpers (saved via SaveSettings). Zone music/ambience: MusicDirector. Idle creature calls: CreatureVoices.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
@@ -132,18 +132,47 @@ SoundController.PlayMusic = Mixer.PlayMusic
 SoundController.CurrentMusic = Mixer.CurrentMusic
 SoundController.SetAmbience = Mixer.SetAmbience
 
--- Settings helpers for the UI (plain Attributes; DataService may persist them).
+-- Settings helpers for the UI. DataService sets the 4 Attributes on load; changes go to the server
+-- via the SaveSettings RemoteEvent ({music, sfx, musicOn, sfxOn}), debounced so slider drags send once.
+local saveToken = 0
+local function attrOr(name: string, default: any): any
+	local v = player:GetAttribute(name)
+	return if v == nil then default else v
+end
+local function queueSave()
+	saveToken += 1
+	local token = saveToken
+	task.delay(1, function()
+		if token ~= saveToken then
+			return
+		end
+		local remotes = ReplicatedStorage:FindFirstChild("Remotes")
+		local ev = remotes and remotes:FindFirstChild("SaveSettings")
+		if ev and ev:IsA("RemoteEvent") then
+			ev:FireServer({
+				music = attrOr("MusicVolume", 1),
+				sfx = attrOr("SFXVolume", 1),
+				musicOn = attrOr("MusicOn", true),
+				sfxOn = attrOr("SFXOn", true),
+			})
+		end
+	end)
+end
 function SoundController.SetMusicVolume(v: number)
 	player:SetAttribute("MusicVolume", math.clamp(v, 0, 1))
+	queueSave()
 end
 function SoundController.SetSFXVolume(v: number)
 	player:SetAttribute("SFXVolume", math.clamp(v, 0, 1))
+	queueSave()
 end
 function SoundController.SetMusicOn(on: boolean)
 	player:SetAttribute("MusicOn", on)
+	queueSave()
 end
 function SoundController.SetSFXOn(on: boolean)
 	player:SetAttribute("SFXOn", on)
+	queueSave()
 end
 
 local started = false

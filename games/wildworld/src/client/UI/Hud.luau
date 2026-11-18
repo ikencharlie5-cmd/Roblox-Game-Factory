@@ -168,17 +168,23 @@ function Hud.Mount(gui: ScreenGui)
 	biome()
 end
 
-local ZONE_NAMES = {
-	Park = "My Park",
-	Hub = "Plaza",
-	Meadow = "Meadow Edge",
-	Hollow = "Mossy Hollow",
-	Glade = "Waterfall Glade",
-}
+local EXTRA_NAMES = { Park = "My Park", Hub = "Plaza" }
+
+-- Zone attribute is a Config.Zones Id (Meadow/Hollow/Glade) or Park/Hub; show Config.Zones[].Name.
+local function zoneName(id: string): string
+	local zones = Derived.Cfg("Zones")
+	if type(zones) == "table" then
+		for _, z in zones do
+			if type(z) == "table" and z.Id == id and type(z.Name) == "string" then
+				return z.Name
+			end
+		end
+	end
+	return EXTRA_NAMES[id] or id
+end
 
 function Hud.SetBiome(raw: string)
-	-- Audio/Gameplay zone ids ("MeadowEdge") -> "Meadow Edge".
-	local name = ZONE_NAMES[raw] or (string.gsub(raw, "(%l)(%u)", "%1 %2"))
+	local name = zoneName(raw)
 	if biomeText.Text == name then
 		return
 	end
