@@ -134,7 +134,8 @@ local function update()
 		end
 		if nextQ then
 			local done = (nextQ.progress or 0) >= (nextQ.goal or 1)
-			trackerLabel.Text = (if done then "Claim: " else "Quest: ") .. Kit.StripEmoji(tostring(nextQ.text or nextQ.kind))
+			trackerLabel.Text = (if done then "Claim: " else "Quest: ")
+				.. Kit.StripEmoji(tostring(nextQ.text or nextQ.kind))
 			setTracker((nextQ.progress or 0) / math.max(1, nextQ.goal or 1))
 		else
 			trackerLabel.Text = "All quests done - try a Release!"

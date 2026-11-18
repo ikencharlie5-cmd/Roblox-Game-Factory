@@ -10,38 +10,46 @@ local SettingsWindow = {}
 
 local player = Players.LocalPlayer :: Player
 
-local function toggleRow(parent: Instance, order: number, icon: string, label: string, attr: string)
-	local row = Kit.Panel(parent, Style.Color.Panel, { LayoutOrder = order, Size = UDim2.new(1, -8, 0, 64) })
-	Kit.Label(row, icon .. " " .. label, {
-		Size = UDim2.new(0.6, -8, 0.8, 0),
-		Position = UDim2.new(0, 10, 0.1, 0),
+local function toggleRow(parent: Instance, order: number, glyph: string, label: string, attr: string)
+	local row = Kit.Panel(parent, Style.Color.Panel, { LayoutOrder = order, Size = UDim2.new(1, -12, 0, 80) })
+	Kit.CodeBadge(row, glyph, Style.Pal.Sky, {
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, 12, 0.5, 0),
+		Size = UDim2.fromOffset(54, 54),
+	})
+	Kit.Label(row, label, {
+		Size = UDim2.new(0.6, -80, 0, 40),
+		Position = UDim2.new(0, 80, 0.5, -20),
+		TextSize = 28,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
 	local btn: TextButton
 	local function refresh()
 		local on = player:GetAttribute(attr) ~= false -- nil = on
 		btn.Text = if on then "ON" else "OFF"
-		Kit.SetButtonColor(btn, if on then Style.Color.Leaf else Style.Color.Grey)
+		Kit.SetButtonColor(btn, if on then "Leaf" else Style.Color.Grey)
 	end
-	btn = Kit.Button(row, "ON", Style.Color.Leaf, function()
+	btn = Kit.Button(row, "ON", "Leaf", function()
 		player:SetAttribute(attr, player:GetAttribute(attr) == false)
-	end, { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -8, 0.5, 0), Size = UDim2.new(0.3, 0, 0, 48) })
+	end, {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -12, 0.5, 0),
+		Size = UDim2.fromOffset(130, 60),
+		TextSize = 28,
+	})
 	player:GetAttributeChangedSignal(attr):Connect(refresh)
 	refresh()
 end
 
 function SettingsWindow.Mount()
-	local win = Windows.Create("Settings", "⚙️ Settings", Style.Color.Grey)
-	win.Frame.Size = UDim2.fromScale(0.4, 0.55)
+	local win = Windows.Create("Settings", "Settings", "Stone", "Settings", Vector2.new(560, 380))
 	local body = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1) }, win.Body)
-	Kit.List(body, false, 8, true)
-	toggleRow(body, 1, "🎵", "Music", "MusicOn")
-	toggleRow(body, 2, "🔊", "Sound effects", "SFXOn")
-	Kit.Label(body, "🌱 Sprout Zoo by Chiken Studios", {
+	Kit.List(body, false, 12).HorizontalAlignment = Enum.HorizontalAlignment.Center
+	toggleRow(body, 1, "M", "Music", "MusicOn")
+	toggleRow(body, 2, "S", "Sound effects", "SFXOn")
+	Kit.Body(body, "Sprout Zoo by Chiken Studios", {
 		LayoutOrder = 3,
-		Size = UDim2.new(1, 0, 0, 28),
-		Font = Style.FontBody,
-		TextColor3 = Style.Color.InkSoft,
+		Size = UDim2.new(1, 0, 0, 30),
 	})
 end
 

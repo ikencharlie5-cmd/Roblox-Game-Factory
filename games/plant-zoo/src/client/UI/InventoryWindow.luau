@@ -40,8 +40,16 @@ local function card(title: string, rarity: string?, sub: string, order: number, 
 			ZIndex = 2,
 		})
 	end
-	Kit.Label(c, title, { Position = UDim2.fromOffset(6, 102), Size = UDim2.new(1, -12, 0, 28), TextSize = 22, ZIndex = 3 })
-	Kit.Body(c, sub, { Position = UDim2.fromOffset(8, 128), Size = UDim2.new(1, -16, 0, 40), TextSize = 17, ZIndex = 3 })
+	Kit.Label(
+		c,
+		title,
+		{ Position = UDim2.fromOffset(6, 102), Size = UDim2.new(1, -12, 0, 28), TextSize = 22, ZIndex = 3 }
+	)
+	Kit.Body(
+		c,
+		sub,
+		{ Position = UDim2.fromOffset(8, 128), Size = UDim2.new(1, -16, 0, 40), TextSize = 17, ZIndex = 3 }
+	)
 	return c
 end
 
@@ -87,9 +95,7 @@ local function renderSeeds()
 		local c = card(
 			string.format("%s x%d", name, seeds[name]),
 			if s then s.Rarity else nil,
-			if s
-				then string.format("%s · %s grow", s.Biome, Format.Time(s.Grow))
-				else "",
+			if s then string.format("%s · %s grow", s.Biome, Format.Time(s.Grow)) else "",
 			i,
 			{ species = name, stage = "Grown" }
 		)

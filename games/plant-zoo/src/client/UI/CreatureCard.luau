@@ -68,14 +68,9 @@ local function renderNeeds(item: any, s: any)
 		return
 	end
 	local padBiome = State.Tbl("padBiome")[item.pad] or "?"
-	needRow(
-		1,
-		r.biome == true,
-		string.format("%s exhibit (pad is %s)", s.Biome, padBiome),
-		function()
-			Windows.Open("Build", { tab = "Exhibits", pad = item.pad, biome = s.Biome })
-		end
-	)
+	needRow(1, r.biome == true, string.format("%s exhibit (pad is %s)", s.Biome, padBiome), function()
+		Windows.Open("Build", { tab = "Exhibits", pad = item.pad, biome = s.Biome })
+	end)
 	needRow(2, r.decor == true, s.Decor .. " in this pad", function()
 		Windows.Open("Build", { tab = "Decor", decor = s.Decor, pad = item.pad })
 	end)
@@ -171,9 +166,12 @@ function CreatureCard.Mount()
 	}, body)
 	header = Kit.Label(right, "", { Size = UDim2.new(1, 0, 0, 44), TextSize = 38 })
 	info = Kit.Body(right, "", { Position = UDim2.fromOffset(0, 44), Size = UDim2.new(1, 0, 0, 28), TextSize = 22 })
-	stageLabel = Kit.Label(right, "", { Position = UDim2.fromOffset(0, 76), Size = UDim2.new(1, 0, 0, 30), TextSize = 24 })
-	_skip, setStage = Kit.Progress(right, "Leaf", { Position = UDim2.fromOffset(0, 110), Size = UDim2.new(1, 0, 0, 20) })
-	thrivingLabel = Kit.Label(right, "", { Position = UDim2.fromOffset(0, 138), Size = UDim2.new(1, 0, 0, 30), TextSize = 24 })
+	stageLabel =
+		Kit.Label(right, "", { Position = UDim2.fromOffset(0, 76), Size = UDim2.new(1, 0, 0, 30), TextSize = 24 })
+	_skip, setStage =
+		Kit.Progress(right, "Leaf", { Position = UDim2.fromOffset(0, 110), Size = UDim2.new(1, 0, 0, 20) })
+	thrivingLabel =
+		Kit.Label(right, "", { Position = UDim2.fromOffset(0, 138), Size = UDim2.new(1, 0, 0, 30), TextSize = 24 })
 	needsBox = Kit.Make("Frame", {
 		BackgroundTransparency = 1,
 		Position = UDim2.fromOffset(0, 174),

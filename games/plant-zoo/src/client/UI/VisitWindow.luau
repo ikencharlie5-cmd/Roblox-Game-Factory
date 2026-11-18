@@ -23,7 +23,9 @@ local function stateFolder(): Instance?
 end
 
 local function rowFrame(order: number): Frame
-	return Kit.Panel(list, Style.Color.Panel, { LayoutOrder = order, Size = UDim2.new(1, -8, 0, 60) })
+	local r = Kit.Panel(list, Style.Color.Panel, { LayoutOrder = order, Size = UDim2.new(1, -12, 0, 76) })
+	Kit.Stagger(r)
+	return r
 end
 
 local function renderZoos()
@@ -38,35 +40,59 @@ local function renderZoos()
 			local likes = (st :: Instance):GetAttribute("Plot" .. plot .. "_Likes") or 0
 			local pads = (st :: Instance):GetAttribute("Plot" .. plot .. "_PadsOwned") or 1
 			local r = rowFrame(plot)
-			Kit.Label(r, string.format("🏡 %s's Zoo%s", tostring(name), if plot == mine then " (you)" else ""), {
-				Size = UDim2.new(0.5, -8, 0.55, 0),
-				Position = UDim2.new(0, 8, 0, 2),
+			Kit.Icon(r, "Visit", {
+				AnchorPoint = Vector2.new(0, 0.5),
+				Position = UDim2.new(0, 10, 0.5, 0),
+				Size = UDim2.fromOffset(54, 54),
+			})
+			Kit.Label(r, string.format("%s's Zoo%s", tostring(name), if plot == mine then " (you)" else ""), {
+				Size = UDim2.new(0.5, -74, 0, 34),
+				Position = UDim2.fromOffset(74, 6),
+				TextSize = 26,
 				TextXAlignment = Enum.TextXAlignment.Left,
 			})
-			Kit.Label(r, string.format("❤️ %s   🌿 %s pads", Format.Number(likes), tostring(pads)), {
-				Size = UDim2.new(0.5, -8, 0.38, 0),
-				Position = UDim2.new(0, 8, 0.58, 0),
+			Kit.Body(r, string.format("%s likes · %s pads", Format.Number(likes), tostring(pads)), {
+				Size = UDim2.new(0.5, -74, 0, 26),
+				Position = UDim2.fromOffset(74, 42),
 				TextXAlignment = Enum.TextXAlignment.Left,
-				Font = Style.FontBody,
-				TextColor3 = Style.Color.InkSoft,
 			})
 			if plot ~= mine then
-				Kit.Button(r, "🚶 Visit", Style.Color.Sky, function()
+				Kit.Button(r, "Visit", "Sky", function()
 					if Net.Do("VisitPlot", nil, plot) then
 						Windows.Close()
 					end
-				end, { Size = UDim2.new(0.22, 0, 0, 48), Position = UDim2.new(0.52, 0, 0.5, -24) })
-				Kit.Button(r, "❤️ Like", Style.Color.Pink, function()
-					if Net.Do("LikeZoo", "❤️ Liked " .. tostring(name) .. "'s zoo!", plot) then
+				end, {
+					AnchorPoint = Vector2.new(1, 0.5),
+					Size = UDim2.new(0.21, 0, 0, 58),
+					Position = UDim2.new(0.76, -6, 0.5, 0),
+					TextSize = 24,
+				})
+				Kit.Button(r, "Like", "Pink", function()
+					if Net.Do("LikeZoo", "Liked " .. tostring(name) .. "'s zoo!", plot) then
 						VisitWindow.Render()
 					end
-				end, { Size = UDim2.new(0.22, 0, 0, 48), Position = UDim2.new(0.76, 0, 0.5, -24) })
+				end, {
+					AnchorPoint = Vector2.new(1, 0.5),
+					Size = UDim2.new(0.21, 0, 0, 58),
+					Position = UDim2.new(1, -12, 0.5, 0),
+					TextSize = 24,
+				})
 			end
 		end
 	end
 	if count == 0 then
-		Kit.Label(list, "No zoos yet...", { LayoutOrder = 1, Size = UDim2.new(1, 0, 0, 40) })
+		Kit.Body(list, "No zoos yet...", { LayoutOrder = 1, Size = UDim2.new(1, 0, 0, 40) })
 	end
+end
+
+-- Rank badge: gold / silver / bronze, then stone.
+local function medal(r: Frame, rank: number)
+	local pal = if rank == 1 then "Sun" elseif rank == 2 then "Stone" elseif rank == 3 then "Wood" else "Sky"
+	Kit.CodeBadge(r, tostring(rank), Style.Pal[pal], {
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, 12, 0.5, 0),
+		Size = UDim2.fromOffset(50, 50),
+	})
 end
 
 local function stat(p: Player, key: string): number
@@ -86,17 +112,19 @@ local function renderTop()
 	end)
 	for i, p in players do
 		local r = rowFrame(i)
-		local medal = ({ "🥇", "🥈", "🥉" })[i] or ("#" .. i)
-		Kit.Label(r, medal .. " " .. p.DisplayName, {
-			Size = UDim2.new(0.5, -8, 0.8, 0),
-			Position = UDim2.new(0, 8, 0.1, 0),
+		medal(r, i)
+		Kit.Label(r, p.DisplayName, {
+			Size = UDim2.new(0.5, -74, 0, 40),
+			Position = UDim2.new(0, 74, 0.5, -20),
+			TextSize = 26,
 			TextXAlignment = Enum.TextXAlignment.Left,
 		})
-		Kit.Label(r, string.format("🕊️ %d   💵 $%s", stat(p, "Releases"), Format.Number(stat(p, "Cash"))), {
-			Size = UDim2.new(0.48, -8, 0.6, 0),
-			Position = UDim2.new(0.5, 0, 0.2, 0),
+		Kit.Label(r, string.format("%d Releases · $%s", stat(p, "Releases"), Format.Number(stat(p, "Cash"))), {
+			Size = UDim2.new(0.48, -16, 0, 36),
+			Position = UDim2.new(0.5, 0, 0.5, -18),
+			TextSize = 24,
 			TextXAlignment = Enum.TextXAlignment.Right,
-			TextColor3 = Style.Color.LeafDark,
+			TextColor3 = Style.Pal.Leaf.Dark,
 		})
 	end
 	-- All-time Top 10 Total Earned (server JSON in GameState.TopEarned, refreshed every 60 s).
@@ -108,32 +136,34 @@ local function renderTop()
 			return HttpService:JSONDecode(top.Value)
 		end)
 	end
-	Kit.Label(list, "🏆 All-time Top 10 (total earned)", {
+	Kit.Label(list, "All-time Top 10 (total earned)", {
 		LayoutOrder = 100,
-		Size = UDim2.new(1, -8, 0, 30),
+		Size = UDim2.new(1, -12, 0, 36),
+		TextSize = 28,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
 	if ok and type(rows) == "table" then
 		for i, e in rows do
 			local r = rowFrame(100 + i)
-			Kit.Label(r, string.format("#%s %s", tostring(e.rank or i), tostring(e.name or "?")), {
-				Size = UDim2.new(0.6, -8, 0.8, 0),
-				Position = UDim2.new(0, 8, 0.1, 0),
+			medal(r, tonumber(e.rank) or i)
+			Kit.Label(r, tostring(e.name or "?"), {
+				Size = UDim2.new(0.6, -74, 0, 40),
+				Position = UDim2.new(0, 74, 0.5, -20),
+				TextSize = 26,
 				TextXAlignment = Enum.TextXAlignment.Left,
 			})
 			Kit.Label(r, "$" .. Format.Number(tonumber(e.value) or 0), {
-				Size = UDim2.new(0.38, -8, 0.6, 0),
-				Position = UDim2.new(0.6, 0, 0.2, 0),
+				Size = UDim2.new(0.38, -16, 0, 36),
+				Position = UDim2.new(0.6, 0, 0.5, -18),
+				TextSize = 26,
 				TextXAlignment = Enum.TextXAlignment.Right,
-				TextColor3 = Style.Color.LeafDark,
+				TextColor3 = Style.Pal.Leaf.Dark,
 			})
 		end
 	else
-		Kit.Label(list, "Loading board...", {
+		Kit.Body(list, "Loading board...", {
 			LayoutOrder = 101,
-			Size = UDim2.new(1, -8, 0, 30),
-			Font = Style.FontBody,
-			TextColor3 = Style.Color.InkSoft,
+			Size = UDim2.new(1, -12, 0, 30),
 		})
 	end
 end
@@ -151,21 +181,21 @@ function VisitWindow.Render()
 end
 
 function VisitWindow.Mount()
-	local win = Windows.Create("Visit", "🏡 Visit Zoos", Style.Color.Sky)
-	local top = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, win.Body)
+	local win = Windows.Create("Visit", "Visit Zoos", "Sky", "Visit")
+	local top = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 58) }, win.Body)
 	local tabHolder = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(0.6, 0, 1, 0) }, top)
 	local choose = Kit.Tabs(tabHolder, { "Zoos", "Top" }, function(name)
 		tab = name
 		VisitWindow.Render()
-	end)
-	Kit.Button(top, "🏠 Go Home", Style.Color.Leaf, function()
+	end, "Sky")
+	Kit.Button(top, "Go Home", "Leaf", function()
 		if Net.Do("GoHome", nil) then
 			Windows.Close()
 		end
-	end, { Size = UDim2.new(0.36, 0, 1, 0), Position = UDim2.new(0.64, 0, 0, 0) })
-	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 52), Size = UDim2.new(1, 0, 1, -52) })
-	Kit.List(list, false, 6)
-	Kit.Padding(list, 4)
+	end, { Size = UDim2.new(0.36, 0, 0, 56), Position = UDim2.new(0.64, 0, 0, 0), TextSize = 24, Lip = 4 })
+	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 68), Size = UDim2.new(1, 0, 1, -68) })
+	Kit.List(list, false, 10)
+	Kit.Padding(list, 6)
 	win.OnOpen = function()
 		choose(tab)
 	end

@@ -112,7 +112,11 @@ end
 
 -- Size of the usable (safe-inset) screen in reference px.
 function Kit.Virtual(gui: ScreenGui): Vector2
-	return gui.AbsoluteSize / Kit.Scale()
+	local size = gui.AbsoluteSize
+	if size.Y < 1 and workspace.CurrentCamera then
+		size = workspace.CurrentCamera.ViewportSize -- not laid out yet
+	end
+	return size / Kit.Scale()
 end
 
 -- Screen (absolute) position -> reference px inside Kit.Root(gui).

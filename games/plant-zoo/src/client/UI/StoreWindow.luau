@@ -12,20 +12,21 @@ local StoreWindow = {}
 
 local list: ScrollingFrame
 
+-- Icon = Style.Icons name (code-drawn badge until uploaded).
 local PASSES = {
-	{ Key = "VIP", Icon = "👑", Desc = "+25% income, 100% offline cash, VIP chat tag" },
-	{ Key = "DoubleCash", Icon = "💰", Desc = "x2 cash forever" },
-	{ Key = "SuperLuck", Icon = "🍀", Desc = "+50% shop luck forever" },
-	{ Key = "AutoGardener", Icon = "🤖", Desc = "Auto-collects Tip Jars + auto-waters" },
+	{ Key = "VIP", Desc = "+25% income, 100% offline cash, VIP chat tag" },
+	{ Key = "DoubleCash", Desc = "x2 cash forever" },
+	{ Key = "SuperLuck", Desc = "+50% shop luck forever" },
+	{ Key = "AutoGardener", Desc = "Auto-collects Tip Jars + auto-waters" },
 }
 
 local PRODUCTS = {
-	{ Key = "CashBoost", Icon = "💸", Desc = "30 min of income right now" },
-	{ Key = "FinishGrowing", Icon = "⏩", Desc = "Finish ALL growing plants" },
-	{ Key = "InstantRestock", Icon = "⚡", Desc = "New Seed Shop stock now" },
-	{ Key = "Hope100", Icon = "🌟", Desc = "100 Hope" },
-	{ Key = "Hope500", Icon = "🌟", Desc = "500 Hope" },
-	{ Key = "Hope1500", Icon = "🌟", Desc = "1,500 Hope - best value!" },
+	{ Key = "CashBoost", Desc = "30 min of income right now" },
+	{ Key = "FinishGrowing", Desc = "Finish ALL growing plants" },
+	{ Key = "InstantRestock", Desc = "New Seed Shop stock now" },
+	{ Key = "Hope100", Icon = "Hope", Desc = "100 Hope" },
+	{ Key = "Hope500", Icon = "Hope", Desc = "500 Hope" },
+	{ Key = "Hope1500", Icon = "Hope", Desc = "1,500 Hope - best value!" },
 }
 
 local function card(
@@ -37,34 +38,35 @@ local function card(
 	owned: boolean,
 	fn: () -> ()
 )
-	local c = Kit.Panel(list, Style.Color.Panel, { LayoutOrder = order })
+	local c = Kit.Card(list, nil, { LayoutOrder = order })
 	if owned then
-		(c:FindFirstChildOfClass("UIStroke") :: UIStroke).Color = Style.Color.Leaf
+		(c:FindFirstChildOfClass("UIStroke") :: UIStroke).Color = Style.Pal.Leaf.Bottom
 	end
-	local isImg = string.sub(icon, 1, 13) == "rbxassetid://"
-	if isImg then
-		Kit.Icon(c, icon, { Size = UDim2.new(0.24, 0, 0.26, 0), Position = UDim2.new(0, 4, 0.03, 0) })
-	end
-	Kit.Label(c, if isImg then name else icon .. " " .. name, {
-		Size = UDim2.new(if isImg then 0.74 else 1, -8, 0.24, 0),
-		Position = UDim2.new(if isImg then 0.26 else 0, 4, 0.04, 0),
+	Kit.Icon(c, icon, {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 10),
+		Size = UDim2.fromOffset(76, 76),
+		Depth = true,
+		ZIndex = 3,
 	})
-	Kit.Label(c, desc, {
-		Size = UDim2.new(1, -8, 0.32, 0),
-		Position = UDim2.new(0, 4, 0.29, 0),
-		Font = Style.FontBody,
-		TextColor3 = Style.Color.InkSoft,
-	})
-	Kit.Button(
+	Kit.Label(
 		c,
-		if owned then "✅ Owned" else "R$ " .. price,
-		if owned then Style.Color.Grey else Style.Color.Robux,
-		fn,
-		{
-			Size = UDim2.new(1, -12, 0.3, 0),
-			Position = UDim2.new(0, 6, 0.65, 0),
-		}
+		name,
+		{ Position = UDim2.fromOffset(6, 88), Size = UDim2.new(1, -12, 0, 30), TextSize = 22, ZIndex = 3 }
 	)
+	Kit.Body(
+		c,
+		desc,
+		{ Position = UDim2.fromOffset(8, 118), Size = UDim2.new(1, -16, 0, 52), TextSize = 17, ZIndex = 3 }
+	)
+	Kit.Button(c, if owned then "Owned" else "R$ " .. price, if owned then Style.Color.Grey else "Robux", fn, {
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -8),
+		Size = UDim2.new(1, -16, 0, 54),
+		TextSize = 24,
+		Lip = 4,
+		ZIndex = 4,
+	})
 end
 
 function StoreWindow.Render()
@@ -76,7 +78,7 @@ function StoreWindow.Render()
 	for i, p in PASSES do
 		local def = Config.GamePasses[p.Key]
 		if def then
-			card(i, Style.Icons[p.Key] or p.Icon, def.Name, p.Desc, def.Price or 0, Derived.HasPass(p.Key), function()
+			card(i, p.Key, def.Name, p.Desc, def.Price or 0, Derived.HasPass(p.Key), function()
 				Market.PromptPass(p.Key)
 			end)
 		end
@@ -84,7 +86,7 @@ function StoreWindow.Render()
 	for i, p in PRODUCTS do
 		local def = Config.DevProducts[p.Key]
 		if def then
-			card(10 + i, Style.Icons[p.Key] or p.Icon, def.Name, p.Desc, def.Price or 0, false, function()
+			card(10 + i, p.Icon or p.Key, def.Name, p.Desc, def.Price or 0, false, function()
 				Market.PromptProduct(p.Key)
 			end)
 		end
@@ -92,10 +94,10 @@ function StoreWindow.Render()
 end
 
 function StoreWindow.Mount()
-	local win = Windows.Create("Store", "💎 Store", Style.Color.Robux)
+	local win = Windows.Create("Store", "Store", "Pink", "Store")
 	list = Kit.Scroll(win.Body)
-	Kit.Grid(list, UDim2.new(0.24, -6, 0.5, -6), 8)
-	Kit.Padding(list, 4)
+	Kit.Grid(list, UDim2.fromOffset(172, 240), 12)
+	Kit.Padding(list, 8)
 	win.OnOpen = function()
 		StoreWindow.Render()
 	end

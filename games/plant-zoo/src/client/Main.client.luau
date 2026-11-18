@@ -170,7 +170,7 @@ player:GetAttributeChangedSignal("ThrivingCount"):Connect(function()
 	local n = player:GetAttribute("ThrivingCount") or 0
 	local armed = thrivingArmedAt ~= nil and os.clock() >= thrivingArmedAt
 	if armed and type(n) == "number" and type(lastThriving) == "number" and n > lastThriving then
-		Notify.Splash("✨ Thriving! x1.5 ✨", Style.Color.Leaf)
+		Notify.Splash("Thriving! x1.5", Style.Color.Leaf)
 	end
 	lastThriving = n
 end)

@@ -146,7 +146,13 @@ function Notify.Announce(text: string, rarity: string?)
 	Kit.Tween(banner, 0.4, { Position = UDim2.fromOffset(0, 0) }, Enum.EasingStyle.Back)
 	task.delay(6, function()
 		if banner.Parent then
-			Kit.Tween(banner, 0.3, { Position = UDim2.fromOffset(0, -120) }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+			Kit.Tween(
+				banner,
+				0.3,
+				{ Position = UDim2.fromOffset(0, -120) },
+				Enum.EasingStyle.Quad,
+				Enum.EasingDirection.In
+			)
 			task.wait(0.3)
 			banner:Destroy()
 		end

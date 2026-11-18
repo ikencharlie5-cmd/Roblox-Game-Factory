@@ -80,7 +80,12 @@ function DailyWindow.Render(force: boolean?)
 			lip.BackgroundColor3 = Style.Pal.Body.Dark
 		end
 		local dark = if pal == Style.Pal.Card then Style.Pal.Body.Dark else pal.Dark
-		Kit.Title(face, "Day " .. i, dark, { Size = UDim2.new(1, -8, 0, 30), Position = UDim2.fromOffset(4, 6), TextSize = 24, ZIndex = 4 })
+		Kit.Title(
+			face,
+			"Day " .. i,
+			dark,
+			{ Size = UDim2.new(1, -8, 0, 30), Position = UDim2.fromOffset(4, 6), TextSize = 24, ZIndex = 4 }
+		)
 		local icon, text = reward(r)
 		Kit.Icon(face, icon, {
 			AnchorPoint = Vector2.new(0.5, 0),

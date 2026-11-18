@@ -245,7 +245,13 @@ function BuildMode.Mount(gui: ScreenGui)
 	}, bar)
 	Kit.List(row, true, 12, true)
 	local function btn(text: string, color: any, fn: () -> (), order: number): TextButton
-		return Kit.Button(row, text, color, fn, { Size = UDim2.fromOffset(122, 66), LayoutOrder = order, TextSize = 26 })
+		return Kit.Button(
+			row,
+			text,
+			color,
+			fn,
+			{ Size = UDim2.fromOffset(122, 66), LayoutOrder = order, TextSize = 26 }
+		)
 	end
 	rotateBtn = btn("Rotate", "Sky", rotate, 1)
 	placeBtn = btn("Place", "Leaf", confirm, 2)

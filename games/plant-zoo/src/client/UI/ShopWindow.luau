@@ -90,8 +90,16 @@ local function infoCard(order: number, icon: string, title: string, desc: string
 		Depth = true,
 		ZIndex = 3,
 	})
-	Kit.Label(card, title, { Position = UDim2.fromOffset(6, 84), Size = UDim2.new(1, -12, 0, 28), TextSize = 22, ZIndex = 3 })
-	Kit.Body(card, desc, { Position = UDim2.fromOffset(8, 112), Size = UDim2.new(1, -16, 0, 50), TextSize = 18, ZIndex = 3 })
+	Kit.Label(
+		card,
+		title,
+		{ Position = UDim2.fromOffset(6, 84), Size = UDim2.new(1, -12, 0, 28), TextSize = 22, ZIndex = 3 }
+	)
+	Kit.Body(
+		card,
+		desc,
+		{ Position = UDim2.fromOffset(8, 112), Size = UDim2.new(1, -16, 0, 50), TextSize = 18, ZIndex = 3 }
+	)
 	return card
 end
 

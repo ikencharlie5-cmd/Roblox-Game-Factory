@@ -55,8 +55,16 @@ local function cardBase(order: number, title: string, sub: string, color: Color3
 	else
 		Kit.BiomeChip(c, title, badge)
 	end
-	Kit.Label(c, title, { Position = UDim2.fromOffset(6, 80), Size = UDim2.new(1, -12, 0, 30), TextSize = 22, ZIndex = 3 })
-	Kit.Body(c, sub, { Position = UDim2.fromOffset(8, 110), Size = UDim2.new(1, -16, 0, 44), TextSize = 17, ZIndex = 3 })
+	Kit.Label(
+		c,
+		title,
+		{ Position = UDim2.fromOffset(6, 80), Size = UDim2.new(1, -12, 0, 30), TextSize = 22, ZIndex = 3 }
+	)
+	Kit.Body(
+		c,
+		sub,
+		{ Position = UDim2.fromOffset(8, 110), Size = UDim2.new(1, -16, 0, 44), TextSize = 17, ZIndex = 3 }
+	)
 	return c
 end
 
@@ -180,12 +188,7 @@ local function renderBiomes()
 	for i, name in Config.BiomeOrder do
 		local def = Config.Biomes[name] or { Cost = 0 }
 		local info = Style.BiomeInfo(name)
-		local c = cardBase(
-			i,
-			name,
-			if biomes[name] then "Unlocked forever!" else "Kept through Release",
-			info.Color
-		)
+		local c = cardBase(i, name, if biomes[name] then "Unlocked forever!" else "Kept through Release", info.Color)
 		if not biomes[name] then
 			bottomButton(c, "$" .. Format.Number(def.Cost), "Leaf", function()
 				Net.Do("UnlockBiome", nil, name)

@@ -5,37 +5,49 @@ Phone-first: Scale sizing + UISizeConstraint (buttons min 44 px), safe insets (`
 right-bottom thumb zone kept clear. Every button: `Click` sound + press/hover UIScale tween.
 The client never decides outcomes: it previews with `Shared/Formulas` + `Shared/Needs`, then calls a remote.
 
+## Premium UI rebuild (follows research/UI_STYLE_GUIDE.md)
+- **Scaling:** `Kit.Gui` adds a `Root` frame with one UIScale = clamp(viewport.Y/1080, 0.55, 1.25); everything is sized in px at 1080p
+  (`Kit.Root(gui)`, `Kit.Virtual(gui)` = usable screen in ref px, `Kit.ToRoot` converts absolute -> ref px, `Kit.Resized` signal).
+  Windows fit to min(design size, 92% width, height-70). Text: fixed max size (TextScaled + UITextSizeConstraint only shrinks).
+- **Fonts:** FredokaOne (titles, buttons, numbers; white + Contextual UIStroke in the dark shade) and BuilderSansExtraBold (body). No Gotham, no legacy TextStroke.
+- **Palette:** `Style.Pal` = Top/Bottom/Dark per colour (Leaf, Sun, Sky, Pink, Purple, Teal, Red, Stone, Disabled, Robux, Wood, Body, Card). `Style.PaletteFor` maps palettes, names or old `Style.Color.*` values. Rarity: `Style.RarityDark`, `Style.RarityPalette`.
+- **Kit (folder module):** `init` (core, Label/Title/Body, StripEmoji), `Button` (Button, IconButton, CloseButton, Tabs, SetButtonColor, ButtonFace/ButtonPress), `Window` (Kit.Window chrome), `Parts` (Slab, Panel, Card, Progress, Icon, CodeBadge, BiomeChip, Badge), `Fx` (Gradient, Highlight, Shine, Pulse, Stagger, PopIn, Float, RarityFx), `View` (CreatureView).
+- **Button recipe:** white face + UIGradient + 3.5 px same-hue dark stroke + dark lip + shadow + gloss strip; parts sit in a centre-anchored `Holder` with the press UIScale (hover 1.06, press 0.92 + face sinks onto lip, Back-Out release, Click sound). Grey (`Style.Color.Grey`) = disabled palette. Old `Kit.Button(parent, text, color, onClick, props)` signature kept; setting `.Text` updates the label.
+- **Windows:** coloured header slab sticking 24 px out of the top (icon + title), tilted red close button on the corner, cream gradient body, 4 px wood stroke, 8 px lip; Back-Out open, Quad-In close, BlurEffect (Lighting, "SproutUIBlur") + dim behind; cards stagger in. Header colour = category (Shop green, Bag/Visit blue, Index purple, Build wood, Release teal, Quests pink, Daily gold, Store pink, Settings stone).
+- **Rarity cards:** white card, rarity-dark stroke, rarity band + word at the bottom; Epic gradient stroke, Legendary spinning gold, Mythical pink/purple pan, Secret rainbow (one shared 30 Hz loop).
+- **Creature pictures:** `Kit.CreatureView` renders Shared/CreatureModels in a ViewportFrame (FOV 30, 3/4 view, white light). Each species+stage is built once and cached; viewports get a Clone. Undiscovered Index entries = dark silhouette tint.
+- **No emoji anywhere.** Server toast/quest/daily text goes through `Kit.StripEmoji`. Biomes/weather/mutations use code-drawn 2-letter chips.
+
 ## Screens / modules
 | Module | What |
 |---|---|
-| Style | UI palette, rarity colors (spec hexes), biome/weather icons |
-| Kit | builders: Button (sound+tween+44px), Label, Panel, Progress, Tabs, Scroll, Grid, Sig |
-| Windows | window frames + manager (one open at a time, pop-in), `Confirm` dialog |
-| State / Derived | synced data mirror; display helpers (stage, needs, income, luck, release req, next pad) |
-| Net | safe remote calls (RF or RE, timeout, no double error toasts), `Net.On` for server events |
-| Hud | top: Cash + $/s, Hope, Luck (+potion timer); weather banner + timer (or "next weather in"); top-right restock timer (tap = Shop) + Settings gear; top-left goal card (Next pad $ bar, Release bar) |
-| SideBar | left 2x5: Shop, Bag, Build, Index, Upgrade, Release, Quests, Daily, Visit, Store; red "!" badges (Daily ready, Quest claimable) |
-| ShopWindow | Seed Shop (rarity frames, $/s, qty left, countdown, locked slots, Instant Restock R$) + Hope Shop tab |
-| InventoryWindow | Bag tabs: Seeds (Plant), Creatures (Place / Sell / View), Items (decor, Luck Potion "Drink", tonics) |
-| BuildMode + BuildGhost | placement: 5x5 cell tiles green/red, ghost + facing nose, Rotate 90°, Place, Done; edit mode (tap item -> Move/Remove). PC: hover+click, R rotate, Q/Esc cancel, Enter place. Touch: TouchTap a cell, then Place |
-| BuildWindow | Decor shop (buy+place, locked by biome), Exhibits (buy next pad, per-pad biome picker), Biomes (unlock), Edit button |
-| CreatureCard | tap your creature (or View): rarity, stage + timer bar, $/s, role, mutations, needs ✅/❌ with Fix, Thriving line, Water, Tonic, Move, Sell |
-| IndexWindow | 28 species, "???" silhouettes until found, rarity bands (Secret rainbow outline), mutation badges, role filter (from buddy Fix) |
-| UpgradesWindow | 6 upgrades, level pips, next cost, MAX |
-| ReleaseWindow | requirement (cash ✅/❌ + rarity), rewards, pick eligible creature, confirm "They won't come back!", camera cutscene to `ReleaseAltar` |
-| QuestsWindow | tutorial step progress + 3 daily quests with bars and Claim |
-| DailyWindow | 7-day strip (today pulses), Claim; auto-opens on join for returning players with a reward waiting |
-| VisitWindow | Zoos tab (Visit / Like per plot, Go Home) + Top tab (server players + all-time Top 10 from `GameState.TopEarned`) |
-| StoreWindow | 4 passes (Owned state from `Pass_*` attrs) + 6 dev products; Id 0 -> "Coming soon!" |
-| SettingsWindow | Music / SFX toggles -> LocalPlayer attrs `MusicOn` / `SFXOn` |
-| Notify | stacked toasts, rarity-colored announce banner (Mythical/Secret rainbow outline), center splash, offline-earnings popup |
-| Tutorial | bottom tracker (tutorial step or next daily quest, tap = Quests), bouncing 👈 on the right UI button, world beam + ⬇️ billboard to pad 1 / Tip Jar / Seed Shop |
-| ChatTags | shows `ChatTag` attr ("[VIP]") in TextChatService |
+| Hud | top-left currency chips (Cash + "+" -> Store, $/s under it, Hope + "+", Luck), tick-up + pop + floating "+$" on gain; top-right restock pill (tap = Shop), Store icon button (pulse + shine), settings gear; goal card (Next pad / Release bars) under it; Luck Potion boost tile with timer |
+| WeatherBanner | top-centre weather pill (weather colour + code chip + effect + timer), grey "Next weather in" teaser |
+| SideBar | 8 icon buttons (Shop, Bag, Build, Index, Release, Quests, Daily, Visit), 2 columns (3-4 on short screens so the bottom-left joystick zone stays clear on touch), red bobbing "!" badges; `SetVisible` reveals buttons with a staggered pop |
+| ShopWindow | seed cards (creature render, biome chip, $/s, qty left, green price button with cash icon), locked slots, Hope Shop tab, Restock R$29 |
+| InventoryWindow | Seeds / Creatures / Items cards with renders/icons and Plant / Place / View / Sell / Drink |
+| BuildWindow | Decor / Exhibits / Biomes cards + Edit + **Upgrades** button (Upgrades moved off the left bar: max 8 buttons) |
+| UpgradesWindow | rows with code badge, gradient level pips, price button / MAX |
+| ReleaseWindow | requirement (cash coloured green/red), rewards, selectable creature cards (render + teal "OK" badge), Release button |
+| QuestsWindow / DailyWindow | progress rows with shining Claim; 7 day slabs (today pulses, done = OK badge), shining Claim |
+| VisitWindow | zoo rows (Visit / Like), Top tab with gold/silver/bronze rank badges |
+| StoreWindow / SettingsWindow | pass/product cards with icons + green Robux buttons; ON/OFF toggles |
+| CreatureCard | big rarity card with the creature render, name, $/s, stage bar, Thriving line, needs rows (OK/X badge + Fix), Water / Tonic / Move / Sell |
+| Notify | slab toasts (max 3, slide + fade, 2.5 s), rarity announce banner with animated stroke, splash with rotating sunburst, offline popup window |
+| Tutorial | bottom tracker card (pushed up on touch), code-drawn gold arrow at the target button, world beam + arrow billboard; reveals left buttons per step |
+| BuildMode | bottom-centre context bar (cream panel, Rotate / Place / Move / Remove / Done) |
+
+## Charlie TODO: icons
+Upload in the same style as the existing pack, then add the id to `Style.Icons` (the code-drawn badge is replaced automatically):
+Shop, Inventory (Bag), Build, Index, Upgrades, Quests, Visit, Hope, Luck, SuperLuck, LuckPotion, GrowTonic, HopeCrate,
+FinishGrowing, InstantRestock, Decor, Locked. Optional: biome icons (Meadow, Pond, Desert, Canopy, Fungus, Frost) and
+weather icons (currently 2-letter chips).
 
 ## First 60 s (driven by `data.tutorialStep`, Config.Tutorial)
-1 Plant: 👈 Bag, beam to pad 1, "tap your glowing pad, then Place" in build mode.
-2 Flower Bed: 👈 Build + "(🌱 grows in Xs)". 3 Thriving: countdown, then "✨ Thriving! x1.5" splash (on `ThrivingCount` rise).
-4 Tip Jar: beam to my `TipJar` pad 1. 5 Seed Shop: beam to `ShopStand` + 👈 Shop. 6 Pad 2: 👈 goal card. Then daily quests.
+1 Plant: arrow at Bag, beam to pad 1, "tap your glowing pad, then Place" in build mode.
+2 Flower Bed: arrow at Build + "(grows in Xs)". 3 Thriving: countdown, then "Thriving! x1.5" splash (on `ThrivingCount` rise).
+4 Tip Jar: beam to my `TipJar` pad 1. 5 Seed Shop: beam to `ShopStand` + arrow at Shop. 6 Pad 2: arrow at goal card. Then daily quests.
+Left buttons revealed per step: 1 Shop+Bag, 2 +Build, 3 +Index, 4 +Quests, 5 +Daily, 6 +Release+Visit; tutorial done = all 8.
 
 ## Remotes used (args per notes/gameplay.md)
 RF: GetStock, BuySeed(slot), PlaceItem(kind, ref, pad, cell, rotDeg), MoveItem(id, pad, cell, rotDeg), RemoveItem(id),
