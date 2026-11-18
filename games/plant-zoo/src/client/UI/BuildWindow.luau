@@ -36,23 +36,41 @@ local function highlight(c: Frame)
 	end)
 end
 
-local function cardBase(order: number, title: string, sub: string, color: Color3?): Frame
-	local c = Kit.Panel(list, Style.Color.Panel, { LayoutOrder = order })
+-- Card: biome chip (or icon) on top, title, sub line. Stroke tinted by the biome colour.
+local function cardBase(order: number, title: string, sub: string, color: Color3?, icon: string?): Frame
+	local c = Kit.Card(list, nil, { LayoutOrder = order })
 	if color then
-		(c:FindFirstChildOfClass("UIStroke") :: UIStroke).Color = color
+		(c:FindFirstChildOfClass("UIStroke") :: UIStroke).Color = Style.PaletteFor(color).Dark
 	end
-	Kit.Label(c, title, { Size = UDim2.new(1, -8, 0.24, 0), Position = UDim2.new(0, 4, 0.04, 0) })
-	Kit.Label(c, sub, {
-		Size = UDim2.new(1, -8, 0.28, 0),
-		Position = UDim2.new(0, 4, 0.3, 0),
-		Font = Style.FontBody,
-		TextColor3 = Style.Color.InkSoft,
-	})
+	local badge = {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 12),
+		Size = UDim2.fromOffset(64, 64),
+		ZIndex = 3,
+	}
+	if icon and string.sub(icon, 1, 6) == "biome:" then
+		Kit.BiomeChip(c, string.sub(icon, 7), badge)
+	elseif icon then
+		Kit.Icon(c, icon, badge)
+	else
+		Kit.BiomeChip(c, title, badge)
+	end
+	Kit.Label(c, title, { Position = UDim2.fromOffset(6, 80), Size = UDim2.new(1, -12, 0, 30), TextSize = 22, ZIndex = 3 })
+	Kit.Body(c, sub, { Position = UDim2.fromOffset(8, 110), Size = UDim2.new(1, -16, 0, 44), TextSize = 17, ZIndex = 3 })
 	return c
 end
 
-local function bottomButton(c: Frame, text: string, color: Color3, fn: () -> ())
-	Kit.Button(c, text, color, fn, { Size = UDim2.new(1, -12, 0.3, 0), Position = UDim2.new(0, 6, 0.64, 0) })
+local function bottomButton(c: Frame, text: string, color: any, fn: () -> (), icon: string?)
+	Kit.Button(c, text, color, fn, {
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -8),
+		Size = UDim2.new(1, -16, 0, 54),
+		Icon = icon,
+		IconSize = 30,
+		TextSize = 22,
+		Lip = 4,
+		ZIndex = 4,
+	})
 end
 
 local function renderDecor()
@@ -69,20 +87,28 @@ local function renderDecor()
 				local info = Style.BiomeInfo(def.Biome)
 				local c = cardBase(
 					if wanted then 0 else gi * 100 + order,
-					(if def.Biome then info.Icon else "🪧") .. " " .. kind,
+					kind,
 					if def.Biome then def.Biome .. " decor" else "Any pad: +5% income",
-					if def.Biome then info.Color else nil
+					if def.Biome then info.Color else nil,
+					if def.Biome then nil else "Decor"
 				)
+				if def.Biome then
+					Kit.BiomeChip(c, def.Biome, {
+						Position = UDim2.fromOffset(8, 8),
+						Size = UDim2.fromOffset(30, 30),
+						ZIndex = 4,
+					})
+				end
 				if unlocked then
-					bottomButton(c, "$" .. Format.Number(def.Cost) .. " Place", Style.Color.Leaf, function()
+					bottomButton(c, "$" .. Format.Number(def.Cost), "Leaf", function()
 						BuildMode.Start({
 							mode = "buydecor",
 							ref = kind,
-							label = "🪴 " .. kind .. " - tap cells to buy & place",
+							label = kind .. " - tap a cell to buy & place",
 						})
-					end)
+					end, "Cash")
 				else
-					bottomButton(c, "🔒 " .. def.Biome, Style.Color.Grey, function()
+					bottomButton(c, "Locked", Style.Color.Grey, function()
 						filter = { biome = def.Biome }
 						choose("Biomes")
 					end)
@@ -105,27 +131,29 @@ local function renderExhibits()
 			local b = padBiome[pad] or "Meadow"
 			local info = Style.BiomeInfo(b)
 			if pickingPad == pad then
-				local c = cardBase(pad, "Pad " .. pad .. ": pick a biome", "", info.Color)
+				local c = cardBase(pad, "Pad " .. pad, "", info.Color, "biome:" .. tostring(b))
 				local row = Kit.Make("Frame", {
 					BackgroundTransparency = 1,
-					Size = UDim2.new(1, -8, 0.62, 0),
-					Position = UDim2.new(0, 4, 0.34, 0),
+					AnchorPoint = Vector2.new(0.5, 1),
+					Position = UDim2.new(0.5, 0, 1, -8),
+					Size = UDim2.new(1, -12, 0, 104),
+					ZIndex = 5,
 				}, c)
-				Kit.Grid(row, UDim2.new(0.33, -4, 0.5, -4), 4)
+				Kit.Grid(row, UDim2.fromOffset(48, 48), 6)
 				for i, name in Config.BiomeOrder do
 					if biomes[name] then
 						local bi = Style.BiomeInfo(name)
-						Kit.Button(row, bi.Icon, bi.Color, function()
+						Kit.Button(row, bi.Code, bi.Color, function()
 							pickingPad = nil
 							Net.Do("SetPadBiome", "Pad " .. pad .. " is now " .. name .. "!", pad, name)
 							lastSig = ""
 							BuildWindow.Render()
-						end, { LayoutOrder = i })
+						end, { LayoutOrder = i, TextSize = 20, Lip = 4, Radius = 12 })
 					end
 				end
 			else
-				local c = cardBase(pad, string.format("Pad %d %s", pad, info.Icon), tostring(b), info.Color)
-				bottomButton(c, "🔄 Biome", info.Color, function()
+				local c = cardBase(pad, "Pad " .. pad, tostring(b), info.Color, "biome:" .. tostring(b))
+				bottomButton(c, "Biome", info.Color, function()
 					pickingPad = pad
 					lastSig = ""
 					BuildWindow.Render()
@@ -135,13 +163,13 @@ local function renderExhibits()
 				end
 			end
 		elseif pad == owned + 1 then
-			local c = cardBase(pad, "🌿 Pad " .. pad, "Expand your zoo!", Style.Color.Leaf)
-			bottomButton(c, "$" .. Format.Number(price), Style.Color.Leaf, function()
+			local c = cardBase(pad, "Pad " .. pad, "Expand your zoo!", Style.Color.Leaf, "Build")
+			bottomButton(c, "$" .. Format.Number(price), "Leaf", function()
 				Net.Do("BuyPad", nil, pad)
-			end)
+			end, "Cash")
 			highlight(c)
 		else
-			local c = cardBase(pad, "🔒 Pad " .. pad, "$" .. Format.Number(price), Style.Color.Grey)
+			local c = cardBase(pad, "Pad " .. pad, "Locked · $" .. Format.Number(price), Style.Color.Grey, "Locked")
 			c.BackgroundTransparency = 0.35
 		end
 	end
@@ -154,14 +182,14 @@ local function renderBiomes()
 		local info = Style.BiomeInfo(name)
 		local c = cardBase(
 			i,
-			info.Icon .. " " .. name,
-			if biomes[name] then "Unlocked forever ✅" else "Kept through Release",
+			name,
+			if biomes[name] then "Unlocked forever!" else "Kept through Release",
 			info.Color
 		)
 		if not biomes[name] then
-			bottomButton(c, "$" .. Format.Number(def.Cost), Style.Color.Leaf, function()
+			bottomButton(c, "$" .. Format.Number(def.Cost), "Leaf", function()
 				Net.Do("UnlockBiome", nil, name)
-			end)
+			end, "Cash")
 		end
 		if filter.biome == name then
 			highlight(c)
@@ -207,21 +235,32 @@ local function applyBiomeFix(pad: number, biome: string)
 end
 
 function BuildWindow.Mount()
-	local win = Windows.Create("Build", "🔨 Build", Style.Color.Sun)
-	local top = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, win.Body)
-	local tabHolder = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(0.72, 0, 1, 0) }, top)
+	local win = Windows.Create("Build", "Build", "Wood", "Build")
+	local top = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 58) }, win.Body)
+	local tabHolder = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(0.6, 0, 1, 0) }, top)
 	choose = Kit.Tabs(tabHolder, { "Decor", "Exhibits", "Biomes" }, function(name)
 		tab = name
 		pickingPad = nil
 		lastSig = ""
 		BuildWindow.Render()
-	end)
-	Kit.Button(top, "✋ Edit", Style.Color.Sky, function()
+	end, "Wood")
+	Kit.Button(top, "Edit", "Sky", function()
 		BuildMode.Start({ mode = "edit" })
-	end, { Size = UDim2.new(0.26, 0, 1, 0), Position = UDim2.new(0.74, 0, 0, 0) })
-	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 52), Size = UDim2.new(1, 0, 1, -52) })
-	Kit.Grid(list, UDim2.new(0.24, -6, 0.48, -6), 8)
-	Kit.Padding(list, 4)
+	end, { Size = UDim2.new(0.18, 0, 0, 56), Position = UDim2.new(0.61, 0, 0, 0), TextSize = 24, Lip = 4 })
+	-- Upgrades lives here (the left bar is capped at 8 buttons).
+	Kit.Button(top, "Upgrades", "Leaf", function()
+		Windows.Open("Upgrades")
+	end, {
+		Size = UDim2.new(0.2, 0, 0, 56),
+		Position = UDim2.new(0.8, 0, 0, 0),
+		TextSize = 22,
+		Lip = 4,
+		Icon = "Upgrades",
+		IconSize = 32,
+	})
+	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 68), Size = UDim2.new(1, 0, 1, -68) })
+	Kit.Grid(list, UDim2.fromOffset(172, 230), 12)
+	Kit.Padding(list, 8)
 
 	win.OnOpen = function(arg: any)
 		filter = if type(arg) == "table" then arg else {}

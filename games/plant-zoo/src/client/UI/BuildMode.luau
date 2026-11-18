@@ -150,8 +150,10 @@ function BuildMode.Start(opts: Opts)
 	rot = 0
 	selPad, selCell = nil, nil
 	titleLabel.Text = opts.label
-		or (if opts.mode == "edit" then "✋ Tap an item to move or remove it" else "Tap a cell to place")
+		or (if opts.mode == "edit" then "Tap an item to move or remove it" else "Tap a cell to place")
+	titleLabel.Text = Kit.StripEmoji(titleLabel.Text)
 	bar.Visible = true
+	Kit.PopIn(bar, 0.7, 0.25)
 	setButtons()
 	oldZoom = player.CameraMaxZoomDistance
 	player.CameraMaxZoomDistance = math.max(oldZoom, 90)
@@ -202,7 +204,7 @@ local function onTap(screen: Vector2, isMouse: boolean)
 			Kit.Sound("Click")
 		else
 			selectedItem = nil
-			titleLabel.Text = "✋ Tap an item to move or remove it"
+			titleLabel.Text = "Tap an item to move or remove it"
 		end
 		setButtons()
 		return
@@ -220,31 +222,39 @@ end
 
 function BuildMode.Mount(gui: ScreenGui)
 	BuildGhost.Init()
-	bar = Kit.Panel(gui, Style.Color.Cream, {
+	-- Bottom-centre context bar (pushed up on touch so the joystick/jump zones stay clear).
+	bar = Kit.Panel(Kit.Root(gui), Style.Color.Cream, {
+		Name = "BuildBar",
 		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.45, 0, 1, -8),
-		Size = UDim2.fromScale(0.56, 0.17),
+		Position = UDim2.new(0.5, 0, 1, if Kit.IsTouch() then -150 else -20),
+		Size = UDim2.fromOffset(700, 140),
 		Visible = false,
+		ZIndex = 3,
 	})
-	Kit.Make("UISizeConstraint", { MinSize = Vector2.new(320, 96), MaxSize = Vector2.new(720, 130) }, bar)
-	titleLabel = Kit.Label(bar, "", { Size = UDim2.new(1, -16, 0.36, 0), Position = UDim2.new(0, 8, 0, 4) })
+	titleLabel = Kit.Label(bar, "", {
+		Size = UDim2.new(1, -32, 0, 40),
+		Position = UDim2.fromOffset(16, 8),
+		TextSize = 28,
+		ZIndex = 3,
+	})
 	local row = Kit.Make("Frame", {
 		BackgroundTransparency = 1,
-		Position = UDim2.new(0, 8, 0.44, 0),
-		Size = UDim2.new(1, -16, 0.52, 0),
+		Position = UDim2.fromOffset(12, 56),
+		Size = UDim2.new(1, -24, 0, 70),
+		ZIndex = 3,
 	}, bar)
-	Kit.List(row, true, 8, true)
-	local function btn(text: string, color: Color3, fn: () -> (), order: number): TextButton
-		return Kit.Button(row, text, color, fn, { Size = UDim2.fromScale(0.23, 1), LayoutOrder = order })
+	Kit.List(row, true, 12, true)
+	local function btn(text: string, color: any, fn: () -> (), order: number): TextButton
+		return Kit.Button(row, text, color, fn, { Size = UDim2.fromOffset(122, 66), LayoutOrder = order, TextSize = 26 })
 	end
-	rotateBtn = btn("🔄 Rotate", Style.Color.Sky, rotate, 1)
-	placeBtn = btn("✅ Place", Style.Color.Leaf, confirm, 2)
-	moveBtn = btn("✋ Move", Style.Color.Sky, function()
+	rotateBtn = btn("Rotate", "Sky", rotate, 1)
+	placeBtn = btn("Place", "Leaf", confirm, 2)
+	moveBtn = btn("Move", "Sky", function()
 		if selectedItem then
 			BuildMode.Start({ mode = "move", ref = selectedItem, label = "Pick a new cell" })
 		end
 	end, 3)
-	removeBtn = btn("🗑️ Remove", Style.Color.Red, function()
+	removeBtn = btn("Remove", "Red", function()
 		local id = selectedItem
 		if id then
 			Windows.Confirm("Remove item?", "Creatures and decor go back to your Bag.", "Remove", function()
@@ -256,7 +266,7 @@ function BuildMode.Mount(gui: ScreenGui)
 			end)
 		end
 	end, 4)
-	btn("❌ Done", Style.Color.Grey, BuildMode.Stop, 5)
+	btn("Done", "Stone", BuildMode.Stop, 5)
 
 	UserInputService.InputBegan:Connect(function(input, processed)
 		if not active or processed then

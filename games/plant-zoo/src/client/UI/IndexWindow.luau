@@ -16,15 +16,16 @@ local countLabel: TextLabel
 local roleFilter: string? = nil
 local lastSig = ""
 
+-- Mutation badges: code-drawn chips (2 letters) in the mutation's colour.
 local BADGES: { [string]: string } = {
-	Gold = "🟡",
-	Diamond = "💎",
-	Rainbow = "🌈",
-	Dewy = "💧",
-	Sunkissed = "☀️",
-	Frosted = "🧊",
-	Electric = "⚡",
-	Starlit = "⭐",
+	Gold = "Sun",
+	Diamond = "Sky",
+	Rainbow = "Pink",
+	Dewy = "Teal",
+	Sunkissed = "Sun",
+	Frosted = "Sky",
+	Electric = "Purple",
+	Starlit = "Purple",
 }
 
 function IndexWindow.Render(force: boolean?)
@@ -47,65 +48,79 @@ function IndexWindow.Render(force: boolean?)
 			have += 1
 		end
 		if roleFilter == nil or s.Role == roleFilter then
-			local color = Style.RarityColor(s.Rarity)
-			local c = Kit.Panel(list, if isFound then Style.Color.Panel else Style.Color.Dark, { LayoutOrder = i })
-			local stroke = c:FindFirstChildOfClass("UIStroke") :: UIStroke
-			stroke.Color = color
-			stroke.Thickness = 3
-			local band =
-				Kit.Make("Frame", { BackgroundColor3 = color, BorderSizePixel = 0, Size = UDim2.fromScale(1, 0.18) }, c)
-			Kit.Corner(band, 10)
-			Kit.Label(band, string.format("#%d %s", i, s.Rarity), { TextColor3 = Style.Color.White })
-			Kit.Label(c, if isFound then s.Name else "???", {
-				Size = UDim2.new(1, -8, 0.22, 0),
-				Position = UDim2.new(0, 4, 0.2, 0),
-				TextColor3 = if isFound then Style.Color.Ink else Style.Color.Grey,
+			local c = Kit.Card(list, s.Rarity, { LayoutOrder = i })
+			Kit.CreatureView(c, s.Name, "Grown", {
+				Position = UDim2.fromOffset(6, 6),
+				Size = UDim2.new(1, -12, 0, 90),
+				Silhouette = not isFound,
+				ZIndex = 2,
 			})
-			local biome = Style.BiomeInfo(s.Biome).Icon .. " " .. s.Biome
-			Kit.Label(
-				c,
-				if isFound then string.format("%s\n$%s/s · %s", biome, Format.Number(s.Income), s.Role) else biome,
-				{
-					Size = UDim2.new(1, -8, 0.3, 0),
-					Position = UDim2.new(0, 4, 0.43, 0),
-					Font = Style.FontBody,
-					TextColor3 = if isFound then Style.Color.InkSoft else Style.Color.Grey,
-				}
-			)
-			local badges = ""
+			Kit.Label(c, "#" .. i, {
+				Position = UDim2.fromOffset(8, 4),
+				Size = UDim2.fromOffset(40, 22),
+				TextSize = 18,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				TextColor3 = Style.Color.InkSoft,
+				ZIndex = 3,
+			})
+			Kit.BiomeChip(c, s.Biome, {
+				AnchorPoint = Vector2.new(1, 0),
+				Position = UDim2.new(1, -6, 0, 6),
+				Size = UDim2.fromOffset(28, 28),
+				ZIndex = 3,
+			})
+			Kit.Label(c, if isFound then s.Name else "???", {
+				Position = UDim2.fromOffset(4, 96),
+				Size = UDim2.new(1, -8, 0, 26),
+				TextSize = 20,
+				TextColor3 = if isFound then Style.Color.Ink else Style.Color.InkSoft,
+				ZIndex = 3,
+			})
+			Kit.Body(c, if isFound then string.format("$%s/s · %s", Format.Number(s.Income), s.Role) else s.Biome, {
+				Position = UDim2.fromOffset(4, 120),
+				Size = UDim2.new(1, -8, 0, 22),
+				TextSize = 16,
+				ZIndex = 3,
+			})
+			local row = Kit.Make("Frame", {
+				BackgroundTransparency = 1,
+				Position = UDim2.fromOffset(4, 144),
+				Size = UDim2.new(1, -8, 0, 24),
+				ZIndex = 3,
+			}, c)
+			Kit.List(row, true, 3, true)
 			if type(entry) == "table" then
 				for mut in entry do
-					if type(mut) == "string" and mut ~= "" and string.lower(mut) ~= "none" then
-						badges ..= BADGES[mut] or ""
+					if type(mut) == "string" and BADGES[mut] then
+						Kit.CodeBadge(row, string.sub(mut, 1, 2), Style.Pal[BADGES[mut]], {
+							Size = UDim2.fromOffset(24, 24),
+							ZIndex = 3,
+						})
 					end
 				end
 			end
-			Kit.Label(c, badges, { Size = UDim2.new(1, -8, 0.2, 0), Position = UDim2.new(0, 4, 0.76, 0) })
-			if s.Rarity == "Secret" then
-				task.spawn(function()
-					while stroke.Parent do
-						stroke.Color = Color3.fromHSV((os.clock() / 4) % 1, 0.8, 1)
-						task.wait(0.05)
-					end
-				end)
-			end
 		end
 	end
-	countLabel.Text = string.format("📖 Found %d / %d", have, total)
+	countLabel.Text = string.format("Found %d / %d", have, total)
 		.. (if roleFilter then "   (showing " .. roleFilter .. "s)" else "")
 end
 
 function IndexWindow.Mount()
-	local win = Windows.Create("Index", "📖 Index", Style.Color.Sky)
-	local top = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, win.Body)
-	countLabel = Kit.Label(top, "", { Size = UDim2.new(0.7, 0, 1, 0), TextXAlignment = Enum.TextXAlignment.Left })
-	local allBtn = Kit.Button(top, "Show all", Style.Color.Sky, function()
+	local win = Windows.Create("Index", "Index", "Purple", "Index")
+	local top = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 58) }, win.Body)
+	countLabel = Kit.Label(top, "", {
+		Size = UDim2.new(0.7, 0, 0, 44),
+		Position = UDim2.fromOffset(4, 6),
+		TextSize = 30,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	})
+	local allBtn = Kit.Button(top, "Show all", "Purple", function()
 		roleFilter = nil
 		IndexWindow.Render(true)
-	end, { Size = UDim2.new(0.26, 0, 1, 0), Position = UDim2.new(0.74, 0, 0, 0) })
-	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 52), Size = UDim2.new(1, 0, 1, -52) })
-	Kit.Grid(list, UDim2.new(0.19, -6, 0.5, -6), 8)
-	Kit.Padding(list, 4)
+	end, { Size = UDim2.new(0.26, 0, 0, 56), Position = UDim2.new(0.74, 0, 0, 0), TextSize = 24, Lip = 4 })
+	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 68), Size = UDim2.new(1, 0, 1, -68) })
+	Kit.Grid(list, UDim2.fromOffset(140, 202), 10)
+	Kit.Padding(list, 8)
 	win.OnOpen = function(arg: any)
 		roleFilter = if type(arg) == "table" then arg.role else nil
 		allBtn.Visible = roleFilter ~= nil

@@ -22,40 +22,50 @@ function InventoryWindow.SetCardOpener(fn: (any) -> ())
 	openCard = fn
 end
 
-local function card(title: string, rarity: string?, sub: string, order: number): Frame
-	local color = if rarity then Style.RarityColor(rarity) else Style.Color.Wood
-	local c = Kit.Panel(list, Style.Color.Panel, { LayoutOrder = order })
-	local stroke = c:FindFirstChildOfClass("UIStroke") :: UIStroke
-	stroke.Color = color
-	stroke.Thickness = 3
-	Kit.Label(
-		c,
-		title,
-		{ Size = UDim2.new(1, -8, 0.22, 0), Position = UDim2.new(0, 4, 0.03, 0), TextColor3 = Kit.Darker(color, 0.3) }
-	)
-	Kit.Label(c, sub, {
-		Size = UDim2.new(1, -8, 0.3, 0),
-		Position = UDim2.new(0, 4, 0.26, 0),
-		Font = Style.FontBody,
-		TextColor3 = Style.Color.InkSoft,
-	})
+-- Card with a picture on top: a creature render (species given) or an icon.
+local function card(title: string, rarity: string?, sub: string, order: number, view: any?): Frame
+	local c = Kit.Card(list, rarity, { LayoutOrder = order })
+	if type(view) == "table" then
+		Kit.CreatureView(c, tostring(view.species), view.stage, {
+			Position = UDim2.fromOffset(8, 6),
+			Size = UDim2.new(1, -16, 0, 96),
+			ZIndex = 2,
+		})
+	else
+		Kit.Icon(c, tostring(view or "Decor"), {
+			AnchorPoint = Vector2.new(0.5, 0),
+			Position = UDim2.new(0.5, 0, 0, 14),
+			Size = UDim2.fromOffset(72, 72),
+			Depth = true,
+			ZIndex = 2,
+		})
+	end
+	Kit.Label(c, title, { Position = UDim2.fromOffset(6, 102), Size = UDim2.new(1, -12, 0, 28), TextSize = 22, ZIndex = 3 })
+	Kit.Body(c, sub, { Position = UDim2.fromOffset(8, 128), Size = UDim2.new(1, -16, 0, 40), TextSize = 17, ZIndex = 3 })
 	return c
 end
 
-local function actions(c: Frame, defs: { { text: string, color: Color3, fn: () -> () } })
+local function actions(c: Frame, defs: { { text: string, color: any, fn: () -> () } })
 	local row = Kit.Make("Frame", {
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, -10, 0.32, 0),
-		Position = UDim2.new(0, 5, 0.62, 0),
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, if c:FindFirstChild("Band") then -34 else -8),
+		Size = UDim2.new(1, -12, 0, 52),
+		ZIndex = 4,
 	}, c)
-	Kit.List(row, true, 4, true)
+	Kit.List(row, true, 6, true)
 	for i, d in defs do
-		Kit.Button(row, d.text, d.color, d.fn, { Size = UDim2.new(1 / #defs, -4, 1, 0), LayoutOrder = i })
+		Kit.Button(row, d.text, d.color, d.fn, {
+			Size = UDim2.new(1 / #defs, -4, 1, 0),
+			LayoutOrder = i,
+			TextSize = 22,
+			Lip = 4,
+		})
 	end
 end
 
 local function empty(text: string)
-	Kit.Label(list, text, { LayoutOrder = 1, TextColor3 = Style.Color.InkSoft })
+	Kit.Body(list, text, { LayoutOrder = 1, TextSize = 24 })
 end
 
 local function renderSeeds()
@@ -78,22 +88,23 @@ local function renderSeeds()
 			string.format("%s x%d", name, seeds[name]),
 			if s then s.Rarity else nil,
 			if s
-				then string.format("%s %s · %s grow", Style.BiomeInfo(s.Biome).Icon, s.Biome, Format.Time(s.Grow))
+				then string.format("%s · %s grow", s.Biome, Format.Time(s.Grow))
 				else "",
-			i
+			i,
+			{ species = name, stage = "Grown" }
 		)
 		actions(c, {
 			{
-				text = "🌱 Plant",
-				color = Style.Color.Leaf,
+				text = "Plant",
+				color = "Leaf",
 				fn = function()
-					BuildMode.Start({ mode = "seed", ref = name, label = "🌱 Plant " .. name .. " - tap a cell" })
+					BuildMode.Start({ mode = "seed", ref = name, label = "Plant " .. name .. " - tap a cell" })
 				end,
 			},
 		})
 	end
 	if #names == 0 then
-		empty("No seeds - visit the Seed Shop! 🛒")
+		empty("No seeds - visit the Seed Shop!")
 	end
 end
 
@@ -108,12 +119,18 @@ local function renderCreatures()
 		local s = Derived.Species(item.species)
 		local stage = if entry.placed then Derived.Stage(item) else "Grown"
 		local where = if entry.placed then string.format("Pad %s · %s", tostring(item.pad), stage) else "In bag"
-		local c = card(Derived.DisplayName(item), if s then s.Rarity else nil, where, i)
+		local c = card(
+			Derived.DisplayName(item),
+			if s then s.Rarity else nil,
+			where,
+			i,
+			{ species = item.species, stage = if entry.placed then stage else "Grown" }
+		)
 		if entry.placed then
 			actions(c, {
 				{
-					text = "👀 View",
-					color = Style.Color.Sky,
+					text = "View",
+					color = "Sky",
 					fn = function()
 						if openCard then
 							(openCard :: (any) -> ())(item.id)
@@ -124,15 +141,15 @@ local function renderCreatures()
 		else
 			actions(c, {
 				{
-					text = "📍 Place",
-					color = Style.Color.Leaf,
+					text = "Place",
+					color = "Leaf",
 					fn = function()
 						BuildMode.Start({ mode = "creature", ref = item.id, label = "Place " .. tostring(item.species) })
 					end,
 				},
 				{
 					text = "$" .. Format.Number(Derived.SellValue(item)),
-					color = Style.Color.Sun,
+					color = "Sun",
 					fn = function()
 						Windows.Confirm(
 							"Sell " .. tostring(item.species) .. "?",
@@ -148,7 +165,7 @@ local function renderCreatures()
 		end
 	end
 	if #all == 0 then
-		empty("No creatures yet - plant a seed! 🌱")
+		empty("No creatures yet - plant a seed!")
 	end
 end
 
@@ -158,11 +175,11 @@ local function renderItems()
 	for kind, count in decor do
 		if type(count) == "number" and count > 0 then
 			order += 1
-			local c = card(string.format("%s x%d", kind, count), nil, "Decor from your bag", order)
+			local c = card(string.format("%s x%d", kind, count), nil, "Decor from your bag", order, "Decor")
 			actions(c, {
 				{
-					text = "📍 Place",
-					color = Style.Color.Leaf,
+					text = "Place",
+					color = "Leaf",
 					fn = function()
 						BuildMode.Start({ mode = "decor", ref = kind, label = "Place " .. kind })
 					end,
@@ -173,11 +190,11 @@ local function renderItems()
 	local potions = State.Num("luck", State.Tbl("potions"))
 	if potions > 0 then
 		order += 1
-		local c = card("🧪 Luck Potion x" .. potions, "Rare", "x2 luck for 15 min", order)
+		local c = card("Luck Potion x" .. potions, "Rare", "x2 luck for 15 min", order, "LuckPotion")
 		actions(c, {
 			{
 				text = "Drink!",
-				color = Style.Color.Purple,
+				color = "Purple",
 				fn = function()
 					Net.Do("UseHopeItem", nil, "LuckPotion")
 				end,
@@ -187,7 +204,7 @@ local function renderItems()
 	local tonics = State.Num("tonics")
 	if tonics > 0 then
 		order += 1
-		card("💧 Grow Tonic x" .. tonics, "Uncommon", "Tap a growing plant, then 'Tonic'", order)
+		card("Grow Tonic x" .. tonics, "Uncommon", "Tap a growing plant, then 'Tonic'", order, "GrowTonic")
 	end
 	if order == 0 then
 		empty("No items yet. Decor bought without a spot lands here.")
@@ -215,15 +232,15 @@ function InventoryWindow.Render(force: boolean?)
 end
 
 function InventoryWindow.Mount()
-	local win = Windows.Create("Inventory", "🎒 Bag", Style.Color.Wood)
-	local tabs = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(0.7, 0, 0, 44) }, win.Body)
+	local win = Windows.Create("Inventory", "Bag", "Sky", "Inventory")
+	local tabs = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(0.7, 0, 0, 58) }, win.Body)
 	local choose = Kit.Tabs(tabs, { "Seeds", "Creatures", "Items" }, function(name)
 		tab = name
 		InventoryWindow.Render(true)
-	end)
-	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 52), Size = UDim2.new(1, 0, 1, -52) })
-	Kit.Grid(list, UDim2.new(0.32, -6, 0.48, -6), 8)
-	Kit.Padding(list, 4)
+	end, "Sky")
+	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 68), Size = UDim2.new(1, 0, 1, -68) })
+	Kit.Grid(list, UDim2.fromOffset(172, 250), 12)
+	Kit.Padding(list, 8)
 	win.OnOpen = function(arg: any)
 		choose(if type(arg) == "string" then arg else tab)
 	end

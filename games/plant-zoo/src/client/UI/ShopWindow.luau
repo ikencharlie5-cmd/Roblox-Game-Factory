@@ -20,72 +20,91 @@ local tab = "Seeds"
 local choose: (string) -> ()
 
 local HOPE_ITEMS = {
-	{ Key = "HopeCrate", Icon = "📦", Desc = "Random Rare+ seed!" },
-	{ Key = "LuckPotion", Icon = "🧪", Desc = "x2 luck for 15 min" },
-	{ Key = "GrowTonic", Icon = "💧", Desc = "Instantly grow 1 plant (up to Legendary)" },
+	{ Key = "HopeCrate", Desc = "Random Rare+ seed!" },
+	{ Key = "LuckPotion", Desc = "x2 luck for 15 min" },
+	{ Key = "GrowTonic", Desc = "Instantly grow 1 plant (up to Legendary)" },
 }
+
+local CELL = UDim2.fromOffset(172, 250)
+
+local function priceButton(card: Frame, text: string, color: any, icon: string?, fn: () -> ())
+	Kit.Button(card, text, color, fn, {
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.new(0.5, 0, 1, -36),
+		Size = UDim2.new(1, -16, 0, 54),
+		Icon = icon,
+		IconSize = 30,
+		TextSize = 24,
+		Lip = 4,
+		ZIndex = 4,
+	})
+end
 
 local function seedCard(entry: any, order: number)
 	local rarity = Style.NormRarity(entry.rarity)
-	local color = Style.RarityColor(rarity)
 	local s = Derived.Species(entry.species)
-	local card = Kit.Panel(list, Style.Color.Panel, { LayoutOrder = order })
-	local stroke = card:FindFirstChildOfClass("UIStroke") :: UIStroke
-	stroke.Color = color
-	stroke.Thickness = 3
-	local band =
-		Kit.Make("Frame", { BackgroundColor3 = color, Size = UDim2.fromScale(1, 0.2), BorderSizePixel = 0 }, card)
-	Kit.Corner(band, 10)
-	Kit.Label(band, rarity, { TextColor3 = Style.Color.White, Size = UDim2.fromScale(1, 0.9) })
-	local biome = if s then Style.BiomeInfo(s.Biome).Icon else ""
-	Kit.Label(card, biome .. " " .. entry.species, {
-		Size = UDim2.new(1, -8, 0.2, 0),
-		Position = UDim2.new(0, 4, 0.22, 0),
+	local card = Kit.Card(list, rarity, { LayoutOrder = order })
+	Kit.CreatureView(card, tostring(entry.species), "Grown", {
+		Position = UDim2.fromOffset(8, 6),
+		Size = UDim2.new(1, -16, 0, 92),
+		ZIndex = 2,
+	})
+	if s then
+		Kit.BiomeChip(card, s.Biome, { Position = UDim2.fromOffset(6, 6), Size = UDim2.fromOffset(32, 32), ZIndex = 3 })
+	end
+	Kit.Label(card, tostring(entry.species), {
+		Position = UDim2.fromOffset(6, 98),
+		Size = UDim2.new(1, -12, 0, 28),
+		TextSize = 22,
+		ZIndex = 3,
 	})
 	local income = if s then s.Income else 0
-	Kit.Label(card, string.format("+$%s/s  ·  %d left", Format.Number(income), entry.left or 0), {
-		Size = UDim2.new(1, -8, 0.15, 0),
-		Position = UDim2.new(0, 4, 0.43, 0),
-		Font = Style.FontBody,
-		TextColor3 = Style.Color.InkSoft,
+	Kit.Body(card, string.format("+$%s/s · %d left", Format.Number(income), entry.left or 0), {
+		Position = UDim2.fromOffset(6, 124),
+		Size = UDim2.new(1, -12, 0, 24),
+		TextSize = 18,
+		ZIndex = 3,
 	})
 	local soldOut = (entry.left or 0) <= 0
-	Kit.Button(
+	priceButton(
 		card,
 		if soldOut then "Sold out" else "$" .. Format.Number(entry.cost or 0),
-		if soldOut then Style.Color.Grey else Style.Color.Leaf,
+		if soldOut then Style.Color.Grey else "Leaf",
+		if soldOut then nil else "Cash",
 		function()
 			if soldOut then
 				Kit.Sound("Error")
 				return
 			end
 			Net.Do("BuySeed", nil, entry.slot) -- server plays Purchase / Reveal<Rarity>
-		end,
-		{ Size = UDim2.new(1, -12, 0.3, 0), Position = UDim2.new(0, 6, 0.64, 0) }
+		end
 	)
+end
+
+local function infoCard(order: number, icon: string, title: string, desc: string): Frame
+	local card = Kit.Card(list, nil, { LayoutOrder = order })
+	Kit.Icon(card, icon, {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 10),
+		Size = UDim2.fromOffset(70, 70),
+		Depth = true,
+		ZIndex = 3,
+	})
+	Kit.Label(card, title, { Position = UDim2.fromOffset(6, 84), Size = UDim2.new(1, -12, 0, 28), TextSize = 22, ZIndex = 3 })
+	Kit.Body(card, desc, { Position = UDim2.fromOffset(8, 112), Size = UDim2.new(1, -16, 0, 50), TextSize = 18, ZIndex = 3 })
+	return card
 end
 
 local function hopeCard(item: any, order: number)
 	local def = Derived.Config.HopeShop[item.Key] or { Name = item.Key, Cost = 0 }
-	local card = Kit.Panel(list, Style.Color.Panel, { LayoutOrder = order })
-	Kit.Label(
-		card,
-		item.Icon .. " " .. def.Name,
-		{ Size = UDim2.new(1, -8, 0.24, 0), Position = UDim2.new(0, 4, 0.04, 0) }
-	)
-	Kit.Label(card, item.Desc, {
-		Size = UDim2.new(1, -8, 0.3, 0),
-		Position = UDim2.new(0, 4, 0.3, 0),
-		Font = Style.FontBody,
-		TextColor3 = Style.Color.InkSoft,
-	})
-	Kit.Button(card, "🌟 " .. Format.Number(def.Cost), Style.Color.Sun, function()
+	local card = infoCard(order, item.Key, def.Name, item.Desc)
+	priceButton(card, Format.Number(def.Cost), "Sun", "Hope", function()
 		-- Server plays the sound and toasts the crate result; we only add a hint for potions/tonics.
 		local ok = Net.Do("BuyHopeItem", nil, item.Key)
 		if ok and item.Key ~= "HopeCrate" then
 			Net.Toast("Got " .. def.Name .. "! It's in your Bag > Items", "success")
 		end
-	end, { Size = UDim2.new(1, -12, 0.3, 0), Position = UDim2.new(0, 6, 0.64, 0) })
+	end)
 end
 
 function ShopWindow.Render()
@@ -100,27 +119,21 @@ function ShopWindow.Render()
 			seedCard(entry, i)
 		end
 		if #slots == 0 then
-			Kit.Label(list, "Loading stock...", { LayoutOrder = 1 })
+			Kit.Body(list, "Loading stock...", { LayoutOrder = 1 })
 		end
 		local maxSlots = Derived.Config.Shop.MaxSlots
 		for i = #slots + 1, maxSlots do
-			local locked = Kit.Panel(list, Style.Color.Card, { LayoutOrder = 100 + i, BackgroundTransparency = 0.3 })
-			Kit.Label(locked, "🔒\nMore slots:\nBigger Restock\nor Release", {
-				Font = Style.FontBody,
-				TextColor3 = Style.Color.InkSoft,
-				Size = UDim2.fromScale(0.9, 0.9),
-				Position = UDim2.fromScale(0.05, 0.05),
-			})
+			local locked = infoCard(100 + i, "Locked", "Locked", "More slots: Bigger Restock or Release")
+			locked.BackgroundTransparency = 0.35
 		end
 	else
 		for i, item in HOPE_ITEMS do
 			hopeCard(item, i)
 		end
-		local more = Kit.Panel(list, Style.Color.Panel, { LayoutOrder = 10 })
-		Kit.Label(more, "Need more 🌟?", { Size = UDim2.new(1, -8, 0.4, 0), Position = UDim2.new(0, 4, 0.08, 0) })
-		Kit.Button(more, "💎 Get Hope", Style.Color.Robux, function()
+		local more = infoCard(10, "Hope", "Need more Hope?", "Hope packs in the Store")
+		priceButton(more, "Get Hope", "Robux", "Store", function()
 			Windows.Open("Store")
-		end, { Size = UDim2.new(1, -12, 0.3, 0), Position = UDim2.new(0, 6, 0.64, 0) })
+		end)
 	end
 end
 
@@ -133,26 +146,27 @@ function ShopWindow.RefreshStock()
 end
 
 function ShopWindow.Mount()
-	win = Windows.Create("Shop", "🛒 Seed Shop", Style.Color.Leaf)
-	local top = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, win.Body)
-	local tabHolder = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(0.42, 0, 1, 0) }, top)
+	win = Windows.Create("Shop", "Seed Shop", "Leaf", "Shop")
+	local top = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 58) }, win.Body)
+	local tabHolder = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(0.44, 0, 1, 0) }, top)
 	choose = Kit.Tabs(tabHolder, { "Seeds", "Hope Shop" }, function(name)
 		tab = name
-		win.Title.Text = if name == "Seeds" then "🛒 Seed Shop" else "🌟 Hope Shop"
+		win.Title.Text = if name == "Seeds" then "Seed Shop" else "Hope Shop"
 		ShopWindow.Render()
-	end)
+	end, "Leaf")
 	timerLabel = Kit.Label(top, "", {
-		Size = UDim2.new(0.3, 0, 0.8, 0),
-		Position = UDim2.new(0.43, 0, 0.1, 0),
-		TextColor3 = Style.Color.LeafDark,
+		Size = UDim2.new(0.26, 0, 0, 40),
+		Position = UDim2.new(0.45, 0, 0, 8),
+		TextSize = 22,
+		TextColor3 = Style.Pal.Leaf.Dark,
 	})
-	Kit.Button(top, "⚡ Restock Now (R$29)", Style.Color.Robux, function()
+	Kit.Button(top, "Restock R$29", "Robux", function()
 		Market.PromptProduct("InstantRestock")
-	end, { Size = UDim2.new(0.26, 0, 1, 0), Position = UDim2.new(0.74, 0, 0, 0) })
+	end, { Size = UDim2.new(0.28, 0, 0, 56), Position = UDim2.new(0.72, 0, 0, 0), TextSize = 22, Lip = 4 })
 
-	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 52), Size = UDim2.new(1, 0, 1, -52) })
-	Kit.Grid(list, UDim2.new(0.24, -6, 0.48, -6), 8)
-	Kit.Padding(list, 4)
+	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 68), Size = UDim2.new(1, 0, 1, -68) })
+	Kit.Grid(list, CELL, 12)
+	Kit.Padding(list, 8)
 
 	win.OnOpen = function(arg: any)
 		choose(if arg == "Hope" then "Hope Shop" else "Seeds")
@@ -170,7 +184,7 @@ function ShopWindow.Mount()
 			local period = Derived.Config.Shop.RestockSeconds
 			local now = State.Now()
 			local id = math.floor(now / period)
-			timerLabel.Text = "⏱ New seeds in " .. Format.Time((id + 1) * period - now)
+			timerLabel.Text = "New seeds in " .. Format.Time((id + 1) * period - now)
 			if id ~= lastId then
 				if lastId ~= -1 or State.stock == nil then
 					task.delay(1, ShopWindow.RefreshStock)

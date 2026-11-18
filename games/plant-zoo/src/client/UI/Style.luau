@@ -246,6 +246,8 @@ Style.IconFallback = {
 	HopeCrate = { Glyph = "?", Pal = "Purple" },
 	LuckPotion = { Glyph = "L", Pal = "Purple" },
 	GrowTonic = { Glyph = "T", Pal = "Sky" },
+	Locked = { Glyph = "?", Pal = "Stone" },
+	Decor = { Glyph = "D", Pal = "Wood" },
 } :: { [string]: { Glyph: string, Pal: string } }
 
 return Style

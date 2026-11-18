@@ -15,13 +15,13 @@ local UpgradesWindow = {}
 local list: ScrollingFrame
 local lastSig = ""
 
-local INFO: { [string]: { Icon: string, Text: string } } = {
-	WateringCan = { Icon = "🚿", Text = "Water skips more grow time" },
-	Fertilizer = { Icon = "🧪", Text = "+10% grow speed per level" },
-	ShopLuck = { Icon = "🍀", Text = "+10% shop luck per level" },
-	BiggerRestock = { Icon = "🛒", Text = "+1 Seed Shop slot per level" },
-	VisitorAppeal = { Icon = "🎟️", Text = "+10% income per level" },
-	ComfyBenches = { Icon = "🪑", Text = "+2 h offline earnings cap" },
+local INFO: { [string]: { Glyph: string, Pal: string, Text: string } } = {
+	WateringCan = { Glyph = "W", Pal = "Sky", Text = "Water skips more grow time" },
+	Fertilizer = { Glyph = "F", Pal = "Leaf", Text = "+10% grow speed per level" },
+	ShopLuck = { Glyph = "L", Pal = "Leaf", Text = "+10% shop luck per level" },
+	BiggerRestock = { Glyph = "R", Pal = "Sun", Text = "+1 Seed Shop slot per level" },
+	VisitorAppeal = { Glyph = "V", Pal = "Pink", Text = "+10% income per level" },
+	ComfyBenches = { Glyph = "C", Pal = "Wood", Text = "+2 h offline earnings cap" },
 }
 
 function UpgradesWindow.Render(force: boolean?)
@@ -41,64 +41,77 @@ function UpgradesWindow.Render(force: boolean?)
 		local level = ups[key] or 0
 		local max = #def.Costs
 		local cost = def.Costs[level + 1]
-		local info = INFO[key] or { Icon = "⬆️", Text = "" }
-		local row = Kit.Panel(list, Style.Color.Panel, { LayoutOrder = i, Size = UDim2.new(1, -8, 0, 64) })
-		Kit.Label(row, info.Icon, { Size = UDim2.new(0, 50, 1, -8), Position = UDim2.new(0, 4, 0, 4) })
+		local info = INFO[key] or { Glyph = "U", Pal = "Leaf", Text = "" }
+		local row = Kit.Panel(list, Style.Color.Panel, { LayoutOrder = i, Size = UDim2.new(1, -12, 0, 84) })
+		Kit.Stagger(row)
+		Kit.CodeBadge(row, info.Glyph, Style.Pal[info.Pal], {
+			AnchorPoint = Vector2.new(0, 0.5),
+			Position = UDim2.new(0, 12, 0.5, 0),
+			Size = UDim2.fromOffset(60, 60),
+		})
 		Kit.Label(row, def.Name, {
-			Size = UDim2.new(0.45, -60, 0.5, -2),
-			Position = UDim2.new(0, 58, 0, 4),
+			Size = UDim2.new(0.45, -84, 0, 34),
+			Position = UDim2.fromOffset(84, 8),
+			TextSize = 28,
 			TextXAlignment = Enum.TextXAlignment.Left,
 		})
-		Kit.Label(row, info.Text, {
-			Size = UDim2.new(0.45, -60, 0.4, 0),
-			Position = UDim2.new(0, 58, 0.55, 0),
+		Kit.Body(row, info.Text, {
+			Size = UDim2.new(0.45, -84, 0, 28),
+			Position = UDim2.fromOffset(84, 46),
 			TextXAlignment = Enum.TextXAlignment.Left,
-			Font = Style.FontBody,
-			TextColor3 = Style.Color.InkSoft,
 		})
 		local pips = Kit.Make("Frame", {
 			BackgroundTransparency = 1,
-			Size = UDim2.new(0.25, 0, 0.4, 0),
-			Position = UDim2.new(0.47, 0, 0.3, 0),
+			AnchorPoint = Vector2.new(0, 0.5),
+			Size = UDim2.new(0.25, 0, 0, 22),
+			Position = UDim2.new(0.47, 0, 0.5, 0),
 		}, row)
-		Kit.List(pips, true, 4, true)
+		Kit.List(pips, true, 5, true)
 		for p = 1, max do
+			local on = p <= level
+			local pal = if on then Style.Pal.Leaf else Style.Pal.Disabled
 			local pip = Kit.Make("Frame", {
-				BackgroundColor3 = if p <= level then Style.Color.Leaf else Style.Color.Grey,
-				Size = UDim2.new(1 / max, -4, 1, 0),
+				BackgroundColor3 = Color3.new(1, 1, 1),
+				BorderSizePixel = 0,
+				Size = UDim2.new(1 / max, -5, 1, 0),
 				LayoutOrder = p,
 			}, pips)
-			Kit.Corner(pip, 6)
+			Kit.Corner(pip, 99)
+			Kit.Gradient(pip, pal)
+			Kit.Stroke(pip, pal.Dark, 2.5)
 		end
 		if cost then
-			Kit.Button(row, "$" .. Format.Number(cost), Style.Color.Leaf, function()
-				Net.Do("BuyUpgrade", "⬆️ " .. def.Name .. " upgraded!", key)
+			Kit.Button(row, "$" .. Format.Number(cost), "Leaf", function()
+				Net.Do("BuyUpgrade", def.Name .. " upgraded!", key)
 			end, {
 				AnchorPoint = Vector2.new(1, 0.5),
-				Position = UDim2.new(1, -6, 0.5, 0),
-				Size = UDim2.new(0.24, 0, 0, 48),
+				Position = UDim2.new(1, -12, 0.5, 0),
+				Size = UDim2.new(0.24, 0, 0, 60),
+				Icon = "Cash",
+				IconSize = 32,
+				TextSize = 24,
 			})
 		else
-			Kit.Label(row, "MAX ⭐", {
+			Kit.Title(row, "MAX", Style.Pal.Sun.Dark, {
 				AnchorPoint = Vector2.new(1, 0.5),
-				Position = UDim2.new(1, -6, 0.5, 0),
-				Size = UDim2.new(0.24, 0, 0.6, 0),
-				TextColor3 = Style.Color.Sun,
+				Position = UDim2.new(1, -12, 0.5, 0),
+				Size = UDim2.new(0.24, 0, 0, 44),
+				TextSize = 34,
+				TextColor3 = Style.Pal.Sun.Top,
 			})
 		end
 	end
 end
 
 function UpgradesWindow.Mount()
-	local win = Windows.Create("Upgrades", "⬆️ Upgrades", Style.Color.LeafDark)
-	Kit.Label(win.Body, "Upgrades are kept forever - even after Release!", {
-		Size = UDim2.new(1, 0, 0, 26),
-		Font = Style.FontBody,
-		TextColor3 = Style.Color.InkSoft,
+	local win = Windows.Create("Upgrades", "Upgrades", "Leaf", "Upgrades")
+	Kit.Body(win.Body, "Upgrades are kept forever - even after Release!", {
+		Size = UDim2.new(1, 0, 0, 30),
+		TextSize = 22,
 	})
-	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 32), Size = UDim2.new(1, 0, 1, -32) })
-	Kit.List(list, false, 6)
-	Kit.Padding(list, 4)
+	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 38), Size = UDim2.new(1, 0, 1, -38) })
+	Kit.List(list, false, 10, true)
+	Kit.Padding(list, 6)
 	win.OnOpen = function()
 		UpgradesWindow.Render(true)
 	end

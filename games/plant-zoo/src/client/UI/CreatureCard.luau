@@ -28,6 +28,8 @@ local waterBtn: TextButton
 local tonicBtn: TextButton
 local currentId: any = nil
 local lastSig = ""
+local lastView = ""
+local picture: Frame
 local notify: ((string, string?) -> ())? = nil
 
 function CreatureCard.SetNotifier(fn: (string, string?) -> ())
@@ -35,28 +37,26 @@ function CreatureCard.SetNotifier(fn: (string, string?) -> ())
 end
 
 local function needRow(order: number, ok: boolean, text: string, fix: (() -> ())?)
-	local row = Kit.Make(
-		"Frame",
-		{ BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0.3, -4), LayoutOrder = order },
-		needsBox
-	)
-	Kit.Make("UISizeConstraint", { MinSize = Vector2.new(0, 34) }, row)
-	Kit.Label(row, if ok then "✅" else "❌", { Size = UDim2.fromScale(0.12, 1) })
-	Kit.Label(row, text, {
-		Size = UDim2.fromScale(if ok then 0.86 else 0.6, 1),
-		Position = UDim2.fromScale(0.13, 0),
+	local row = Kit.Panel(needsBox, Style.Color.Panel, { Size = UDim2.new(1, -8, 0, 54), LayoutOrder = order })
+	Kit.CodeBadge(row, if ok then "OK" else "X", if ok then Style.Pal.Leaf else Style.Pal.Red, {
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, 8, 0.5, 0),
+		Size = UDim2.fromOffset(38, 38),
+	})
+	Kit.Body(row, text, {
+		Size = UDim2.new(1, if ok then -64 else -200, 1, -8),
+		Position = UDim2.fromOffset(56, 4),
 		TextXAlignment = Enum.TextXAlignment.Left,
-		Font = Style.FontBody,
-		TextColor3 = if ok then Style.Color.LeafDark else Style.Color.Ink,
+		TextColor3 = if ok then Style.Pal.Leaf.Dark else Style.Color.Ink,
 	})
 	if not ok and fix then
-		Kit.Button(
-			row,
-			"🔧 Fix",
-			Style.Color.Sun,
-			fix,
-			{ Size = UDim2.fromScale(0.25, 1), Position = UDim2.fromScale(0.74, 0) }
-		)
+		Kit.Button(row, "Fix", "Sun", fix, {
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.new(1, -8, 0.5, 0),
+			Size = UDim2.fromOffset(120, 46),
+			TextSize = 24,
+			Lip = 4,
+		})
 	end
 end
 
@@ -64,23 +64,23 @@ local function renderNeeds(item: any, s: any)
 	Kit.Clear(needsBox)
 	local r = Derived.NeedsFor(item)
 	if not s or not r then
-		Kit.Label(needsBox, "Needs loading...", { Size = UDim2.new(1, 0, 0.3, 0) })
+		Kit.Body(needsBox, "Needs loading...", { Size = UDim2.new(1, 0, 0, 40) })
 		return
 	end
 	local padBiome = State.Tbl("padBiome")[item.pad] or "?"
 	needRow(
 		1,
 		r.biome == true,
-		string.format("%s %s exhibit (pad is %s)", Style.BiomeInfo(s.Biome).Icon, s.Biome, padBiome),
+		string.format("%s exhibit (pad is %s)", s.Biome, padBiome),
 		function()
 			Windows.Open("Build", { tab = "Exhibits", pad = item.pad, biome = s.Biome })
 		end
 	)
-	needRow(2, r.decor == true, "🪴 " .. s.Decor .. " in this pad", function()
+	needRow(2, r.decor == true, s.Decor .. " in this pad", function()
 		Windows.Open("Build", { tab = "Decor", decor = s.Decor, pad = item.pad })
 	end)
 	if s.Buddy then
-		needRow(3, r.buddy == true, "🤝 A " .. s.Buddy .. " buddy in this pad", function()
+		needRow(3, r.buddy == true, "A " .. s.Buddy .. " buddy in this pad", function()
 			if notify then
 				(notify :: (string, string?) -> ())(
 					"Place any " .. s.Buddy .. " creature in Pad " .. tostring(item.pad),
@@ -93,8 +93,8 @@ local function renderNeeds(item: any, s: any)
 	local met = r.met or 0
 	local total = r.total or 0
 	if r.thriving then
-		thrivingLabel.Text = "✨ THRIVING! x1.5 income ✨"
-		thrivingLabel.TextColor3 = Style.Color.LeafDark
+		thrivingLabel.Text = "THRIVING! x1.5 income"
+		thrivingLabel.TextColor3 = Style.Pal.Leaf.Dark
 	else
 		thrivingLabel.Text = string.format("Needs %d/%d - meet all for Thriving x1.5", met, total)
 		thrivingLabel.TextColor3 = Style.Color.InkSoft
@@ -113,20 +113,32 @@ function CreatureCard.Update()
 	local s = Derived.Species(item.species)
 	local rarity = if s then s.Rarity else "Common"
 	header.Text = Derived.DisplayName(item)
-	header.TextColor3 = Style.RarityColor(rarity)
-	win.Title.Text = string.format("%s %s", Style.BiomeInfo(s and s.Biome).Icon, rarity)
+	header.TextColor3 = Style.RarityDarkColor(rarity)
+	win.Title.Text = Style.NormRarity(rarity) .. (if s then " · " .. tostring(s.Biome) else "")
 	local stage, progress, left = Derived.Stage(item)
+	-- Picture: rebuild only when species/stage changes (cached models, cheap clone).
+	local viewKey = tostring(item.species) .. "|" .. (if progress >= 1 then "Grown" else tostring(stage))
+	if viewKey ~= lastView then
+		lastView = viewKey
+		Kit.Clear(picture)
+		local card = Kit.Card(picture, rarity, { Size = UDim2.fromScale(1, 1) })
+		Kit.CreatureView(card, tostring(item.species), if progress >= 1 then "Grown" else tostring(stage), {
+			Position = UDim2.fromOffset(8, 8),
+			Size = UDim2.new(1, -16, 1, -44),
+			ZIndex = 2,
+		})
+	end
 	local muts = Derived.Mutations(item)
 	info.Text = string.format(
 		"+$%s/s · %s%s",
 		Format.Number(Derived.CreatureIncome(item)),
 		if s then s.Role else "",
-		if muts ~= "" then " · 🌈 " .. muts else ""
+		if muts ~= "" then " · " .. muts else ""
 	)
 	if progress >= 1 then
-		stageLabel.Text = "🌳 Grown - earning!"
+		stageLabel.Text = "Grown - earning!"
 	else
-		stageLabel.Text = string.format("🌱 %s - ready in %s", stage, Format.Time(left))
+		stageLabel.Text = string.format("%s - ready in %s", stage, Format.Time(left))
 	end
 	setStage(progress)
 	waterBtn.Visible = progress < 1
@@ -141,50 +153,54 @@ end
 function CreatureCard.Open(id: any)
 	currentId = id
 	lastSig = ""
+	lastView = ""
 	Windows.Open("Creature", id)
 end
 
 function CreatureCard.Mount()
-	win = Windows.Create("Creature", "Creature", Style.Color.Sky)
+	win = Windows.Create("Creature", "Creature", "Sky", nil, Vector2.new(840, 580))
 	local body = win.Body
-	header = Kit.Label(body, "", { Size = UDim2.new(1, 0, 0.12, 0) })
-	Kit.Make("UIStroke", { Thickness = 1.5, Color = Style.Color.Dark }, header)
-	info = Kit.Label(body, "", {
-		Size = UDim2.new(1, 0, 0.08, 0),
-		Position = UDim2.fromScale(0, 0.13),
-		Font = Style.FontBody,
-		TextColor3 = Style.Color.InkSoft,
-	})
-	stageLabel = Kit.Label(body, "", { Size = UDim2.new(1, 0, 0.08, 0), Position = UDim2.fromScale(0, 0.22) })
-	_skip, setStage =
-		Kit.Progress(body, Style.Color.Leaf, { Size = UDim2.new(1, 0, 0.05, 0), Position = UDim2.fromScale(0, 0.31) })
-	thrivingLabel = Kit.Label(body, "", { Size = UDim2.new(1, 0, 0.08, 0), Position = UDim2.fromScale(0, 0.38) })
+	picture = Kit.Make("Frame", {
+		BackgroundTransparency = 1,
+		Size = UDim2.new(0, 250, 1, -86),
+	}, body)
+	local right = Kit.Make("Frame", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(266, 0),
+		Size = UDim2.new(1, -266, 1, -86),
+	}, body)
+	header = Kit.Label(right, "", { Size = UDim2.new(1, 0, 0, 44), TextSize = 38 })
+	info = Kit.Body(right, "", { Position = UDim2.fromOffset(0, 44), Size = UDim2.new(1, 0, 0, 28), TextSize = 22 })
+	stageLabel = Kit.Label(right, "", { Position = UDim2.fromOffset(0, 76), Size = UDim2.new(1, 0, 0, 30), TextSize = 24 })
+	_skip, setStage = Kit.Progress(right, "Leaf", { Position = UDim2.fromOffset(0, 110), Size = UDim2.new(1, 0, 0, 20) })
+	thrivingLabel = Kit.Label(right, "", { Position = UDim2.fromOffset(0, 138), Size = UDim2.new(1, 0, 0, 30), TextSize = 24 })
 	needsBox = Kit.Make("Frame", {
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 0.36, 0),
-		Position = UDim2.fromScale(0, 0.47),
-	}, body)
-	Kit.List(needsBox, false, 4)
+		Position = UDim2.fromOffset(0, 174),
+		Size = UDim2.new(1, 0, 1, -174),
+	}, right)
+	Kit.List(needsBox, false, 8)
 
 	local row = Kit.Make("Frame", {
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 0.14, 0),
-		Position = UDim2.fromScale(0, 0.86),
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.fromScale(0, 1),
+		Size = UDim2.new(1, 0, 0, 72),
 	}, body)
-	Kit.List(row, true, 6, true)
-	local function act(text: string, color: Color3, order: number, fn: () -> ()): TextButton
-		return Kit.Button(row, text, color, fn, { Size = UDim2.new(0.24, -6, 1, 0), LayoutOrder = order })
+	Kit.List(row, true, 14, true)
+	local function act(text: string, color: any, order: number, fn: () -> ()): TextButton
+		return Kit.Button(row, text, color, fn, { Size = UDim2.fromOffset(176, 68), LayoutOrder = order })
 	end
-	waterBtn = act("💦 Water", Style.Color.Sky, 1, function()
+	waterBtn = act("Water", "Sky", 1, function()
 		Net.Do("Water", nil, currentId)
 	end)
-	tonicBtn = act("💧 Tonic", Style.Color.Purple, 2, function()
-		Net.Do("UseHopeItem", "Grown instantly! 🌳", "GrowTonic", currentId)
+	tonicBtn = act("Tonic", "Purple", 2, function()
+		Net.Do("UseHopeItem", "Grown instantly!", "GrowTonic", currentId)
 	end)
-	act("✋ Move", Style.Color.Wood, 3, function()
+	act("Move", "Wood", 3, function()
 		BuildMode.Start({ mode = "move", ref = currentId, label = "Pick a new cell" })
 	end)
-	act("💰 Sell", Style.Color.Sun, 4, function()
+	act("Sell", "Sun", 4, function()
 		local item = Derived.FindPlaced(currentId)
 		if not item then
 			return
