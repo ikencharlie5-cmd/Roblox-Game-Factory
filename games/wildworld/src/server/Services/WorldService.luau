@@ -61,6 +61,31 @@ function WorldService.Init()
 	end
 	Plots.Build(root, rng)
 	Forest.Build(root, rng)
+	Terrain.Bounds(root)
+	-- Anyone who falls onto the hidden SafetyFloor goes back to the hub (per-character debounce).
+	local floor = Workspace:FindFirstChild("SafetyFloor") :: BasePart?
+	if floor then
+		local busy: { [Model]: boolean } = {}
+		floor.Touched:Connect(function(hit)
+			local parent = hit.Parent
+			if not parent or not parent:IsA("Model") or not parent:FindFirstChildOfClass("Humanoid") then
+				return
+			end
+			local char = parent :: Model
+			if busy[char] then
+				return
+			end
+			busy[char] = true
+			local hrp = char:FindFirstChild("HumanoidRootPart") :: BasePart?
+			if hrp then
+				hrp.AssemblyLinearVelocity = Vector3.zero
+			end
+			char:PivotTo(WorldService.HubSpawn())
+			task.delay(1, function()
+				busy[char] = nil
+			end)
+		end)
+	end
 	-- Trees on every other backdrop hilltop.
 	local hills = Kit.Model(root, "HillTrees")
 	for i, top in hillTops do

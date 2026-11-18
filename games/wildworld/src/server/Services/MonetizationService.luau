@@ -89,7 +89,56 @@ local function setPassAttrs(player: Player)
 	player:SetAttribute("VIP", MonetizationService.HasPass(player, "VIP"))
 end
 
+-- VIP perk "Gold name + tag": gold billboard over the head (built in code).
+local function applyVipTag(player: Player)
+	local char = player.Character
+	local head = char and char:FindFirstChild("Head")
+	if not head then
+		return
+	end
+	local old = head:FindFirstChild("VipTag")
+	if not player:GetAttribute("VIP") then
+		if old then
+			old:Destroy()
+		end
+		return
+	end
+	if old then
+		return
+	end
+	local bb = Instance.new("BillboardGui")
+	bb.Name = "VipTag"
+	bb.Size = UDim2.fromOffset(80, 28)
+	bb.StudsOffset = Vector3.new(0, 2.6, 0)
+	bb.AlwaysOnTop = false
+	bb.MaxDistance = 80
+	bb.LightInfluence = 0
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.fromScale(1, 1)
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.FredokaOne
+	label.Text = "VIP"
+	label.TextScaled = true
+	label.TextColor3 = Color3.fromRGB(255, 205, 50)
+	label.TextStrokeColor3 = Color3.fromRGB(90, 55, 0)
+	label.TextStrokeTransparency = 0.2
+	label.Parent = bb
+	bb.Parent = head
+end
+
+local function watchVip(player: Player)
+	player.CharacterAdded:Connect(function(char)
+		char:WaitForChild("Head", 10)
+		applyVipTag(player)
+	end)
+	player:GetAttributeChangedSignal("VIP"):Connect(function()
+		applyVipTag(player)
+	end)
+	applyVipTag(player)
+end
+
 local function loadPasses(player: Player)
+	task.spawn(watchVip, player)
 	local t = {}
 	for key, pass in Config.GamePasses :: any do
 		if pass.Id ~= 0 then

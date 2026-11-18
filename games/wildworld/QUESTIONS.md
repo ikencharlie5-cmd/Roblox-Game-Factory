@@ -28,3 +28,8 @@
 - [gameplay] Likes "+1 rating/visitor/day, cap 20" added directly to park rating (0-100) is strong. (built: literal, clamped to 100; tune `Config.Economy.LikeBonusCap`) ✅ Keep per-visitor/day, LikeBonusCap 20 -> 10
 - [gameplay] Exact tutorial rating numbers (22 -> 34) aren't reproducible with the rating formula. (built: formula as spec'd; a tree adds +5 enrichment so the bar always jumps) ✅ Approved; formula + tree jump
 - [gameplay] Bait sources: spec lists bait prices but not how players get the first one. (built: 5 Berry bait in new saves + shop stall restock every 5 min) ✅ Approved (5 Berry bait + restock)
+
+## Sign-off fixes
+- [gameplay] VIP "Gold name + tag" promised in shop/SPEC but not built: gold "VIP" BillboardGui over VIP players' heads on CharacterAdded (UI: gold chat tag via TextChatService.OnIncomingMessage) — or remove the claim from ShopWindow INFO.VIP.
+- [graphics] Map edge has no invisible walls; players can walk over backdrop hills off the terrain onto SafetyFloor and get stuck. Add invisible boundary walls + make SafetyFloor teleport touched players to HubSpawn.
+- [manager] README not publish-ready: title + emoji tag, How to play, description, icon/thumbnail ideas, pass/product names+prices+descriptions table.

@@ -50,6 +50,12 @@ task.spawn(function()
 	end
 end)
 
+-- Gold [VIP] chat prefix (isolated so it can't break UI).
+pcall(function()
+	local tag = require(Client:WaitForChild("Chat"):WaitForChild("VipChatTag")) :: any
+	tag.Start()
+end)
+
 -- Camera: a bit wider so whole habitats fit on phones; capped zoom keeps parks readable.
 workspace.CurrentCamera.FieldOfView = 72
 player.CameraMaxZoomDistance = 80

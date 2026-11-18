@@ -2,9 +2,9 @@
   "name": "Wildworld",
   "slug": "wildworld",
   "idea": "Multiplayer wildlife park + creature collection/breeding sim (Planet Zoo x Slime Rancher x Pokemon inspired, all original). Explore, capture original creatures, build habitats, breed for genetics + rare mutations, earn from visitors, visit/trade securely.",
-  "stage": "checker",
+  "stage": "signoff",
   "created": "2026-11-18T03:02:43Z",
-  "updated": "2026-11-18T05:09:16Z",
+  "updated": "2026-11-18T05:11:21Z",
   "branches": {
     "gameplay": "done",
     "graphics": "done",
@@ -180,6 +180,18 @@
       "from": "checker",
       "to": "all",
       "text": "PASS"
+    },
+    {
+      "time": "2026-11-18T05:09:34Z",
+      "from": "system",
+      "to": "all",
+      "text": "Stage \u2192 signoff"
+    },
+    {
+      "time": "2026-11-18T05:11:21Z",
+      "from": "manager",
+      "to": "all",
+      "text": "Sign-off: 3 items need work"
     }
   ]
 }

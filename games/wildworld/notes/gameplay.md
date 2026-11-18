@@ -160,3 +160,7 @@ false when the lock was lost, so receipts stay NotProcessedYet (also re-checked 
 - **Animation:** creature motion from `Goal`/`Speed`/`State`; moments from `LastFed`, `LastPet`, Reveal events.
 - **Main.server.luau** (not gameplay-owned) loads `DataService, MonetizationService, DailyRewardService` first then
   everything else; all fine as is. Helper modules without Init/Start are harmless; `CreatureAI.Start` must run (Main does).
+
+## VIP tag (sign-off fix)
+- MonetizationService adds a gold "VipTag" BillboardGui on the Head for players with the `VIP` attribute (on CharacterAdded and when VIP changes mid-session).
+- Client `src/client/Chat/VipChatTag.luau` sets TextChatService.OnIncomingMessage to prefix gold [VIP]; required in a pcall from Main.client.luau.

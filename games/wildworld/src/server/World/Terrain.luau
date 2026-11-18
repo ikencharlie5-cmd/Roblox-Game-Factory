@@ -128,6 +128,37 @@ function Terrain.Backdrop(rng: Random): { Vector3 }
 	return tops
 end
 
+-- Invisible boundary walls: park box (x/z ±420) + forest corridor (x ±225, down to z -1240).
+-- Keeps players off the backdrop hills / out of the SafetyFloor pit. Clear of plots (r <= 360) and zones (x ±210).
+function Terrain.Bounds(parent: Instance)
+	local folder = Instance.new("Folder")
+	folder.Name = "Bounds"
+	folder.Parent = parent
+	local H, P, F, S = 400, 420, 225, -1240
+	local function wall(name: string, a: Vector2, b: Vector2)
+		local w = Instance.new("Part")
+		w.Name = name
+		w.Anchored = true
+		w.CanCollide = true
+		w.CanTouch = false
+		w.CanQuery = false
+		w.CastShadow = false
+		w.Transparency = 1
+		local mid = (a + b) / 2
+		w.Size = Vector3.new(math.abs(b.X - a.X) + 4, H, math.abs(b.Y - a.Y) + 4)
+		w.CFrame = CFrame.new(mid.X, H / 2 - 20, mid.Y)
+		w.Parent = folder
+	end
+	wall("South", Vector2.new(-P, P), Vector2.new(P, P))
+	wall("East", Vector2.new(P, -P), Vector2.new(P, P))
+	wall("West", Vector2.new(-P, -P), Vector2.new(-P, P))
+	wall("NorthEast", Vector2.new(F, -P), Vector2.new(P, -P))
+	wall("NorthWest", Vector2.new(-P, -P), Vector2.new(-F, -P))
+	wall("ForestEast", Vector2.new(F, S), Vector2.new(F, -P))
+	wall("ForestWest", Vector2.new(-F, S), Vector2.new(-F, -P))
+	wall("ForestEnd", Vector2.new(-F, S), Vector2.new(F, S))
+end
+
 -- Glade back wall: rock cliff the waterfall pours over, with grass on top.
 function Terrain.Cliff()
 	local tr = t()

@@ -11,7 +11,7 @@ Everything is built in code by `WorldService.Init()` and works straight from `ro
 - `default.project.json` → Lighting `$properties` (ShadowMap etc. per ART_STYLE_GUIDE §1).
 
 ## Map layout (studs, ground top y = 0, north = -Z)
-- Terrain 1280 x 1920 (x -640..640, z -1280..640). Grass `#6CC644` with Decoration, LeafyGrass under the deep forest, Ground roads, backdrop hills ring (r ≈ 440+) and forest flanks (x ≈ ±280). `Workspace.SafetyFloor` at y ≈ -15. Any Baseplate is destroyed.
+- Terrain 1280 x 1920 (x -640..640, z -1280..640). Grass `#6CC644` with Decoration, LeafyGrass under the deep forest, Ground roads, backdrop hills ring (r ≈ 440+) and forest flanks (x ≈ ±280). `Workspace.SafetyFloor` at y ≈ -15. Touching it teleports the character to HubSpawn (1 s debounce). Invisible walls in `World/Bounds` (400 tall): park box x/z ±420, forest corridor x ±225 down to z -1240. Any Baseplate is destroyed.
 - **Hub** at the origin (r 80): paved plaza, cobble inner ring, **Heart Tree** (giant pink/purple magic tree in a fountain basin; the focal point), 8 lanterns, 4 benches, 4 flower beds. Landmarks face the centre: Field Shop stall (east, r 64), Top Parks board (225°), Daily Chest (west), forest signpost (north edge). `HubSpawn` SpawnLocation at (0, 0.6, 42).
 - **Plots**: 8 plots (128x128) at r 270, angle `-67.5° + 45°·(i-1)`, so the north gap between plots 8 and 1 is the forest road. Spokes (Ground road, 12 wide, with lanterns and flower lines) run from the plaza to each gate. Tree clusters sit on the lawns between the spokes.
 - **Greenleaf Forest** (road x = 0): ForestGate arch at z -370.
