@@ -4,7 +4,7 @@
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
   "stage": "branches",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-17T23:45:13Z",
+  "updated": "2026-11-18T00:20:21Z",
   "branches": {
     "gameplay": "done",
     "graphics": "done",
@@ -149,6 +149,12 @@
       "from": "gameplay",
       "to": "all",
       "text": "Round 1 fixes: Studio data fallback, WorldReady race, pad1 on leave, VIP tag, shutdown saves, rate-limit feedback"
+    },
+    {
+      "time": "2026-11-18T00:20:21Z",
+      "from": "checker",
+      "to": "all",
+      "text": "Studio playtest: boots clean after DataService fix; plot, UI, tutorial working"
     }
   ]
 }

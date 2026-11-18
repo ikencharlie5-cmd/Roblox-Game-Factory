@@ -12,8 +12,18 @@ local Remotes = require(Shared:WaitForChild("Remotes"))
 
 local DataService = {}
 
-local store = DataStoreService:GetDataStore(Config.DataStoreName)
-local board = DataStoreService:GetOrderedDataStore(Config.LeaderboardStoreName)
+-- GetDataStore throws in unpublished places (e.g. a local .rbxl in Studio): fall back to no-save mode.
+local storeOk, storeOrErr = pcall(function()
+	return DataStoreService:GetDataStore(Config.DataStoreName)
+end)
+local boardOk, boardOrErr = pcall(function()
+	return DataStoreService:GetOrderedDataStore(Config.LeaderboardStoreName)
+end)
+local store: any = if storeOk then storeOrErr else nil
+local board: any = if boardOk then boardOrErr else nil
+if not storeOk then
+	warn("[DataService] DataStores unavailable:", storeOrErr)
+end
 local cache: { [Player]: { [string]: any } } = {}
 local dirty: { [Player]: boolean } = {}
 local loadedCbs: { (Player, any) -> () } = {}
@@ -84,7 +94,7 @@ end
 
 local function save(player: Player)
 	local data = cache[player]
-	if not data or noSave[player] then
+	if not data or noSave[player] or not store then
 		return
 	end
 	data.lastOnline = os.time()
@@ -94,6 +104,9 @@ local function save(player: Player)
 		return true
 	end)
 	retry(function()
+		if not board then
+			return true
+		end
 		board:SetAsync(tostring(player.UserId), math.floor(math.min(data.totalEarned or 0, 2 ^ 52)))
 		return true
 	end)
@@ -112,9 +125,12 @@ local function waitWorldReady()
 end
 
 local function onJoin(player: Player)
-	local ok, saved = retry(function()
-		return store:GetAsync("u_" .. player.UserId)
-	end)
+	local ok, saved = false, nil
+	if store then
+		ok, saved = retry(function()
+			return store:GetAsync("u_" .. player.UserId)
+		end)
+	end
 	if not ok then
 		if not RunService:IsStudio() then
 			player:Kick("Couldn't load your data. Please rejoin.")
@@ -229,6 +245,9 @@ end
 -- Top N of Total Earned: { {userId, value} }. Yields; call from a loop.
 function DataService.GetTopEarned(n: number): { { userId: number, value: number } }
 	local out = {}
+	if not board then
+		return out
+	end
 	local ok, pages = pcall(function()
 		return board:GetSortedAsync(false, n)
 	end)

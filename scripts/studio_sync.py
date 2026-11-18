@@ -2,7 +2,8 @@
 """Turn a game's Rojo project into Luau chunks that recreate every script in Studio
 (via the Studio MCP `execute_luau` tool). Used when Rojo can't connect.
 
-Usage: python3 scripts/studio_sync.py <slug> [max_chunk_bytes]
+Usage: python3 scripts/studio_sync.py <slug> [max_chunk_bytes] [--only path1,path2]
+  --only: sync just these repo files (relative to games/<slug>/), no wipe. Good for small fixes.
 Writes build/studio-sync/<slug>/chunk_NN.luau — run each one with execute_luau (Edit).
 Chunk 00 deletes the old synced folders first so the result matches the repo exactly.
 """
@@ -51,7 +52,7 @@ def add_dir(d: Path, inst_path: list, out: list):
         else:
             name, cls = classify(f)
             if cls and not name.startswith("init"):
-                out.append({"path": inst_path + [name], "class": cls, "src": f.read_text()})
+                out.append({"path": inst_path + [name], "class": cls, "src": f.read_text(), "file": str(f)})
 
 
 def long_string(s: str) -> str:
@@ -88,12 +89,21 @@ end
 
 
 def main():
-    slug = sys.argv[1]
-    limit = int(sys.argv[2]) if len(sys.argv) > 2 else 60000
+    args = [a for a in sys.argv[1:]]
+    only = None
+    if "--only" in args:
+        i = args.index("--only")
+        only = set(args[i + 1].split(","))
+        del args[i:i + 2]
+    slug = args[0]
+    limit = int(args[1]) if len(args) > 1 else 60000
     base = ROOT / "games" / slug
     project = json.loads((base / "default.project.json").read_text())
     items, roots = [], []
     walk(project["tree"], [], base, items, roots)
+    if only is not None:
+        items = [it for it in items if it.get("file") and str(Path(it["file"]).relative_to(base)) in only]
+        roots = []
 
     outdir = ROOT / "build" / "studio-sync" / slug
     outdir.mkdir(parents=True, exist_ok=True)
