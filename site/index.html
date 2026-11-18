@@ -235,8 +235,9 @@ function stick(cx, baseY, color, on) {
   return `<g stroke="${color}" stroke-width="2.4" stroke-linecap="round" fill="none" filter="url(#neon)">
     <circle cx="${cx}" cy="${baseY - 30}" r="6"/>
     <line x1="${cx}" y1="${baseY - 24}" x2="${cx}" y2="${baseY - 8}"/>
-    <line x1="${cx}" y1="${baseY - 8}" x2="${cx + 9}" y2="${baseY - 8}"/>
-    <line x1="${cx + 9}" y1="${baseY - 8}" x2="${cx + 9}" y2="${baseY + 4}"/>
+    <line x1="${cx}" y1="${baseY - 8}" x2="${cx - 9}" y2="${baseY - 8}"/>
+    <line x1="${cx - 9}" y1="${baseY - 8}" x2="${cx - 9}" y2="${baseY + 4}"/>
+    <line x1="${cx + 3}" y1="${baseY - 6}" x2="${cx + 3}" y2="${baseY + 4}" stroke-opacity=".5"/>
     <g class="${on ? "type" : ""}" style="transform-origin:${cx}px ${baseY - 20}px">
       <line x1="${cx}" y1="${baseY - 20}" x2="${cx - 12}" y2="${baseY - 14}"/>
     </g>
