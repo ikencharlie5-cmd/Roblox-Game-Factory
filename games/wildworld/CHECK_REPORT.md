@@ -1,36 +1,33 @@
-# Wildworld — Check Report
+# Wildworld — Check Report (round 2)
 
-**Verdict: FAIL** (8 blocking/major issues, 6 minor)
+**Verdict: PASS** (0 blocking, 1 minor left)
 
-`scripts/check.sh wildworld`: local tools missing (skipped); CI reported green (stylua, selene, rojo build).
+`scripts/check.sh wildworld`: stylua, selene and rojo aren't installed locally, so they were skipped. CI reported green.
 No Roblox Studio MCP is connected, so there was no playtest. These findings come from reading the code.
 
-## Blocking / major
+## Round 1 issues: re-verified
+- [ui] Build grid on rotated plots: **fixed.** PlotInfo.CFrame (PlotInfo.luau:62-75) levels the plot the same way as PlotService.PlotCFrame. ToCell, CellCFrame and BuildGrid all work in plot space, and the math matches PlacementService (CellCentre + ToWorld + rot).
+- [gameplay] Berry trust decays before capture: **fixed.** CaptureService.luau:246-248 skips decay while the wild is claimed.
+- [ui/gameplay] UnlockZone unreachable: **fixed.** ParkWindow has zone cards (ParkWindow.luau:162-197) and a client ProximityPrompt on each `ZoneGate` anchor (221-258). Zone Ids match across Config.Zones, Layout and the Forest tags, and the server re-checks level and cost.
+- [audio] Server sound names missing: **fixed.** Every Guard.Sound name, including the dynamic `Weather_<Name>` names (Sunny/Rain/RainbowShower), resolves through Sounds.Aliases. A full scan found no unknown names.
+- [animation] Visitors never spawned: **fixed.** It accepts the tagged Base part, maps Models to PrimaryPart (Base), and watches `workspace.World.Plots`. EconomyService writes TipAmount/Tips onto PlotService.PlotPart (the same tagged Base part).
+- [gameplay] Hub DailyChest/ShopStall prompts: **fixed.** Guard.WirePrompt picks up prompts under the tagged models (now and later). The server fires Reveal "OpenWindow" with Daily/Shop, and Main.client.luau:176 opens the window. Both window names exist.
+- [ui] Tutorial feed range: **fixed.** Tutorial.luau:122-145 only enables "Feed it" within InteractRange-2. Otherwise it shows "Walk closer" with a world arrow.
+- [gameplay] DataService autosave/release race: **partly fixed** (see Minor).
+- Minor round 1 fixes: starter-species spawn bias (WildService.luau:89-114, Config.Capture.StarterSpeciesBias) is done. Server `position` maps to `At` (SoundController.luau:31-33). Feed, Egg_Crack and Baby_Chirp have fallback IDs. Ping/2 is used (CaptureService.luau:181). SaveNow returns false on lockLost, so receipts are retried. All done.
 
-- [ui] src/client/UI/PlotInfo.luau:71-81 (+ BuildGrid.luau:51-58, BuildMode.luau:89/123) — Build-mode cell math uses world X/Z offsets from the plot centre, but plots are rotated to face the hub (Layout.PlotCFrame: -67.5° + 45°·i, so none are axis-aligned). The server (PlotService.ToWorld) uses the rotated plot CFrame. The ghost, grid and tapped cell don't match where the server puts the item, and Remove picks the wrong item. This breaks tutorial step 3 ("place a tree, watch the rating jump"). — Get the plot part's CFrame (level it like PlotService.PlotCFrame does). Use `cf:PointToObjectSpace(pos)` in ToCell, `cf * CFrame.new(x,0,z) * Angles` in CellCFrame, and build the grid lines in `cf` space.
-- [gameplay] src/server/Services/CaptureService.luau:246-248 + Config.luau:147,154-155 — A Berry gives exactly `TrustNeeded` (40), and trust decays 0.5/s on the next 1 s tick even while the wild is claimed. By the time the player presses HOLD NET, trust is 39.5, so CaptureStart fails with "doesn't trust you yet". Every catch costs 2 of the 5 starting berries, and the first one always looks like it failed. — Skip decay while `claimedBy` is set and the claim hasn't expired, or decay only down to `TrustNeeded`, or set Berry trust to 50.
-- [ui] (no file) + [gameplay] EconomyService.luau:188 — The `UnlockZone` remote has no caller anywhere in the client, and nothing in the world (gate prompt) calls it. Mossy Hollow and Waterfall Glade can never be unlocked, and WildService:301-313 teleports players out. So Pebblehorn and Thornstag (2/5 species, journal completion, Legendary wilds) can't be reached. — Add an Unlock button in ParkWindow (Config.Zones, level + cost) and/or a ProximityPrompt on each `ZoneGate` that calls UnlockZone.
-- [audio] src/shared/Sounds.luau:130-142 — About 20 sound names the server fires through PlaySound are not in Defs or Aliases. Mixer.Resolve warns once and plays nothing. Missing: `EggCrack, EggLaid, EggReady, BaitThrow, NetCharge, CaptureSuccess, CaptureFail, Discovery, JournalStep, Munch, GrowUp, Assign, Refill, Sell, Scan, TierUp, Unlock, QuestReady, Restock, WeatherClear, Weather_Sunny/Weather_Rain/Weather_RainbowShower`. Hatch, catch and discovery are all silent from the server side. — Add aliases, e.g. EggCrack→Egg_Crack, BaitThrow→Bait_Throw, CaptureSuccess→Capture_Success, CaptureFail→Capture_Fail, Discovery→Discover_New, JournalStep→Journal_NewEntry, TierUp→ParkTierUp, Unlock→ZoneUnlock, EggLaid→Breed_Start, EggReady→Breed_Ready, NetCharge→Capture_Wobble, Munch→Voice_Munch, GrowUp→Baby_Chirp (or a new def), Assign/Refill/Sell/Scan/QuestReady/Restock→existing UI/SFX defs, Weather_*→Amb_Rain_Bed / Notification.
-- [animation] src/client/Animation/Visitors.luau:135-136,191-210 — `addPlot` only accepts Models, but the `Plot` tag is on the **Base part** (Plots.luau:113). The fallback looks for `workspace.Plots`, but the folder is `workspace.World.Plots`. So no visitors ever spawn, and the `Tips`/`TipAmount` coin fountain (the only income feedback, including the first +25 tip) never shows. — Accept BaseParts tagged `Plot` (use the part's CFrame as pivot and read its attributes), or listen to `.Parent` when the tag is on a part.
-- [gameplay] src/server/World/Hub.luau:14-23 (prompts) — The `DailyChest` and `ShopStall` ProximityPrompts are built, but no service connects `Triggered`. Those hub landmarks do nothing. — In DailyRewardService/ShopService (or a small hub-wiring service), connect `Triggered` to claim daily / open the shop. Opening the shop window needs a client hook: either the client listens to `PromptTriggered` for these tags, or the server fires a Reveal kind such as "OpenWindow".
-- [ui] src/client/UI/Tutorial.luau:127-131 (+ Main.client.luau:143) — During the Feed step, the context bar is suppressed, so the only way to feed is the big "Feed it" button. The player spawns ~54 studs from the pad (Plots.luau:101, spawn at -HALF+10). The server needs ≤30 (+6) studs (CreatureCare.feed), so the first tap usually returns "Get closer to feed it". — Show/enable the button only when `WorldQuery.MyCreature` is within ~28 studs ("Walk to your creature!" otherwise), or skip the range check for tutorial step 2 on the server.
-- [gameplay] src/server/Services/DataService.luau:62-80 — Race: an autosave whose UpdateAsync is in flight when the player leaves can finish after the release save and write `lock = {JOB}` back. The next server then sees a fresh lock for 180 s and kicks the player after 30 s of retries. — In the transform, `if leaving[player] and not release then return nil end`. Alternatively, track an in-flight save per player and have the release save wait for it.
+## New contracts checked (no breakage)
+SaveSettings is declared as a CLIENT_EVENT and created on the server. SettingsService clamps and rate-limits it and writes data.settings, which is in DataSchema. The client debounces it, and SettingsWindow goes through the SoundController setters. Every client `Net.*` name and every server `Guard.Bind`/`Remotes.*` name is declared in Remotes.luau.
 
 ## Minor
+- [gameplay] src/server/Services/DataService.luau:80-90 + 276-282 — The transform guard `if leaving[player] and not release` only works while `leaving[p]` is set. PlayerRemoving clears `leaving[p] = nil` straight after the release save. An autosave or SaveNow whose UpdateAsync attempt failed and is in its `task.wait(attempt)` retry can run after that cleanup and write `lock = {JOB}` back. The next server then blocks the player for SessionLockStaleSeconds. This is rare: it needs a failed DataStore call right before leaving. — In the transform, use `if not release and cache[player] ~= data then return nil end` (cache is cleared on leave), or check the same thing before each retry.
 
-- [gameplay] Config.luau:177 / WildService — The tutorial's last step ("breed two of the same species", the Golden egg hook) needs the first catch to match the starter's species. Meadow has 3 equal commons, so with ~2 catches from starting bait about 44% of players won't get a match. — Bias Meadow spawns (or the first baited wild) toward the player's starter species until `flags.goldenGiven`.
-- [audio] src/client/Audio/SoundController.luau:27-37 — The server sends opts `{position=Vector3, species=…}` in lowercase, but normalizeOpts only reads `At`/`Pitch`. Positional server sounds play as 2D. — Map `opts.position`→`At` in the PlaySound handler.
-- [audio] src/shared/Sounds.luau:56,62,63 — `Feed`, `Egg_Crack` and `Baby_Chirp` are still Id 0, and these are core first-60-seconds actions. — Pick IDs (or list them in the README Charlie TODO).
-- [gameplay] CaptureService.luau:180-181 — `GetNetworkPing()` is round-trip time, but the release only takes one-way time to arrive. Subtracting the full ping biases judgement early by RTT/2, which eats into the ±150 ms tolerance on high ping. — Subtract `ping/2`.
-- [gameplay] MonetizationService.luau:182-184 — `SaveNow` returns true when `lockLost`, so a purchase is reported PurchaseGranted without being saved. — Return false from `save` when `lockLost`, so the receipt is retried on the owning server.
-- [gameplay] DiscoverySpot (Glade) — Graphics tags these, but no gameplay code reads them. Low priority while the Glade is unreachable.
+## Notes (not bugs)
+- `DiscoverySpot` tags (Forest.luau:207) are still not read by gameplay. They're harmless decoration.
 
 ## First 60 seconds (traced)
-1. Spawn on your plot gate → big pulsing "Hatch!" button and an arrow to the egg. HatchEgg works from anywhere. ✔ (the server's EggCrack sound is silent)
-2. "Feed it" → fails from spawn because of the range check (above). After walking up it works, and +25 visitor tip arrives. ✘ friction; no coin fountain (Visitors bug)
-3. Build → tree highlighted → the ghost and grid don't line up with the rotated plot. The item lands somewhere else. ✘
-4. Catch: arrow to the forest gate, a ~25 s walk. Capture → Throw Bait → HOLD NET fails "doesn't trust you yet" until a 2nd berry. ✘
-5. Breed: only works if the catch matched the starter species. The first egg is Golden (server-forced) ✔ and hatches after 2 min, with the Instant Hatch upsell ✔.
-
-## Passing
-All 30 RemoteFunctions plus SaveSettings are declared and server-bound. Every UI call name and argument shape matches notes/gameplay.md. Guard gives rate limits, loaded-data checks and pcall. Handlers type-check their args, and Feed/Pet/Bait/Capture have range checks. Capture timing is judged on the server. Receipts are deduped and force-saved. BindToClose waits for saves. Defaults are reconciled. Daily rewards are saved, with a badge. 4 passes and 7 products are wired (Id 0 → "Coming soon!"). Format.Number is used. README has the Charlie TODO, and DECISIONS.md exists.
+1. You spawn 20 studs in front of your plot centre. The "Hatch!" button and an arrow to the egg appear. Hatching plays the server EggCrack sound (now aliased). ✔
+2. "Walk closer" (disabled) shows until you're within 28 studs, then "Feed it" works. You get the +25 tip, and the coin fountain plays on the plot. ✔
+3. Build → Tree highlighted. The ghost and grid line up with the rotated plot, and the item lands where the ghost was. ✔
+4. Catch: walk to the forest, then Throw Bait (1 Berry = 40 trust, no decay while claimed) → HOLD NET works. ✔
+5. Breed: a matching-species catch is likely (60% bias). The first egg is Golden, and the Instant Hatch upsell shows. ✔

@@ -80,7 +80,7 @@ local function save(player: Player, release: boolean): boolean
 	for attempt = 1, 4 do
 		local ok, err = pcall(function()
 			store:UpdateAsync(key(player), function(old)
-				if leaving[player] and not release then
+				if not release and (leaving[player] or cache[player] ~= data) then
 					return nil -- autosave finishing after leave must not re-write the lock
 				end
 				if lockedByOther(old) then
