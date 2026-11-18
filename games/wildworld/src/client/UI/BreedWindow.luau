@@ -168,7 +168,7 @@ local function render(force: boolean?)
 		Kit.Stroke(pill, pal.Dark, 2.5)
 		Kit.Title(pill, (if ok then "OK  " else "X  ") .. ch[1], pal.Dark, { TextSize = 16, StrokeThickness = 2 })
 	end
-	local eggTime = if a then tonumber(Derived.Field(Derived.Species(tostring(a.species)), "eggTime", "EggTime")) else nil
+	local eggTime = if a then tonumber(Derived.Field(Derived.Species(tostring(a.species)), "EggSeconds", "eggTime")) else nil
 	costLabel.Text = if a
 		then string.format("Cost: %s Coins   ·   Egg: %s", Format.Number(cost), Format.Time(eggTime or 120))
 		else "Cost and egg time show here"

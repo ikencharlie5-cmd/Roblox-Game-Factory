@@ -15,7 +15,6 @@ local PlacementService = require(script.Parent:WaitForChild("PlacementService"))
 local ParkService = require(script.Parent:WaitForChild("ParkService"))
 local CreatureAI = require(script.Parent:WaitForChild("CreatureAI"))
 local Models = require(script.Parent:WaitForChild("Models"))
-local Guard = require(script.Parent:WaitForChild("Guard"))
 local Signals = require(script.Parent:WaitForChild("Signals"))
 local CreatureCare = require(script.Parent:WaitForChild("CreatureCare"))
 
@@ -275,51 +274,9 @@ function CreatureService.Remove(player: Player, uid: string)
 	Signals.Fire("CreaturesChanged", player)
 end
 
-local function assign(player: Player, data: any, uid: any, padU: any)
-	local r = rec(player, uid)
-	if not r then
-		return false, "Bad request"
-	end
-	if padU == nil or padU == 0 then
-		local _, storage = CreatureService.Counts(data)
-		if r.padId and storage >= Config.StorageSlots then
-			return Guard.Fail(player, "Storage is full")
-		end
-		despawn(player, uid)
-		DataService.Update(player, function()
-			r.padId = nil
-		end)
-	else
-		if type(padU) ~= "number" then
-			return false, "Bad request"
-		end
-		local pad: any = nil
-		for _, p in PlacementService.GetPads(player) do
-			if p.u == padU then
-				pad = p
-			end
-		end
-		if not pad then
-			return Guard.Fail(player, "That habitat doesn't exist")
-		end
-		if r.padId == padU then
-			return true, padU
-		end
-		if #ParkService.CreaturesOnPad(data, padU) >= (pad.def.PadCapacity or 4) then
-			return Guard.Fail(player, "That habitat is full - upgrade to a bigger pad")
-		end
-		local park = CreatureService.Counts(data)
-		if not r.padId and park >= Formulas.ParkSlots(data.upgrades.Capacity) then
-			return Guard.Fail(player, "No park slots left - upgrade Creature Capacity")
-		end
-		DataService.Update(player, function()
-			r.padId = padU
-		end)
-		spawnModel(player, r)
-	end
-	Guard.Sound(player, "Assign")
-	Signals.Fire("CreaturesChanged", player)
-	return true, padU
+-- Despawns a creature's model (record untouched).
+function CreatureService.Despawn(player: Player, uid: string)
+	despawn(player, uid)
 end
 
 function CreatureService.Init()
@@ -377,7 +334,6 @@ function CreatureService.Init()
 			task.defer(CreatureService.Respawn, player, uid)
 		end
 	end)
-	Guard.Bind("AssignCreature", assign)
 	CreatureCare.Bind()
 end
 

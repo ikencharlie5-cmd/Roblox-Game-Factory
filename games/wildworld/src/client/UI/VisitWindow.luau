@@ -43,7 +43,7 @@ local function render()
 				TextXAlignment = Enum.TextXAlignment.Left,
 				ZIndex = 3,
 			})
-			Kit.Body(card, string.format("Rating %d  ·  %d likes", tonumber(p:GetAttribute("ParkRating")) or 0, tonumber(p:GetAttribute("Likes")) or 0), {
+			Kit.Body(card, string.format("Rating %d  ·  %s park", tonumber(p:GetAttribute("ParkRating")) or 0, tostring(p:GetAttribute("ParkTier") or "Poor")), {
 				Position = UDim2.fromOffset(92, 44),
 				Size = UDim2.new(1, -440, 0, 28),
 				TextSize = 18,

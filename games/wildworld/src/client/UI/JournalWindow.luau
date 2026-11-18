@@ -11,7 +11,7 @@ local CreatureCard = require(script.Parent:WaitForChild("CreatureCard"))
 
 local JournalWindow = {}
 
-local STEPS = { "Seen", "Captured", "Bred", "Mutation found", "Mastered" }
+local STEPS = { "Discovered", "Raised an adult", "Bred once", "Own 3 at once", "Mutation found" }
 
 local win: any
 local header: TextLabel
@@ -78,7 +78,7 @@ local function speciesPage(name: string)
 		JournalWindow.Render()
 	end, { Size = UDim2.fromOffset(130, 50), TextSize = 22 })
 	local pane = Kit.Panel(body, nil, { Position = UDim2.fromOffset(0, 60), Size = UDim2.new(0.38, 0, 1, -60) })
-	Kit.CreatureView(pane, name, { Rarity = def.rarity, Size = UDim2.new(1, -16, 1, -16), Position = UDim2.fromOffset(8, 8), ZIndex = 3 })
+	Kit.CreatureView(pane, name, { Rarity = Derived.Rarity(name), Size = UDim2.new(1, -16, 1, -16), Position = UDim2.fromOffset(8, 8), ZIndex = 3 })
 	local right = Kit.Make("Frame", {
 		BackgroundTransparency = 1,
 		Position = UDim2.new(0.38, 16, 0, 0),
@@ -88,14 +88,14 @@ local function speciesPage(name: string)
 	local tags = Derived.Field(def, "tags", "Tags")
 	local about = string.format(
 		"%s · %s\nLikes: %s",
-		Style.NormRarity(def.rarity),
+		Derived.Rarity(name),
 		tostring(Derived.Field(def, "personality", "Personality") or "Greenleaf Forest"),
 		if type(tags) == "table" then table.concat(tags, ", ") else "?"
 	)
-	Kit.Body(right, tostring(Derived.Field(def, "description", "Description") or about), {
+	Kit.Body(right, tostring(Derived.Field(def, "Blurb", "description") or "") .. "\n" .. about, {
 		Position = UDim2.fromOffset(0, 48),
-		Size = UDim2.new(1, 0, 0, 56),
-		TextSize = 18,
+		Size = UDim2.new(1, 0, 0, 64),
+		TextSize = 17,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
 	-- Research track: 5 connected 40 px nodes, filled = purple.

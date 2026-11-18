@@ -53,11 +53,8 @@ end
 
 -- Are this creature's genes visible to the player? (bred once, scanned, or bred in the park)
 function Genetics.Known(c: { [string]: any }): boolean
-	local v = Derived.Field(c, "genesKnown", "scanned", "geneScanned")
-	if v ~= nil then
-		return v == true
-	end
-	return Derived.Field(c, "parents") ~= nil and type(c.parents) == "table" and next(c.parents) ~= nil
+	-- Gameplay: genes are known when the creature has bred once or was scanned.
+	return c.scanned == true or (tonumber(c.bred) or 0) > 0
 end
 
 -- Offspring outcome odds for one gene: { {text, pct} } sorted by pct desc.

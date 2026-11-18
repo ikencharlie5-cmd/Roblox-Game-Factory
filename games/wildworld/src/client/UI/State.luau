@@ -1,15 +1,15 @@
 --!strict
--- Client-side mirror of what the server sends (DataChanged / StockChanged / WeatherChanged).
+-- Client-side mirror of what the server sends (DataChanged / HabitatChanged / ShopChanged).
 -- Display only: the client never decides outcomes.
 local State = {}
 
 State.data = {} :: { [string]: any }
-State.stock = nil :: any
-State.weather = nil :: any
+State.habitats = {} :: { [any]: any } -- padUid -> Habitat.Rate result (HabitatChanged)
+State.shop = nil :: any -- ShopChanged view
 State.loaded = false
 
 local changed = Instance.new("BindableEvent")
-State.Changed = changed.Event -- (what: "data" | "stock" | "weather")
+State.Changed = changed.Event -- (what: "data" | "habitat" | "shop")
 
 function State.Fire(what: string)
 	changed:Fire(what)

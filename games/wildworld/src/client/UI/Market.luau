@@ -1,21 +1,10 @@
 --!strict
--- Robux prompts. The server (MonetizationService) grants everything; the client only prompts.
--- Id 0 / missing = not created yet (Charlie TODO) -> "Coming soon!" toast.
-local MarketplaceService = game:GetService("MarketplaceService")
-local Players = game:GetService("Players")
-
+-- Robux purchases go through the PromptPurchase remote; the server prompts and grants.
+-- Id 0 = not created yet (Charlie TODO) -> server answers "Coming soon!".
 local Derived = require(script.Parent:WaitForChild("Derived"))
-local Kit = require(script.Parent:WaitForChild("Kit"))
 local Net = require(script.Parent:WaitForChild("Net"))
 
 local Market = {}
-
-local player = Players.LocalPlayer :: Player
-
-local function soon()
-	Kit.Sound("Error")
-	Net.Toast("Coming soon!", "info")
-end
 
 local function def(group: string, key: string): { [string]: any }?
 	local t = Derived.Config[group]
@@ -31,26 +20,17 @@ function Market.ProductDef(key: string): { [string]: any }?
 	return def("DevProducts", key)
 end
 
+-- The server prompts (PromptPurchase) so it can check Id 0 / already owned in one place.
 function Market.PromptPass(key: string)
-	local d = def("GamePasses", key)
-	if not d or (tonumber(d.Id) or 0) == 0 then
-		soon()
-		return
-	end
 	if Derived.HasPass(key) then
-		Net.Toast("You already own " .. tostring(d.Name or key) .. "!", "success")
+		Net.Toast("You already own " .. tostring((def("GamePasses", key) or {}).Name or key) .. "!", "success")
 		return
 	end
-	MarketplaceService:PromptGamePassPurchase(player, d.Id)
+	Net.Do("PromptPurchase", nil, "pass", key)
 end
 
 function Market.PromptProduct(key: string)
-	local d = def("DevProducts", key)
-	if not d or (tonumber(d.Id) or 0) == 0 then
-		soon()
-		return
-	end
-	MarketplaceService:PromptProductPurchase(player, d.Id)
+	Net.Do("PromptPurchase", nil, "product", key)
 end
 
 return Market

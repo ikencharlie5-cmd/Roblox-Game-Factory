@@ -28,6 +28,11 @@ local step = 0
 
 -- 1 Hatch · 2 Feed · 3 Place a tree · 4 Catch a wild friend · 5 done
 local function computeStep(): number
+	-- Server's TutorialStep attribute (1 Hatch, 2 Feed, 3 Tree, 4 Catch, 5 Breed, 6 done) wins.
+	local attr = tonumber((game:GetService("Players").LocalPlayer :: Player):GetAttribute("TutorialStep"))
+	if attr then
+		return math.clamp(math.floor(attr), 1, 5)
+	end
 	local flags = State.Tbl("flags")
 	if flags.tutorialDone == true or (tonumber(flags.tutorialStep) or 0) >= 5 then
 		return 5
@@ -117,7 +122,7 @@ local function update()
 	elseif s == 2 then
 		text = "Your baby is hungry - feed it!"
 		local c = Derived.Creatures()[1]
-		Arrows.World(WorldQuery.Landmark("FoodBowl", true) or WorldQuery.MyCreature(c and c.uid))
+		Arrows.World(WorldQuery.MyItem("FoodBowl") or WorldQuery.MyCreature(c and c.uid))
 		Arrows.Ui(nil)
 		setBig("Feed it", "Leaf", function()
 			if c and Net.Do("FeedCreature", nil, c.uid) then
@@ -130,7 +135,7 @@ local function update()
 		Arrows.World(nil)
 		if building then
 			text = "Pick the Tree and place it in your park - watch the rating jump!"
-			BuildTray.HighlightItem("Tree")
+			BuildTray.HighlightItem("TreeOak")
 			Arrows.Ui(nil)
 		else
 			text = "Visitors pay more for pretty parks. Tap Build!"
@@ -147,7 +152,7 @@ local function update()
 		setBig(nil)
 		Arrows.World(nil)
 		Arrows.Ui(nil)
-		if not Derived.Flag("goldenGiven") and #Derived.Creatures() >= 2 then
+		if not Derived.Flag("goldenGiven") and #Derived.Creatures() >= 2 and #Derived.Eggs() == 0 then
 			local jp = 0
 			for _, def in Derived.SpeciesList() do
 				if Derived.JournalStep(def.name) >= 2 then

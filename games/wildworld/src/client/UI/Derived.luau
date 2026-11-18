@@ -8,6 +8,8 @@ local State = require(script.Parent:WaitForChild("State"))
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config: any = require(Shared:WaitForChild("Config"))
+local Formulas: any = require(Shared:WaitForChild("Formulas"))
+local Players = game:GetService("Players")
 
 local Derived = {}
 Derived.Config = Config
@@ -109,7 +111,7 @@ function Derived.Species(name: string): { [string]: any }
 			return s
 		end
 	end
-	return { name = name, rarity = "Common", baseValue = 0 }
+	return { name = name, Rarity = "Common", BaseValue = 0 }
 end
 
 function Derived.Rarity(species: string): string
@@ -205,6 +207,9 @@ end
 
 function Derived.EggLeft(e: { [string]: any }): number
 	local ready = tonumber(field(e, "readyAt", "hatchAt"))
+	if e.ready == true then
+		return 0
+	end
 	if not ready then
 		return 0
 	end
@@ -212,14 +217,8 @@ function Derived.EggLeft(e: { [string]: any }): number
 end
 
 function Derived.XpFor(level: number): number
-	local f = cfg("XpForLevel")
-	if type(f) == "function" then
-		local ok, v = pcall(f, level)
-		if ok and type(v) == "number" then
-			return v
-		end
-	end
-	return math.floor(100 * level ^ 1.4)
+	local ok, v = pcall(Formulas.LevelXP, level)
+	return if ok and type(v) == "number" then v else math.floor(100 * level ^ 1.4)
 end
 
 function Derived.Level(): (number, number)
@@ -229,7 +228,8 @@ function Derived.Level(): (number, number)
 end
 
 function Derived.ParkTiers(): { { [string]: any } }
-	local t = list(cfg("ParkTiers"))
+	local econ = cfg("Economy")
+	local t = list(if type(econ) == "table" then econ.ParkTiers else cfg("ParkTiers"))
 	return if #t > 0 then t else FALLBACK_TIERS
 end
 
@@ -244,9 +244,14 @@ function Derived.ParkTier(rating: number): ({ [string]: any }, { [string]: any }
 	return cur, nxt
 end
 
+-- Server sets player attributes Pass_<key> (notes/gameplay.md).
 function Derived.HasPass(key: string): boolean
-	local passes = State.Tbl("passes")
-	return passes[key] == true or table.find(passes, key) ~= nil
+	return (Players.LocalPlayer :: Player):GetAttribute("Pass_" .. key) == true
+end
+
+function Derived.ParkSlots(): number
+	local ok, v = pcall(Formulas.ParkSlots, tonumber(State.Tbl("upgrades").Capacity) or 0)
+	return if ok and type(v) == "number" then v else 6
 end
 
 function Derived.Flag(key: string): any
@@ -263,13 +268,12 @@ end
 
 -- Breeding cost by rarity (spec: 50 / 150 / 400).
 function Derived.BreedCost(species: string): number
-	local b = cfg("Breeding") or {}
-	local costs = field(b, "Cost", "cost", "Costs") or { Common = 50, Uncommon = 150, Rare = 400 }
-	return tonumber(costs[Derived.Rarity(species)]) or 50
+	local ok, v = pcall(Formulas.BreedCost, species)
+	return if ok and type(v) == "number" then v else 50
 end
 
 function Derived.BreedMinHappy(): number
-	return tonumber(field(cfg("Breeding") or {}, "MinHappiness", "minHappy")) or 50
+	return tonumber(field(cfg("Breeding") or {}, "MinHappy", "MinHappiness")) or 50
 end
 
 return Derived

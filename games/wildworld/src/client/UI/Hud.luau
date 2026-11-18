@@ -168,7 +168,13 @@ function Hud.Mount(gui: ScreenGui)
 	biome()
 end
 
-local ZONE_NAMES = { Park = "My Park", Hub = "Plaza" }
+local ZONE_NAMES = {
+	Park = "My Park",
+	Hub = "Plaza",
+	Meadow = "Meadow Edge",
+	Hollow = "Mossy Hollow",
+	Glade = "Waterfall Glade",
+}
 
 function Hud.SetBiome(raw: string)
 	-- Audio/Gameplay zone ids ("MeadowEdge") -> "Meadow Edge".

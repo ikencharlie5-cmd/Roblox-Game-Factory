@@ -23,20 +23,24 @@ local title: TextLabel
 local baitBtn: TextButton
 local target: Instance? = nil
 local holding = false
-local holdStart = 0
+local holdStart = 0 -- server time (GetServerTimeNow) the ring started
 local duration = 1.6
 local zoneFrom, zoneTo = 0.55, 0.8 -- progress window (0 = ring big, 1 = ring gone)
 
-local function baitCount(): number
-	local inv = State.Tbl("inventory")
-	local bait = inv.bait or State.Tbl("bait")
-	local n = 0
-	if type(bait) == "table" then
-		for _, v in bait do
-			n += tonumber(v) or 0
+local BAIT_ORDER = { "Berry", "Honey", "Starfruit" }
+
+-- Cheapest bait the player has (data.bait {Berry, Honey, Starfruit}), and the total count.
+local function pickBait(): (string?, number)
+	local bait = State.Tbl("bait")
+	local total, first = 0, nil
+	for _, k in BAIT_ORDER do
+		local n = tonumber(bait[k]) or 0
+		total += n
+		if n > 0 and not first then
+			first = k
 		end
 	end
-	return n
+	return first, total
 end
 
 function CaptureUI.Mount(gui: ScreenGui)
@@ -59,8 +63,17 @@ function CaptureUI.Mount(gui: ScreenGui)
 		if not t then
 			return
 		end
-		Kit.Sound("Bait_Throw")
-		Net.Do("ThrowBait", nil, WorldQuery.Pos(t))
+		local kind = pickBait()
+		if not kind then
+			Kit.Sound("Error")
+			Net.Toast("Out of bait - buy more at the Market", "error")
+			return
+		end
+		Net.Do("ThrowBait", nil, WorldQuery.Pos(t), kind)
+		task.delay(0.3, function()
+			local _, n = pickBait()
+			baitBtn.Text = "Throw Bait (" .. n .. ")"
+		end)
 	end, { Position = UDim2.fromOffset(16, 92), Size = UDim2.fromOffset(200, 80), ZIndex = 5 })
 	local net = Kit.Button(face, "HOLD NET", "Teal", nil, {
 		AnchorPoint = Vector2.new(1, 0),
@@ -122,7 +135,7 @@ function CaptureUI.Mount(gui: ScreenGui)
 		end
 		trustSet((tonumber(t:GetAttribute("Trust")) or 0) / 100)
 		if holding then
-			local p = math.clamp((os.clock() - holdStart) / duration, 0, 1)
+			local p = math.clamp((State.Now() - holdStart) / duration, 0, 1)
 			ring.Size = UDim2.fromScale(1 - p, 1 - p)
 			if p >= 1 then
 				CaptureUI.Release()
@@ -135,7 +148,8 @@ function CaptureUI.Open(wild: Instance)
 	target = wild
 	local species = tostring(wild:GetAttribute("Species") or "Wild creature")
 	title.Text = "Wild " .. species .. "  ·  " .. Derived.Rarity(species)
-	baitBtn.Text = "Throw Bait (" .. baitCount() .. ")"
+	local _, n = pickBait()
+	baitBtn.Text = "Throw Bait (" .. n .. ")"
 	panel.Visible = true
 	Kit.PopIn(panel, 0.7, 0.3)
 end
@@ -161,10 +175,12 @@ function CaptureUI.Hold()
 	if not ok then
 		return
 	end
+	holdStart = State.Now()
 	if type(res) == "table" then
 		duration = tonumber(res.duration) or duration
-		zoneFrom = tonumber(res.zoneStart) or zoneFrom
-		zoneTo = tonumber(res.zoneEnd) or zoneTo
+		zoneFrom = tonumber(res.greenFrom) or zoneFrom
+		zoneTo = tonumber(res.greenTo) or zoneTo
+		holdStart = tonumber(res.serverStart) or holdStart
 	end
 	-- Border stroke grows outward: inner edge = ring size at zoneTo, thickness = band radius.
 	local inner = 1 - zoneTo
@@ -176,7 +192,6 @@ function CaptureUI.Hold()
 	ring.Size = UDim2.fromScale(1, 1)
 	ringHolder.Visible = true
 	holding = true
-	holdStart = os.clock()
 	Kit.Sound("Capture_Wobble")
 end
 
@@ -191,7 +206,14 @@ function CaptureUI.Release()
 		ringHolder.Visible = false
 	end)
 	Kit.Sound("Capture_Throw")
-	Net.Call("CaptureRelease", t:GetAttribute("WildId"))
+	local ok, res = Net.Call("CaptureRelease", t:GetAttribute("WildId"))
+	if ok and type(res) == "table" then
+		if res.success then
+			CaptureUI.Close() -- the server sends the Capture reveal
+		else
+			Net.Toast(string.format("It slipped away! %d tries left", tonumber(res.attemptsLeft) or 0), "info")
+		end
+	end
 end
 
 return CaptureUI

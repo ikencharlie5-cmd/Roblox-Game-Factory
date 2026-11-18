@@ -8,6 +8,7 @@ local Net = require(script.Parent:WaitForChild("Net"))
 local Derived = require(script.Parent:WaitForChild("Derived"))
 local Windows = require(script.Parent:WaitForChild("Windows"))
 local Genetics = require(script.Parent:WaitForChild("Genetics"))
+local Items: any = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Items"))
 
 local InspectTabs = {}
 
@@ -16,19 +17,13 @@ function InspectTabs.SetOpener(fn: (any) -> ())
 	opener = fn
 end
 
--- Habitat pads in the player's plot: data.pads (preferred) or plot items whose id has "Pad".
+-- Habitat pads in my plot: plot items whose Items def Kind is "pad" (id = item uid `u`).
 function InspectTabs.Pads(): { { id: any, label: string } }
 	local out = {}
-	local pads = State.Tbl("pads")
-	for k, p in pads do
-		table.insert(out, { id = if type(p) == "table" then (p.id or k) else k, label = "Habitat " .. tostring(k) })
-	end
-	if #out == 0 then
-		local items = State.Tbl("plot").items or {}
-		for i, it in items do
-			if type(it) == "table" and string.find(string.lower(tostring(it.id)), "pad", 1, true) then
-				table.insert(out, { id = it.uid or it.key or i, label = "Habitat " .. #out + 1 })
-			end
+	for _, it in State.Tbl("plot").items or {} do
+		local def = if type(it) == "table" then Items.Get(it.id) else nil
+		if def and def.Kind == "pad" then
+			table.insert(out, { id = it.u, label = "Habitat " .. (#out + 1) })
 		end
 	end
 	return out
@@ -93,7 +88,7 @@ local function overview(body: Frame, c: { [string]: any })
 			Net.Do("AssignCreature", "Stored", c.uid, nil)
 		end, { Size = UDim2.fromOffset(150, 60), LayoutOrder = 1 })
 	end
-	if Net.Has("SellCreature") then
+	if Net.Has("SellCreature") and #Derived.Creatures() > 1 then
 		Kit.Button(actions, "Sell", "Red", function()
 			Windows.Confirm("Sell creature?", "Sell " .. Derived.Name(c) .. "? This can't be undone.", "Sell", function()
 				Net.Do("SellCreature", nil, c.uid)
@@ -137,7 +132,7 @@ local function genetics(body: Frame, c: { [string]: any })
 	end
 	Kit.Body(body, "^ dominant (solid)   v recessive (outlined)   ? hidden", { Size = UDim2.new(1, 0, 0, 24), TextSize = 16, LayoutOrder = 20 })
 	if not known then
-		local cost = tonumber(Derived.Field(Derived.Cfg("GeneScanner") or {}, "Cost", "cost")) or 15
+		local cost = tonumber(Derived.Cfg("GeneScanRP")) or 15
 		Kit.Button(body, "Scan genes (" .. cost .. " RP)", "Purple", function()
 			Net.Do("ScanGenes", "Genes revealed!", c.uid)
 		end, { Size = UDim2.fromOffset(280, 60), LayoutOrder = 21, TextSize = 22 })

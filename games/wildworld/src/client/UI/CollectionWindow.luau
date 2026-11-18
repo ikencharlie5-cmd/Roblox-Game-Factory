@@ -97,7 +97,7 @@ local function render(force: boolean?)
 			inPark += 1
 		end
 	end
-	local slots = tonumber(State.Get("parkSlots")) or 6
+	local slots = Derived.ParkSlots()
 	countLabel.Text = string.format("%d creatures · %d / %d in park", #all, inPark, slots)
 	Kit.Clear(grid)
 	if #list == 0 then

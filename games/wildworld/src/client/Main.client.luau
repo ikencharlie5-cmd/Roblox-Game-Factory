@@ -24,6 +24,7 @@ local Reveal = require(UI:WaitForChild("Reveal"))
 local Nameplates = require(UI:WaitForChild("Nameplates"))
 local CollectionWindow = require(UI:WaitForChild("CollectionWindow"))
 local InspectWindow = require(UI:WaitForChild("InspectWindow"))
+local InspectTabs = require(UI:WaitForChild("InspectTabs"))
 local BreedWindow = require(UI:WaitForChild("BreedWindow"))
 local JournalWindow = require(UI:WaitForChild("JournalWindow"))
 local InventoryWindow = require(UI:WaitForChild("InventoryWindow"))
@@ -112,6 +113,16 @@ BuildMode.Changed:Connect(function(active)
 	if active then
 		Windows.Close()
 		CaptureUI.Close()
+		-- Fill the rating strip with my pads' current ratings.
+		task.spawn(function()
+			for _, pad in InspectTabs.Pads() do
+				local ok, res = Net.Call("GetHabitat", pad.id)
+				if ok and type(res) == "table" then
+					State.habitats[pad.id] = res
+					State.Fire("habitat")
+				end
+			end
+		end)
 	end
 end)
 
@@ -156,33 +167,34 @@ local function toast(text: any, kind: any)
 end
 Net.On("Toast", toast)
 Net.On("Notify", toast)
-Net.On("Announce", function(text, rarity)
-	Notify.Announce(tostring(text), if type(rarity) == "string" then rarity else nil)
-end)
+-- Reveal kinds (notes/gameplay.md): Hatch / Capture get the big card; the rest are toasts/splashes.
 Net.On("Reveal", function(kind, data)
 	local k = string.lower(tostring(kind))
-	if k == "offline" and type(data) == "table" then
-		Notify.Offline(tonumber(data.coins) or 0, tonumber(data.seconds) or 0, tonumber(data.rp))
-	elseif k == "levelup" and type(data) == "table" then
-		Notify.Splash("Park Level " .. tostring(data.level or ""), nil)
-	elseif k == "journal" and type(data) == "table" then
-		Notify.Toast("New species: " .. tostring(data.species or "?") .. "!", "new")
-	else
-		Reveal.Show(k, data)
+	local d = if type(data) == "table" then data else {}
+	if k == "hatch" or k == "capture" then
+		Reveal.Show(k, d)
+	elseif k == "offline" then
+		Notify.Offline(tonumber(d.coins) or 0, tonumber(d.seconds) or 0, nil)
+	elseif k == "levelup" then
+		Notify.Splash("Park Level " .. tostring(d.level or ""), nil)
+	elseif k == "tier" then
+		Notify.Splash(tostring(d.tier or "New tier") .. " Park!", nil)
+	elseif k == "discovery" then
+		local extra = if d.rp then "  +" .. tostring(d.rp) .. " RP" else ""
+		Notify.Toast("New species: " .. tostring(d.species or "?") .. "!" .. extra, "new")
+	elseif k == "zoneunlocked" then
+		Notify.Splash(tostring(d.name or "New area") .. " unlocked!", nil)
+	elseif k == "daily" then
+		Notify.Toast("Day " .. tostring(d.day or "") .. ": " .. tostring(d.text or "Reward claimed"), "success")
+	elseif k == "starterpack" or k == "passbought" then
+		Notify.Splash(if k == "starterpack" then "Starter Pack!" else tostring(d.name or "Thank you!"), nil)
 	end
 end)
-Net.On("OfflineEarnings", function(coins, seconds, rp)
-	if type(coins) == "number" and coins > 0 then
-		Notify.Offline(coins, if type(seconds) == "number" then seconds else 0, tonumber(rp))
-	end
+Net.On("HabitatChanged", function(padUid, result)
+	State.habitats[padUid] = result
+	State.Fire("habitat")
 end)
-
--- Hub ProximityPrompts may open screens by name.
-Net.On("OpenScreen", function(name)
-	local n = tostring(name)
-	if n == "Build" then
-		BuildMode.Enter()
-	elseif not BuildMode.IsActive() then
-		Windows.Open(n)
-	end
+Net.On("ShopChanged", function(shop)
+	State.shop = shop
+	State.Fire("shop")
 end)

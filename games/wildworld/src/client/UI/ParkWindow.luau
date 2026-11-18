@@ -1,6 +1,7 @@
 --!strict
 -- Park panel: park rating (stars + number), tier ladder (Poor -> Legendary with income bonus),
 -- income per minute, and the coin upgrades (BuyUpgrade). Server decides prices and effects.
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Style = require(script.Parent:WaitForChild("Style"))
@@ -14,11 +15,10 @@ local Format = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Fo
 local ParkWindow = {}
 
 local FALLBACK_UPGRADES = {
-	{ name = "ParkLand", title = "Park Land", costs = { 500, 2000, 6000, 15000 }, text = "Bigger buildable area" },
-	{ name = "Capacity", title = "Creature Capacity", costs = { 300, 900, 2500, 6000, 15000 }, text = "+2 park slots" },
-	{ name = "Incubators", title = "Incubators", costs = { 1500, 8000 }, text = "+1 egg at once" },
-	{ name = "CalmNet", title = "Calm Net", costs = { 400, 2000, 7000 }, text = "Capture green zone +5%" },
-	{ name = "SnackStand", title = "Snack Stand", costs = { 750, 750, 750 }, text = "+5% park income each" },
+	{ key = "Land", title = "Park Land", costs = { 500, 2000, 6000, 15000 }, text = "Bigger buildable area" },
+	{ key = "Capacity", title = "Creature Capacity", costs = { 300, 900, 2500, 6000, 15000 }, text = "+2 park slots" },
+	{ key = "Incubators", title = "Incubators", costs = { 1500, 8000 }, text = "+1 egg at once" },
+	{ key = "CalmNet", title = "Calm Net", costs = { 400, 2000, 7000 }, text = "Capture green zone +5%" },
 }
 
 local win: any
@@ -26,14 +26,35 @@ local top: Frame
 local list: ScrollingFrame
 local lastSig = ""
 
+-- Config.Upgrades is keyed (Land/Capacity/Incubators/CalmNet); the key is what BuyUpgrade wants.
+local ORDER = { Land = 1, Capacity = 2, Incubators = 3, CalmNet = 4 }
+local TEXT = {
+	Land = "Bigger buildable area",
+	Capacity = "+2 creatures on show",
+	Incubators = "+1 egg at once",
+	CalmNet = "Capture green zone +5%",
+}
 local function upgrades(): { { [string]: any } }
-	local cfg = Derived.List(Derived.Cfg("Upgrades"))
-	return if #cfg > 0 then cfg else FALLBACK_UPGRADES
+	local cfg = Derived.Cfg("Upgrades")
+	if type(cfg) ~= "table" then
+		return FALLBACK_UPGRADES
+	end
+	local out = {}
+	for key, u in cfg do
+		if type(u) == "table" then
+			table.insert(out, { key = key, title = u.Name or key, costs = u.Costs or {}, text = u.Text or TEXT[key] or "" })
+		end
+	end
+	table.sort(out, function(a, b)
+		return (ORDER[a.key] or 9) < (ORDER[b.key] or 9)
+	end)
+	return out
 end
 
 local function renderTop()
 	Kit.Clear(top)
-	local rating = State.Num("parkRating")
+	local player = Players.LocalPlayer :: Player
+	local rating = tonumber(player:GetAttribute("ParkRating")) or 0
 	local tier, nxt = Derived.ParkTier(rating)
 	local _, setStars = Kit.Stars(top, { Position = UDim2.fromOffset(0, 6) })
 	setStars(rating)
@@ -43,7 +64,7 @@ local function renderTop()
 		TextSize = 30,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
-	local income = tonumber(State.Get("incomePerMin")) or 0
+	local income = tonumber(player:GetAttribute("IncomePerMin")) or 0
 	local bonus = tonumber(Derived.Field(tier, "bonus", "Bonus")) or 0
 	local nextText = if nxt
 		then string.format("Next tier: %s at %d", tostring(nxt.name), tonumber(Derived.Field(nxt, "min", "Min")) or 0)
@@ -73,7 +94,7 @@ local function renderList()
 	local levels = State.Tbl("upgrades")
 	local coins = State.Num("coins")
 	for i, u in upgrades() do
-		local key = tostring(Derived.Field(u, "id", "key", "name"))
+		local key = tostring(u.key)
 		local lvl = tonumber(levels[key]) or 0
 		local costs = Derived.Field(u, "costs", "Costs", "levels", "Levels") or {}
 		local cost = tonumber(if type(costs[lvl + 1]) == "table" then costs[lvl + 1].cost else costs[lvl + 1])
@@ -120,7 +141,13 @@ local function render()
 	if not Windows.IsOpen("Park") then
 		return
 	end
-	local sig = Kit.Sig({ State.Get("parkRating"), State.Get("upgrades"), State.Num("coins"), State.Get("incomePerMin") })
+	local player = Players.LocalPlayer :: Player
+	local sig = Kit.Sig({
+		player:GetAttribute("ParkRating"),
+		State.Get("upgrades"),
+		State.Num("coins"),
+		player:GetAttribute("IncomePerMin"),
+	})
 	if sig == lastSig then
 		return
 	end
@@ -141,6 +168,12 @@ function ParkWindow.Mount()
 	end
 	State.OnChange(function(what)
 		if what == "data" then
+			render()
+		end
+	end)
+	local lp = Players.LocalPlayer :: Player
+	lp.AttributeChanged:Connect(function(attr)
+		if attr == "ParkRating" or attr == "IncomePerMin" then
 			render()
 		end
 	end)

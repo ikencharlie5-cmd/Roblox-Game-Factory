@@ -182,7 +182,7 @@ local function show(kind: string, data: { [string]: any })
 		local b = Kit.MutationBadge(mrow, m, 48, { LayoutOrder = i, ZIndex = 7 })
 		Kit.PopIn(b, 0, 0.3)
 	end
-	if data.isNew or data.newDiscovery or kind == "discovery" then
+	if data.firstDiscovery or data.isNew then
 		local ribbon = Kit.Make("Frame", {
 			AnchorPoint = Vector2.new(0.5, 0.5),
 			Position = UDim2.fromScale(0.5, 0.2),

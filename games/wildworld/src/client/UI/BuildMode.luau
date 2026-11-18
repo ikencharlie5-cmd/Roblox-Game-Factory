@@ -88,27 +88,34 @@ local function update()
 	end
 	local cx, cz = PlotInfo.ToCell(pos)
 	cellX, cellZ = cx - math.floor((w - 1) / 2), cz - math.floor((d - 1) / 2)
-	local center = PlotInfo.Bounds()
+	local center = PlotInfo.Center()
 	if not center then
 		valid, reason = true, ""
 	elseif not PlotInfo.InBounds(cellX, cellZ, w, d) then
 		valid, reason = false, "Outside your plot"
 	elseif deleting then
-		valid = PlotInfo.Occupied()[cellX .. "," .. cellZ] == true
+		valid = PlotInfo.ItemAt(cellX, cellZ) ~= nil
 		reason = if valid then "" else "Nothing here"
 	else
-		local used = PlotInfo.Occupied()
+		local def = item :: any
+		local layer = PlotInfo.Occupied()[if def.Layer == "floor" then "floor" else "object"]
 		valid, reason = true, ""
 		for dx = 0, w - 1 do
 			for dz = 0, d - 1 do
-				if used[(cellX + dx) .. "," .. (cellZ + dz)] then
+				if layer[(cellX + dx) .. "," .. (cellZ + dz)] then
 					valid, reason = false, "Overlapping"
 				end
 			end
 		end
-		local price = tonumber((item :: any) and (item :: any).price) or 0
-		if valid and State.Num("coins") < price then
-			valid, reason = false, "Not enough Coins"
+		local stored = tonumber(State.Tbl("decorInv")[def.Id]) or 0
+		local free = (def.Pass and player:GetAttribute("Pass_" .. def.Pass) == true)
+			or (def.Starter and State.Tbl("flags").starterPack == true)
+		if valid and stored <= 0 and not free then
+			if def.RP and State.Num("rp") < def.RP then
+				valid, reason = false, "Not enough RP"
+			elseif not def.RP and State.Num("coins") < (tonumber(def.Cost) or 0) then
+				valid, reason = false, "Not enough Coins"
+			end
 		end
 	end
 	local size = Vector3.new(w * PlotInfo.Cell, if deleting then 0.4 else 2, d * PlotInfo.Cell)
@@ -130,9 +137,9 @@ function BuildMode.Place()
 	end
 	update()
 	if deleting then
-		if valid then
-			Net.Do("RemoveItem", nil, { cellX = cellX, cellZ = cellZ })
-			Kit.Sound("Remove")
+		local uid = PlotInfo.ItemAt(cellX, cellZ)
+		if valid and uid then
+			Net.Do("RemoveItem", nil, uid)
 		end
 		return
 	end
@@ -145,20 +152,22 @@ function BuildMode.Place()
 		Net.Toast(if reason ~= "" then reason else "Can't place here", "error")
 		return
 	end
-	local ok = Net.Do("PlaceItem", nil, { itemId = (item :: any).id, cellX = cellX, cellZ = cellZ, rot = rot })
+	local ok = Net.Do("PlaceItem", nil, (item :: any).Id, cellX, cellZ, rot)
 	if ok then
-		Kit.Sound("Place")
-		ghost.Size *= 1.2
+		ghost.Size *= 1.2 -- server plays the place thud
 	end
 end
 
 function BuildMode.Rotate(step: number?)
-	local fine = item ~= nil and string.lower(tostring((item :: any).category)) == "decor"
+	local fine = item ~= nil and (item :: any).Fine == true
 	local s = step or 90
 	if s ~= 90 and s ~= -90 and not fine then
 		s = if s > 0 then 90 else -90
 	end
 	rot = (rot + s) % 360
+	if not fine then
+		rot = rot - rot % 90
+	end
 	Kit.Sound("Rotate")
 	update()
 end

@@ -10,6 +10,7 @@ local Net = require(script.Parent:WaitForChild("Net"))
 local Derived = require(script.Parent:WaitForChild("Derived"))
 local Windows = require(script.Parent:WaitForChild("Windows"))
 local Format = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Format"))
+local Players = game:GetService("Players")
 
 local DailyWindow = {}
 
@@ -33,34 +34,46 @@ function DailyWindow.SetBadge(fn: (boolean) -> ())
 	badgeFn = fn
 end
 
+-- Config.Daily = array of 7 reward tables {Coins?, RP?, Bait = {Honey = 3}?, MutationEgg?}.
 local function rewards(): { string }
-	local d = Derived.Cfg("Daily") or {}
-	local r = Derived.Field(d, "Rewards", "rewards")
-	if type(r) == "table" and #r >= 7 then
-		local out = {}
-		for i, v in r do
-			out[i] = if type(v) == "table" then tostring(v.text or v.Text or v.label or ("Day " .. i)) else tostring(v)
-		end
-		return out
+	local r = Derived.Cfg("Daily")
+	if type(r) ~= "table" or #r < 7 then
+		return FALLBACK
 	end
-	return FALLBACK
+	local out = {}
+	for i, v in r do
+		local parts = {}
+		if type(v) == "table" then
+			if v.Coins then
+				table.insert(parts, Format.Number(v.Coins) .. " Coins")
+			end
+			if v.RP then
+				table.insert(parts, v.RP .. " RP")
+			end
+			for k, n in (if type(v.Bait) == "table" then v.Bait else {}) do
+				table.insert(parts, n .. " " .. k .. " Bait")
+			end
+			if v.MutationEgg then
+				table.insert(parts, "Mutation Egg!")
+			end
+		end
+		out[i] = if #parts > 0 then table.concat(parts, " + ") else FALLBACK[i]
+	end
+	return out
 end
 
--- (streak so far, can claim now, seconds until next)
+-- (day index 1..7 to show, can claim now, seconds until the next UTC day).
+-- Server sets player attributes DailyReady + DailyDay; data.daily.last is a UTC day number.
 function DailyWindow.Next(): (number, boolean, number)
-	local daily = State.Tbl("daily")
-	local streak = tonumber(daily.streak) or 0
-	local last = tonumber(daily.last) or 0
-	local cd = tonumber(Derived.Field(Derived.Cfg("Daily") or {}, "CooldownSeconds")) or 20 * 3600
-	local left = last + cd - State.Now()
-	if daily.canClaim ~= nil then
-		return streak, daily.canClaim == true, math.max(0, left)
-	end
-	return streak, left <= 0, math.max(0, left)
+	local player = Players.LocalPlayer :: Player
+	local can = player:GetAttribute("DailyReady") == true
+	local day = tonumber(player:GetAttribute("DailyDay")) or ((tonumber(State.Tbl("daily").streak) or 0) % 7 + 1)
+	local left = 86400 - (State.Now() % 86400)
+	return day, can, left
 end
 
 local function render()
-	local streak, can, left = DailyWindow.Next()
+	local today, can, left = DailyWindow.Next()
 	if badgeFn then
 		(badgeFn :: (boolean) -> ())(can)
 	end
@@ -68,7 +81,6 @@ local function render()
 		return
 	end
 	Kit.Clear(strip)
-	local today = (streak % 7) + 1
 	for i, text in rewards() do
 		local done = i < today or (i == today and not can)
 		local isToday = i == today and can
@@ -119,6 +131,8 @@ function DailyWindow.Mount()
 			render()
 		end
 	end)
+	local lp = Players.LocalPlayer :: Player
+	lp:GetAttributeChangedSignal("DailyReady"):Connect(render)
 	task.spawn(function()
 		while true do
 			task.wait(1)

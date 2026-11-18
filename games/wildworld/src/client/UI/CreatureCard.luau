@@ -147,7 +147,7 @@ function CreatureCard.Species(parent: Instance?, def: { [string]: any }, step: n
 	local hint = if step == 1
 		then "Seen"
 		elseif step >= 2 then string.format("Research %d/5", step)
-		else tostring(Derived.Field(def, "hint", "Hint") or "Not found yet")
+		else "Not found yet"
 	Kit.Body(card, hint, {
 		Position = UDim2.new(0, 6, 0.6, 24),
 		Size = UDim2.new(1, -12, 0, if step >= 2 then 18 else 40),

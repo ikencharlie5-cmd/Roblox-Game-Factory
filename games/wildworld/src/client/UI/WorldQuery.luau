@@ -1,10 +1,10 @@
 --!strict
 -- Finds creatures and eggs in the world for the context bar, nameplates and tutorial arrows.
--- Expected server markup (see notes/ui.md):
---   creatures: tag "Creature" (or children of workspace.Creatures / workspace.Wild), attributes
---     Uid (owned) or WildId (wild), OwnerId (number, owned only), Species, Nickname?, Happy?, Mutations?
---   eggs: tag "Egg", attributes EggId, OwnerId, ReadyAt (server time)
---   tutorial targets: tag "FoodBowl", "ForestGate" (or parts with those names)
+-- Server markup (notes/gameplay.md "Attributes"):
+--   park creatures: tag "Creature" / workspace.Creatures; Uid, OwnerId, Species, Nickname, Happy, Mutations
+--   wild creatures: tag "WildCreature" / workspace.WildCreatures; WildId, Species, Trust, ClaimedBy
+--   eggs: any instance with EggId + OwnerId (starter egg sits in the plot folder; ReadyAt optional)
+--   placed items: tag "ParkItem"; ItemUid, ItemId, OwnerId. Forest arch: tag "ForestGate".
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 
@@ -44,11 +44,42 @@ function WorldQuery.IsMine(inst: Instance): boolean
 end
 
 function WorldQuery.Creatures(): { Instance }
-	return gather("Creature", { "Creatures", "Wild", "WildCreatures" })
+	local out = gather("Creature", { "Creatures" })
+	for _, w in gather("WildCreature", { "WildCreatures" }) do
+		table.insert(out, w)
+	end
+	return out
 end
 
+-- Eggs: tagged "Egg" plus anything under workspace.ParkObjects with an EggId attribute (cached 2 s).
+local eggCache: { Instance } = {}
+local eggAt = 0
 function WorldQuery.Eggs(): { Instance }
-	return gather("Egg", { "Eggs" })
+	if os.clock() - eggAt < 2 then
+		return eggCache
+	end
+	eggAt = os.clock()
+	local out = CollectionService:GetTagged("Egg")
+	local root = workspace:FindFirstChild("ParkObjects")
+	if root then
+		for _, d in root:GetDescendants() do
+			if d:GetAttribute("EggId") ~= nil and not table.find(out, d) then
+				table.insert(out, d)
+			end
+		end
+	end
+	eggCache = out
+	return out
+end
+
+-- My placed item by ItemId (e.g. "FoodBowl").
+function WorldQuery.MyItem(itemId: string): Instance?
+	for _, inst in CollectionService:GetTagged("ParkItem") do
+		if inst:GetAttribute("ItemId") == itemId and WorldQuery.IsMine(inst) then
+			return inst
+		end
+	end
+	return nil
 end
 
 function WorldQuery.MyPos(): Vector3?

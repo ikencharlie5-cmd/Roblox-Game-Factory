@@ -1,23 +1,28 @@
 --!strict
--- Where is my plot, and the 4-stud cell math for build previews. Display only: the server
--- re-checks every placement. Plot lookup order:
---   1) player attributes PlotCenter (Vector3) + PlotSize (number, buildable studs)
---   2) a workspace instance tagged "Plot" (or under workspace.Plots) with attribute
---      OwnerId/Owner == my UserId; its pivot = centre, attribute BuildSize or part size = size.
--- Also the build catalog (Config.Items / BuildItems / Placeables, fallback = SPEC props).
+-- Where is my plot, and the 4-stud cell math for build previews (same math as the server:
+-- Shared/Formulas + Shared/Items). Display only: the server re-checks every placement.
+-- Plot = the Graphics "Plot" tagged part whose OwnerId is me (or workspace.Plots child).
+-- Cells are 0-based over the full plot (0..31), min corner of the footprint; the buildable
+-- range comes from Formulas.BuildRange(upgrades.Land). Floor (pads, paths) and object layers
+-- have separate occupancy, so trees can stand on pads.
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local State = require(script.Parent:WaitForChild("State"))
-local Derived = require(script.Parent:WaitForChild("Derived"))
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Config: any = require(Shared:WaitForChild("Config"))
+local Items: any = require(Shared:WaitForChild("Items"))
+local Formulas: any = require(Shared:WaitForChild("Formulas"))
 
 local PlotInfo = {}
 
 local player = Players.LocalPlayer :: Player
-PlotInfo.Cell = tonumber(Derived.Field(Derived.Config, "CellSize", "GridSize")) or 4
+PlotInfo.Cell = Config.Grid.Cell
 
 local function owned(inst: Instance): boolean
-	local o = inst:GetAttribute("OwnerId") or inst:GetAttribute("Owner") or inst:GetAttribute("UserId")
+	local o = inst:GetAttribute("OwnerId") or inst:GetAttribute("Owner")
 	return o == player.UserId or o == player.Name
 end
 
@@ -38,81 +43,65 @@ function PlotInfo.Model(): Instance?
 	return nil
 end
 
--- Buildable area from the Park Land upgrade (64 -> 128 studs).
-local function landSize(): number
-	local sizes = { 64, 80, 96, 112, 128 }
-	local up = State.Tbl("upgrades")
-	local lvl = tonumber(up.ParkLand or up.Land or up.parkLand) or 0
-	return sizes[math.clamp(lvl + 1, 1, #sizes)]
-end
-
--- Returns centre (Y = ground top) and buildable size, or nil if the plot isn't known yet.
-function PlotInfo.Bounds(): (Vector3?, number)
-	local c = player:GetAttribute("PlotCenter")
-	local s = player:GetAttribute("PlotSize")
-	if typeof(c) == "Vector3" then
-		return c, if type(s) == "number" then s else landSize()
-	end
+-- Plot centre (Y = ground top), or nil while the plot isn't known yet.
+function PlotInfo.Center(): Vector3?
 	local m = PlotInfo.Model()
 	if not m then
-		return nil, landSize()
+		return nil
 	end
-	local cf: CFrame
-	local size: Vector3
 	if m:IsA("BasePart") then
-		cf, size = m.CFrame, m.Size
-		cf = cf * CFrame.new(0, size.Y / 2, 0)
+		return m.Position + Vector3.new(0, m.Size.Y / 2, 0)
 	elseif m:IsA("Model") then
-		cf = m:GetPivot()
-		size = m:GetExtentsSize()
-	else
-		return nil, landSize()
+		local cf, size = m:GetBoundingBox()
+		return cf.Position + Vector3.new(0, size.Y / 2, 0)
 	end
-	local bs = m:GetAttribute("BuildSize")
-	return cf.Position, if type(bs) == "number" then bs else math.min(size.X, landSize())
+	return nil
 end
 
--- World position -> 0-based cell (x, z) relative to the plot's min corner.
+local function landLevel(): number
+	return tonumber(State.Tbl("upgrades").Land) or 0
+end
+
+-- (centre, buildable size in studs) for the grid overlay.
+function PlotInfo.Bounds(): (Vector3?, number)
+	return PlotInfo.Center(), Formulas.LandSize(landLevel())
+end
+
+-- World position -> 0-based plot cell.
 function PlotInfo.ToCell(pos: Vector3): (number, number)
-	local center, size = PlotInfo.Bounds()
-	local c = center or Vector3.zero
-	local minX, minZ = c.X - size / 2, c.Z - size / 2
-	return math.floor((pos.X - minX) / PlotInfo.Cell), math.floor((pos.Z - minZ) / PlotInfo.Cell)
+	local c = PlotInfo.Center() or Vector3.zero
+	local half = Formulas.PlotCells() / 2
+	return math.floor((pos.X - c.X) / PlotInfo.Cell + half), math.floor((pos.Z - c.Z) / PlotInfo.Cell + half)
 end
 
--- Cell (+ footprint w x d cells) -> world CFrame at ground level, centred on the footprint.
 function PlotInfo.CellCFrame(cx: number, cz: number, w: number, d: number, rotDeg: number): CFrame
-	local center, size = PlotInfo.Bounds()
-	local c = center or Vector3.zero
-	local minX, minZ = c.X - size / 2, c.Z - size / 2
-	local x = minX + (cx + w / 2) * PlotInfo.Cell
-	local z = minZ + (cz + d / 2) * PlotInfo.Cell
-	return CFrame.new(x, c.Y, z) * CFrame.Angles(0, math.rad(rotDeg), 0)
+	local c = PlotInfo.Center() or Vector3.zero
+	local x, z = Formulas.CellCentre(cx, cz, w, d)
+	return CFrame.new(c.X + x, c.Y, c.Z + z) * CFrame.Angles(0, math.rad(rotDeg), 0)
 end
 
 function PlotInfo.InBounds(cx: number, cz: number, w: number, d: number): boolean
-	local _, size = PlotInfo.Bounds()
-	local n = math.floor(size / PlotInfo.Cell)
-	return cx >= 0 and cz >= 0 and cx + w <= n and cz + d <= n
+	local lo, hi = Formulas.BuildRange(landLevel())
+	return cx >= lo and cz >= lo and cx + w - 1 <= hi and cz + d - 1 <= hi
 end
 
--- Cells used by placed items (from data.plot.items {id,x,z,r}). Display only.
 local occFor: any = nil
-local occCache: { [string]: boolean } = {}
+local occCache: { [string]: { [string]: number } } = {}
 
-function PlotInfo.Occupied(): { [string]: boolean }
+-- layer -> "x,z" -> item uid, from data.plot.items {id, x, z, r, u}.
+function PlotInfo.Occupied(): { [string]: { [string]: number } }
 	if occFor == State.data then
 		return occCache
 	end
-	local used: { [string]: boolean } = {}
-	local items = State.Tbl("plot").items or {}
-	for _, it in items do
-		if type(it) == "table" then
-			local def = PlotInfo.Item(tostring(it.id))
-			local w, d = PlotInfo.Footprint(def, tonumber(it.r) or 0)
+	local used: { [string]: { [string]: number } } = { floor = {}, object = {} }
+	for _, it in State.Tbl("plot").items or {} do
+		local def = if type(it) == "table" then Items.Get(it.id) else nil
+		if def then
+			local w, d = Items.Footprint(def, tonumber(it.r) or 0)
+			local layer = used[def.Layer] or used.object
 			for dx = 0, w - 1 do
 				for dz = 0, d - 1 do
-					used[((tonumber(it.x) or 0) + dx) .. "," .. ((tonumber(it.z) or 0) + dz)] = true
+					layer[((tonumber(it.x) or 0) + dx) .. "," .. ((tonumber(it.z) or 0) + dz)] = it.u
 				end
 			end
 		end
@@ -121,75 +110,61 @@ function PlotInfo.Occupied(): { [string]: boolean }
 	return used
 end
 
-local FALLBACK_ITEMS = {
-	{ id = "PadSmall", name = "Small Habitat", category = "Habitats", price = 100, cells = { 6, 6 } },
-	{ id = "PadMedium", name = "Medium Habitat", category = "Habitats", price = 600, cells = { 9, 9 } },
-	{ id = "PadLarge", name = "Large Habitat", category = "Habitats", price = 2500, cells = { 12, 12 } },
-	{ id = "Tree", name = "Tree", category = "Plants", price = 25, tags = { "tree" } },
-	{ id = "Bush", name = "Bush", category = "Plants", price = 15, tags = { "bush" } },
-	{ id = "Flowers", name = "Flowers", category = "Plants", price = 10, tags = { "flower" } },
-	{ id = "Rock", name = "Rock", category = "Rocks", price = 20, tags = { "rock" } },
-	{ id = "Log", name = "Log", category = "Rocks", price = 20, tags = { "log" } },
-	{ id = "Pond", name = "Pond", category = "Water", price = 80, cells = { 2, 2 }, tags = { "water" } },
-	{ id = "FoodBowl", name = "Food Bowl", category = "Food", price = 30, tags = { "food" } },
-	{ id = "WaterTrough", name = "Water Trough", category = "Food", price = 30, tags = { "water" } },
-	{ id = "Shelter", name = "Shelter Hut", category = "Shelter", price = 120, cells = { 2, 2 } },
-	{ id = "Burrow", name = "Burrow", category = "Shelter", price = 60, tags = { "burrow" } },
-	{ id = "Path", name = "Path", category = "Paths", price = 5 },
-	{ id = "Fence", name = "Fence", category = "Fences", price = 8 },
-	{ id = "Lantern", name = "Lantern", category = "Decor", price = 40 },
-	{ id = "Bench", name = "Bench", category = "Decor", price = 35 },
-	{ id = "SnackStand", name = "Snack Stand", category = "Decor", price = 750, cells = { 2, 2 } },
-}
-
-local itemsCache: { { [string]: any } }? = nil
+-- Item uid at a cell (objects first, then floor) for Remove.
+function PlotInfo.ItemAt(cx: number, cz: number): number?
+	local occ = PlotInfo.Occupied()
+	local key = cx .. "," .. cz
+	return occ.object[key] or occ.floor[key]
+end
 
 function PlotInfo.Items(): { { [string]: any } }
-	if itemsCache then
-		return itemsCache
-	end
-	local list = Derived.List(Derived.Cfg("Items", "BuildItems", "Placeables", "Props"))
-	if #list == 0 then
-		list = FALLBACK_ITEMS
-	end
-	for _, e in list do
-		e.id = Derived.Field(e, "id", "Id") or e.name
-		e.price = Derived.Field(e, "price", "Price", "cost", "Cost") or 0
-	end
-	itemsCache = list
-	return list
+	return Items.List()
 end
 
 function PlotInfo.Item(id: string): { [string]: any }
-	for _, e in PlotInfo.Items() do
-		if e.id == id or e.name == id then
-			return e
-		end
-	end
-	return { id = id, name = id, category = "Decor", price = 0 }
+	return Items.Get(id) or { Id = id, Name = id, Kind = "decor", W = 1, D = 1, Cost = 0, Level = 0, Layer = "object" }
 end
 
 function PlotInfo.Footprint(def: { [string]: any }, rot: number): (number, number)
-	local cells = Derived.Field(def, "cells", "Cells", "footprint", "Footprint")
-	local w, d = 1, 1
-	if type(cells) == "table" then
-		w, d = tonumber(cells[1] or cells.x or cells.X) or 1, tonumber(cells[2] or cells.z or cells.Z) or 1
-	elseif type(cells) == "number" then
-		w, d = cells, cells
-	end
-	if math.floor(rot / 90 + 0.5) % 2 == 1 then
-		w, d = d, w
-	end
-	return w, d
+	return Items.Footprint(def, rot)
+end
+
+-- Tray categories from item Kind.
+local CATEGORY: { [string]: string } = {
+	pad = "Habitats",
+	path = "Paths",
+	fence = "Fences",
+	tree = "Plants",
+	bush = "Plants",
+	flower = "Plants",
+	rock = "Rocks",
+	log = "Rocks",
+	burrow = "Rocks",
+	sand = "Rocks",
+	sunspot = "Rocks",
+	water = "Water",
+	food = "Food",
+	drink = "Food",
+	shelter = "Shelter",
+	toy = "Decor",
+	light = "Decor",
+	stand = "Decor",
+	decor = "Decor",
+}
+local ORDER = { "Habitats", "Plants", "Rocks", "Water", "Food", "Shelter", "Paths", "Fences", "Decor" }
+
+function PlotInfo.Category(def: { [string]: any }): string
+	return CATEGORY[tostring(def.Kind)] or "Decor"
 end
 
 function PlotInfo.Categories(): { string }
 	local seen: { [string]: boolean } = {}
+	for _, def in Items.List() do
+		seen[PlotInfo.Category(def)] = true
+	end
 	local out = {}
-	for _, e in PlotInfo.Items() do
-		local c = tostring(Derived.Field(e, "category", "Category") or "Decor")
-		if not seen[c] then
-			seen[c] = true
+	for _, c in ORDER do
+		if seen[c] then
 			table.insert(out, c)
 		end
 	end

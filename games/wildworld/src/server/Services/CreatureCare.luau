@@ -11,6 +11,7 @@ local Items = require(Shared:WaitForChild("Items"))
 local Formulas = require(Shared:WaitForChild("Formulas"))
 local DataService = require(script.Parent:WaitForChild("DataService"))
 local ParkService = require(script.Parent:WaitForChild("ParkService"))
+local PlacementService = require(script.Parent:WaitForChild("PlacementService"))
 local MonetizationService = require(script.Parent:WaitForChild("MonetizationService"))
 local Guard = require(script.Parent:WaitForChild("Guard"))
 local Signals = require(script.Parent:WaitForChild("Signals"))
@@ -237,7 +238,56 @@ function CreatureCare.Servings(player: Player, itemU: number): number
 	return s and s[itemU] or Config.Needs.StationServings
 end
 
+-- AssignCreature(uid, padUid | nil): move between habitats / storage.
+local function assign(player: Player, data: any, uid: any, padU: any)
+	local r = if type(uid) == "string" then data.creatures[uid] else nil
+	if not r then
+		return false, "Bad request"
+	end
+	if padU == nil or padU == 0 then
+		local _, storage = CS.Counts(data)
+		if r.padId and storage >= Config.StorageSlots then
+			return Guard.Fail(player, "Storage is full")
+		end
+		CS.Despawn(player, uid)
+		DataService.Update(player, function()
+			r.padId = nil
+		end)
+	else
+		if type(padU) ~= "number" then
+			return false, "Bad request"
+		end
+		local pad: any = nil
+		for _, p in PlacementService.GetPads(player) do
+			if p.u == padU then
+				pad = p
+			end
+		end
+		if not pad then
+			return Guard.Fail(player, "That habitat doesn't exist")
+		end
+		if r.padId == padU then
+			return true, padU
+		end
+		if #ParkService.CreaturesOnPad(data, padU) >= (pad.def.PadCapacity or 4) then
+			return Guard.Fail(player, "That habitat is full - upgrade to a bigger pad")
+		end
+		local park = CS.Counts(data)
+		if not r.padId and park >= Formulas.ParkSlots(data.upgrades.Capacity) then
+			return Guard.Fail(player, "No park slots left - upgrade Creature Capacity")
+		end
+		DataService.Update(player, function()
+			r.padId = padU
+		end)
+		CS.Respawn(player, r.uid)
+	end
+	Guard.Sound(player, "Assign")
+	Signals.Fire("CreaturesChanged", player)
+	return true, padU
+end
+
 function CreatureCare.Bind()
+	Guard.Bind("AssignCreature", assign)
 	Guard.Bind("FeedCreature", feed)
 	Guard.Bind("PetCreature", pet)
 	Guard.Bind("RenameCreature", rename)

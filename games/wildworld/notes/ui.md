@@ -31,49 +31,38 @@ No emoji: icons are `Style.Icons` image ids (empty now) with coloured-circle let
 | `Tutorial` + `Arrows` | first 60 s (below) |
 
 ## First 60 seconds (Tutorial.luau)
-Step comes from data (display only): `flags.tutorialDone` / `flags.tutorialStep >= 5` / 2+ creatures = done.
+Step = server attribute `TutorialStep` (1 Hatch, 2 Feed, 3 Tree, 4 Catch, 5 Breed, 6 done); derived from data only if missing.
 1. 0 creatures: hint + big pulsing **Hatch!** button (HatchEgg first egg) + world beam/arrow to my egg. Nothing else on screen.
-2. 1 creature, not fed: **Feed it** button (FeedCreature) + arrow to `FoodBowl`. Collection button pops in.
+2. Feed: **Feed it** button (FeedCreature) + arrow to my FoodBowl item. Collection button pops in.
 3. Fed (`flags.fed`, tutorialStep >= 3, or a successful Feed this session): Coins chip + Build button pop in, arrow on Build; in build mode the "Tree" item pulses; rating strip shows the jump.
 4. Non-pad item placed: Journal button + quest card "Catch a wild friend" + arrow to `ForestGate`.
-5. 2+ creatures: Breed/Inventory/Park, RP, Level, Shop/Daily/Visit; quest card "Breed your first egg - GOLDEN!" until `flags.goldenGiven`.
+5. Breed (and done): Breed/Inventory/Park, RP, Level, Shop/Daily/Visit; quest card "Breed your first egg - GOLDEN!" until `flags.goldenGiven`.
 Context bar is suppressed during steps 1-2 so the screen stays clean.
 
-## Remotes used (all via `UI/Net.luau`: works for RemoteFunction or RemoteEvent, never hangs, toasts on failure)
-Client -> server: `HatchEgg(eggId)`, `FeedCreature(uid)`, `PetCreature(uid)`, `AssignCreature(uid, padId|nil)`,
-`ScanGenes(uid)`, `Breed(uidA, uidB)`, `ThrowBait(pos: Vector3)`, `CaptureStart(wildId)`, `CaptureRelease(wildId)`,
-`PlaceItem({itemId, cellX, cellZ, rot})`, `RemoveItem({cellX, cellZ})`, `BuyUpgrade(key)`, `ClaimDaily()`,
-`ClaimQuest(id)`, `VisitPlot(userId)`, `LikePark(userId)`, `ReturnHome()`.
-Optional (button hidden unless the remote exists): `RenameCreature(uid, text)`, `SellCreature(uid)`, `BuyBait(key)`
-(else Bait uses `BuyUpgrade(key)`).
-Server -> client: `DataChanged(data)`, `Toast(text, kind?)` / `Notify(text, kind?)`, `Reveal(kind, data)`,
-`Announce(text, rarity?)`, `OfflineEarnings(coins, seconds, rp?)`, `OpenScreen(name)`. `PlaySound` is Audio's.
-`Reveal` kinds: `hatch`, `golden`, `capture`, `discovery` (card), `offline` {coins, seconds, rp}, `levelup` {level},
-`journal` {species} (toast). Card data: `{uid?, species, genes?, mutations = {"Golden"}, rarity?, stage?, isNew?}`.
-Robux: UI prompts `Config.GamePasses[key].Id` / `Config.DevProducts[key].Id`; Id 0 -> "Coming soon!" toast.
-Instant Hatch = any DevProducts key starting `InstantHatch` (cheapest for < 2 min left, then next tiers).
+## Remotes used (all via `UI/Net.luau`; matches notes/gameplay.md)
+Client -> server: `HatchEgg(eggId)`, `FeedCreature(uid)`, `PetCreature(uid)`, `AssignCreature(uid, padUid|nil)`,
+`RenameCreature(uid, name)`, `SellCreature(uid)` (hidden if it's your last creature), `ScanGenes(uid)`,
+`Breed(uidA, uidB)`, `RequestInstantHatch(eggId)`, `ThrowBait(pos, baitId)` (cheapest bait owned),
+`CaptureStart(wildId)` (ring uses serverStart/duration/greenFrom/greenTo), `CaptureRelease(wildId)`,
+`PlaceItem(itemId, cellX, cellZ, rot)`, `RemoveItem(itemUid)` (uid found from plot.items cells), `GetHabitat(padUid)`
+(on entering build mode), `BuyUpgrade(Land|Capacity|Incubators|CalmNet)`, `GetShop()` / `BuyShop(slot)` (Shop >
+Market tab), `ClaimDaily()`, `ClaimQuest(index)`, `VisitPlot(userId)`, `LikePark(userId)`, `ReturnHome()`,
+`PromptPurchase("pass"|"product", key)`.
+Server -> client: `DataChanged`, `Toast`/`Notify`, `Reveal` (Hatch/Capture = big card; Discovery, LevelUp, Tier,
+Offline, Daily, ZoneUnlocked, StarterPack, PassBought = toasts/splashes; Tutorial ignored - UI reads the
+`TutorialStep` attribute), `HabitatChanged` (rating strip), `ShopChanged`. `PlaySound` is Audio's.
+Player attributes read: `TutorialStep`, `Zone`, `ParkRating`, `ParkTier`, `IncomePerMin`, `DailyReady`, `DailyDay`,
+`Pass_<key>`, `MusicVolume`/`SFXVolume`/`MusicOn`/`SFXOn` (Audio).
+Shared modules read: `Config`, `Species`, `Items` (catalog, footprints, layers), `Formulas` (LandSize, BuildRange,
+CellCentre, Incubators, ParkSlots, BreedCost, LevelXP).
 
-## Data the UI reads (camelCase or PascalCase both work)
-`coins, rp, xp, level, upgrades{key=level}, plot{items{{id,x,z,r}}}, creatures{uid -> {species, genes, mutations,
-parents, gen, born, personality, stage, hunger, happy, padId, nickname, genesKnown?, breedReadyAt?}}, eggs{id ->
-{species, readyAt, duration?}}, journal{species -> step | {step, mutations}}, daily{streak, last, canClaim?},
-quests{daily = {{id, text, progress, goal, claimed}}}, flags{tutorialStep, tutorialDone, fed, goldenGiven,
-starterBought}, passes{key=true}` plus optional `parkRating, incomePerMin, parkSlots, incubators, habitats{padId ->
-{rating, hints = {"water"}}}, pads, inventory{bait{Berry=n}, items{}}`.
-Config read (with SPEC fallbacks): `Species, Mutations, Genes, Breeding{Cost, MinHappiness}, Items|BuildItems,
-Upgrades, ParkTiers, Daily{Rewards, CooldownSeconds}, Bait, GeneScanner{Cost}, GamePasses, DevProducts, CellSize`.
-
-## World markup the UI expects (Gameplay / Graphics)
-- Creatures: tag `Creature`; attrs `Uid` + `OwnerId` (owned) or `WildId` (wild), `Species`, `Trust` (wild, 0-100).
-- Eggs in world: tag `Egg`; attrs `EggId`, `OwnerId`, `ReadyAt` (server time).
-- Plot: player attrs `PlotCenter` (Vector3, ground top) + `PlotSize` (studs), or a tag `Plot` instance with
-  `OwnerId` (+ optional `BuildSize`). Cells are 4 studs from the plot's min X/Z corner, 0-based.
-- Landmarks for arrows: tag `FoodBowl` (with `OwnerId`) and `ForestGate` (or parts with those names).
-- Creature view builder: `Shared/CreatureBuilder|CreatureBlueprints|CreatureModels` with
-  `Build(species, {genes, mutations, stage}) -> Model`. Without it cards show letter badges.
-- Player attrs `ParkRating`, `Likes` for the Visit list.
+## World markup read
+Park creatures tag `Creature` (Uid, OwnerId), wild tag `WildCreature` (WildId, Trust), eggs = any instance under
+`workspace.ParkObjects` with `EggId` + `OwnerId`, placed items tag `ParkItem` (ItemId "FoodBowl" for the tutorial
+arrow), plot = tag `Plot` part with `OwnerId`, forest arch tag `ForestGate`. Creature pictures use
+`Shared/CreatureBuilder.Build(species, {genes, mutations, stage})`.
 
 ## Assumptions
-- PlaceItem/RemoveItem use a table arg and cell coords (spec says `{itemId, cellX, cellZ, rot}`).
-- Build catalog item ids `Tree`, `PadSmall` etc. when Config has no list (tutorial highlights "Tree").
-- Favourite star on cards skipped (no remote in spec). Move-object build action skipped (Remove + Place covers it).
+- `DailyDay` = the day number the next claim gives (tile shows "Claimed" when `DailyReady` is false).
+- Tutorial step 3 highlights `TreeOak` in the build tray.
+- Favourite star on cards skipped (no remote). Move action skipped (Remove + Place covers it; MoveItem exists).

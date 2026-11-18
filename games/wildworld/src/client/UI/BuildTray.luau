@@ -45,36 +45,41 @@ local function renderItems()
 	local lvl = Derived.Level()
 	local i = 0
 	for _, def in PlotInfo.Items() do
-		if tostring(Derived.Field(def, "category", "Category") or "Decor") == cat then
+		local have = tonumber(State.Tbl("decorInv")[def.Id]) or 0
+		if PlotInfo.Category(def) == cat and (not def.ShopRare or have > 0) then
 			i += 1
-			local need = tonumber(Derived.Field(def, "level", "Level", "unlockLevel")) or 0
+			local need = tonumber(def.Level) or 0
 			local locked = need > lvl
-			local price = tonumber(Derived.Field(def, "price", "Price", "cost")) or 0
-			local sel = selectedId == def.id
+			local stored = tonumber(State.Tbl("decorInv")[def.Id]) or 0
+			local priceText = if stored > 0
+				then "Owned x" .. stored
+				elseif def.RP then Format.Number(def.RP) .. " RP"
+				else Format.Number(tonumber(def.Cost) or 0)
+			local sel = selectedId == def.Id
 			local pal = if locked then "Stone" elseif sel then "Leaf" else "Card"
 			local b = Kit.Button(itemsRow, "", pal, function()
 				if locked then
 					Kit.Sound("Error")
 					return
 				end
-				selectedId = def.id
+				selectedId = def.Id
 				actions.Select(def)
 				renderItems()
-			end, { Size = UDim2.fromOffset(120, 136), LayoutOrder = i, Name = tostring(def.id) })
+			end, { Size = UDim2.fromOffset(120, 136), LayoutOrder = i, Name = tostring(def.Id) })
 			local face = Kit.ButtonFace(b)
-			Kit.Icon(face, tostring(def.id), {
+			Kit.Icon(face, tostring(def.Id), {
 				AnchorPoint = Vector2.new(0.5, 0),
 				Position = UDim2.new(0.5, 0, 0, 8),
 				Size = UDim2.fromOffset(52, 52),
 				ZIndex = 4,
 			})
-			Kit.Label(face, tostring(def.name or def.id), {
+			Kit.Label(face, tostring(def.Name or def.Id), {
 				Position = UDim2.fromOffset(4, 62),
 				Size = UDim2.new(1, -8, 0, 22),
 				TextSize = 18,
 				ZIndex = 4,
 			})
-			local tags = Derived.Field(def, "tags", "Tags")
+			local tags = def.Tags
 			if type(tags) == "table" and #tags > 0 then
 				Kit.Body(face, "+" .. table.concat(tags, " +"), {
 					Position = UDim2.fromOffset(4, 84),
@@ -84,13 +89,13 @@ local function renderItems()
 					ZIndex = 4,
 				})
 			end
-			Kit.Chip(face, if locked then "Lv " .. need else Format.Number(price), {
+			Kit.Chip(face, if locked then "Lv " .. need else priceText, {
 				AnchorPoint = Vector2.new(0.5, 1),
 				Position = UDim2.new(0.5, 0, 1, -4),
 				Size = UDim2.new(1, -16, 0, 24),
 				ZIndex = 5,
 			})
-			if highlightId == def.id then
+			if highlightId == def.Id then
 				Kit.Pulse(b, 1.1)
 				Kit.Badge(b).Visible = true
 			end
@@ -185,35 +190,36 @@ function BuildTray.Mount(gui: ScreenGui, a: Actions)
 	ratingText = Kit.Label(sface, "0", { Position = UDim2.fromOffset(186, 4), Size = UDim2.fromOffset(60, 36), TextSize = 26, ZIndex = 4 })
 	needText = Kit.Body(sface, "", { Position = UDim2.fromOffset(250, 4), Size = UDim2.new(1, -262, 0, 36), TextSize = 18, ZIndex = 4 })
 	State.OnChange(function(what)
-		if what == "data" and tray.Visible then
+		if (what == "data" or what == "habitat") and tray.Visible then
 			BuildTray.RefreshRating()
 		end
 	end)
 end
 
--- Rating = best habitat (data.habitats[*].rating) or the park rating; hint = first missing need.
+-- Rating = best of my habitats (HabitatChanged results in State.habitats) or the ParkRating
+-- attribute; hint = first checklist line that isn't maxed ("+X if you add ___").
 function BuildTray.RefreshRating()
-	local best, hint = State.Num("parkRating"), nil
-	for _, h in State.Tbl("habitats") do
+	local player = game:GetService("Players").LocalPlayer :: Player
+	local best = tonumber(player:GetAttribute("ParkRating")) or 0
+	local hint: string? = nil
+	for _, h in State.habitats do
 		if type(h) == "table" then
 			local r = tonumber(h.rating) or 0
-			if r >= best then
-				best = r
-			end
-			local hints = h.hints or h.missing
-			if not hint and type(hints) == "table" and hints[1] then
-				hint = tostring(if type(hints[1]) == "table" then hints[1].text or hints[1].need else hints[1])
+			best = math.max(best, r)
+			for _, line in (if type(h.checklist) == "table" then h.checklist else {}) do
+				if not hint and type(line) == "table" and (tonumber(line.score) or 0) < (tonumber(line.max) or 0) then
+					hint = if line.hint then tostring(line.hint) else tostring(line.label)
+				end
 			end
 		end
 	end
 	setStars(best)
 	if lastRating >= 0 and best > lastRating then
-		Kit.Sound("RatingUp")
 		Kit.PopIn(strip, 1.15, 0.35)
 	end
 	lastRating = best
 	ratingText.Text = tostring(math.floor(best))
-	needText.Text = if hint then "Needs: " .. hint else "Add plants, rocks and food to raise it"
+	needText.Text = if hint then hint else "Add plants, rocks and food to raise it"
 end
 
 function BuildTray.Show(on: boolean)
@@ -257,9 +263,7 @@ end
 function BuildTray.HighlightItem(id: string?)
 	highlightId = id
 	if id then
-		local def = PlotInfo.Item(id)
-		local cat = tostring(Derived.Field(def, "category", "Category") or "")
-		local idx = table.find(PlotInfo.Categories(), cat)
+		local idx = table.find(PlotInfo.Categories(), PlotInfo.Category(PlotInfo.Item(id)))
 		if idx then
 			catIdx = idx
 		end

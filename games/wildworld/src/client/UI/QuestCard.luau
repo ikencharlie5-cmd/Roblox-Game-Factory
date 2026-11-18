@@ -6,6 +6,7 @@ local Style = require(script.Parent:WaitForChild("Style"))
 local Kit = require(script.Parent:WaitForChild("Kit"))
 local State = require(script.Parent:WaitForChild("State"))
 local Net = require(script.Parent:WaitForChild("Net"))
+local Derived = require(script.Parent:WaitForChild("Derived"))
 
 local QuestCard = {}
 
@@ -22,17 +23,26 @@ local claimId: any = nil
 local enabled = false
 local hidden = false
 
+-- data.quests.list[i] = {id, progress, claimed}; defs in Config.Quests.Pool (Id, Text, Target).
+local function poolDef(id: any): { [string]: any }
+	local pool = (Derived.Cfg("Quests") or {}).Pool or {}
+	for _, d in pool do
+		if d.Id == id then
+			return d
+		end
+	end
+	return {}
+end
+
 local function daily(): { [string]: any }?
-	local qs = State.Tbl("quests")
-	local list = qs.daily or qs.list or qs
+	local list = State.Tbl("quests").list
 	if type(list) ~= "table" then
 		return nil
 	end
-	for k, q in list do
+	for i, q in list do
 		if type(q) == "table" and not q.claimed then
-			local e = table.clone(q)
-			e.id = q.id or k
-			return e
+			local d = poolDef(q.id)
+			return { index = i, text = d.Text or q.id, goal = d.Target or 1, progress = q.progress }
 		end
 	end
 	return nil
@@ -69,7 +79,7 @@ local function render()
 	setBar(prog / goal)
 	if prog >= goal then
 		claimBtn.Visible = true
-		claimId = q.id
+		claimId = q.index
 	end
 end
 

@@ -4,11 +4,11 @@
   "idea": "Multiplayer wildlife park + creature collection/breeding sim (Planet Zoo x Slime Rancher x Pokemon inspired, all original). Explore, capture original creatures, build habitats, breed for genetics + rare mutations, earn from visitors, visit/trade securely.",
   "stage": "branches",
   "created": "2026-11-18T03:02:43Z",
-  "updated": "2026-11-18T03:45:27Z",
+  "updated": "2026-11-18T04:50:34Z",
   "branches": {
-    "gameplay": "working",
-    "graphics": "working",
-    "ui": "working",
+    "gameplay": "blocked",
+    "graphics": "done",
+    "ui": "done",
     "audio": "done",
     "animation": "done"
   },
@@ -96,6 +96,24 @@
       "from": "animation",
       "to": "all",
       "text": "Client procedural animation done: Goal-driven walking (client also moves Hitbox), idle/blink/ears/tail/legs, moods (sleep/eat/hungry/happy), personality idle actions, Hatch with delayed mutation reveal, egg wobble+crack, visitors + Tips coin fountain, tree sway, lantern flicker, placement thud; LOD tiers + one BulkMoveTo. See notes/animation.md; 5 [animation] items in QUESTIONS.md."
+    },
+    {
+      "time": "2026-11-18T04:46:34Z",
+      "from": "graphics",
+      "to": "all",
+      "text": "World built in code: hub w/ Heart Tree, 8 plots (Plot tag on Base part), Greenleaf Forest 3 zones + lake/waterfall, 14-min day cycle, 35 item visuals (ItemModels hook), 5 code-built creatures + Golden/Albino/Crystal/Glowing layers (CreatureBlueprints.Build hook). Tags in notes/graphics.md."
+    },
+    {
+      "time": "2026-11-18T04:46:43Z",
+      "from": "gameplay",
+      "to": "all",
+      "text": "Gameplay built: creature AI, building grid, genetics/breeding, capture, session-locked saves, validated remotes, economy/quests/daily/shop/weather/visits/monetization. 6 questions in QUESTIONS.md; notes/gameplay.md has the remote list."
+    },
+    {
+      "time": "2026-11-18T04:50:34Z",
+      "from": "ui",
+      "to": "all",
+      "text": "UI done: field-journal Kit port, HUD + 6 unlockable side buttons, first-60s tutorial (TutorialStep), Collection/Inspect/Breeding/Reveal/Build tray/Journal/Park/Shop/Daily/Visit/Settings, aligned to notes/gameplay.md remotes. See notes/ui.md"
     }
   ]
 }

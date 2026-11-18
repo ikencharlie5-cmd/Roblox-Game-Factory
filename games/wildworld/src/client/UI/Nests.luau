@@ -9,8 +9,8 @@ local Kit = require(script.Parent:WaitForChild("Kit"))
 local State = require(script.Parent:WaitForChild("State"))
 local Net = require(script.Parent:WaitForChild("Net"))
 local Derived = require(script.Parent:WaitForChild("Derived"))
-local Market = require(script.Parent:WaitForChild("Market"))
 local Format = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Format"))
+local Formulas: any = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Formulas"))
 
 local Nests = {}
 
@@ -19,13 +19,9 @@ local lastSig = ""
 
 -- Incubator slots: data.incubators if sent, else 2 + upgrade level (+1 with the pass).
 function Nests.Capacity(): number
-	local n = tonumber(State.Get("incubators"))
-	if n then
-		return n
-	end
-	local up = State.Tbl("upgrades")
-	local lvl = tonumber(up.Incubators or up.incubators) or 0
-	return 2 + lvl + (if Derived.HasPass("ExtraIncubator") then 1 else 0)
+	local lvl = tonumber(State.Tbl("upgrades").Incubators) or 0
+	local ok, v = pcall(Formulas.Incubators, lvl, Derived.HasPass("ExtraIncubator"))
+	return if ok and type(v) == "number" then v else 2 + lvl
 end
 
 function Nests.FreeSlots(): number
@@ -40,24 +36,6 @@ function Nests.ReadyCount(): number
 		end
 	end
 	return n
-end
-
-local function instantKey(left: number): string?
-	-- Config.DevProducts keys starting with "InstantHatch", cheapest first; bigger for longer waits.
-	local keys = {}
-	for k, d in Derived.Config.DevProducts or {} do
-		if string.sub(k, 1, 12) == "InstantHatch" then
-			table.insert(keys, { k, tonumber((d :: any).Price) or 0 })
-		end
-	end
-	table.sort(keys, function(a, b)
-		return a[2] < b[2]
-	end)
-	if #keys == 0 then
-		return nil
-	end
-	local idx = if left < 120 then 1 elseif left < 600 then 2 else 3
-	return keys[math.min(idx, #keys)][1]
 end
 
 local function tile(parent: Frame, i: number, egg: { [string]: any }?, locked: boolean)
@@ -85,7 +63,7 @@ local function tile(parent: Frame, i: number, egg: { [string]: any }?, locked: b
 	Kit.Corner(oval, 99)
 	Kit.Gradient(oval, Style.RarityPalette(Derived.Rarity(species)))
 	Kit.Stroke(oval, Style.Color.Frame, 3)
-	local total = tonumber(Derived.Field(e, "duration", "total")) or 120
+	local total = math.max(1, (tonumber(e.readyAt) or 0) - (tonumber(e.laidAt) or 0))
 	local _, set = Kit.Progress(face, "Leaf", { Position = UDim2.new(0, 10, 0, 82), Size = UDim2.new(1, -20, 0, 12), ZIndex = 4 })
 	set(1 - left / math.max(1, total))
 	local ready = left <= 0
@@ -93,12 +71,7 @@ local function tile(parent: Frame, i: number, egg: { [string]: any }?, locked: b
 		if ready then
 			Net.Do("HatchEgg", nil, e.id)
 		else
-			local key = instantKey(left)
-			if key then
-				Market.PromptProduct(key)
-			else
-				Net.Toast("Hatching in " .. Format.Time(left), "info")
-			end
+			Net.Do("RequestInstantHatch", nil, e.id)
 		end
 	end, {
 		AnchorPoint = Vector2.new(0.5, 1),

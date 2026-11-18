@@ -7,6 +7,7 @@ local Net = require(script.Parent:WaitForChild("Net"))
 local Derived = require(script.Parent:WaitForChild("Derived"))
 local Windows = require(script.Parent:WaitForChild("Windows"))
 local Market = require(script.Parent:WaitForChild("Market"))
+local Format = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Format"))
 
 local ShopWindow = {}
 
@@ -17,12 +18,6 @@ local INFO: { [string]: { string } } = {
 	AutoFeeder = { "Auto-Feeder", "Food stations refill themselves" },
 	CrystalGrotto = { "Crystal Grotto Decor", "Sparkly cave decor pack" },
 	StarterPack = { "Starter Pack", "Theme decor + creature bow + 2,000 Coins (one time)" },
-}
-
-local BAIT = {
-	{ key = "Berry", title = "Berry Bait", price = 10, text = "Trust +40" },
-	{ key = "Honey", title = "Honey Bait", price = 50, text = "Trust +70" },
-	{ key = "Starfruit", title = "Starfruit Bait", price = 250, text = "Trust +100, rare spawns x2 for 3 min" },
 }
 
 local win: any
@@ -58,7 +53,7 @@ local function robux(def: { [string]: any }?): string
 end
 
 local function render(force: boolean?)
-	local sig = Kit.Sig({ tab, State.Get("inventory"), State.Get("passes"), State.Get("flags") })
+	local sig = Kit.Sig({ tab, State.Get("bait"), State.shop, State.Get("flags"), State.Num("coins") })
 	if sig == lastSig and not force then
 		return
 	end
@@ -73,7 +68,7 @@ local function render(force: boolean?)
 		card(scroll, order, ...)
 	end
 	if tab == "Featured" then
-		if not Derived.Flag("starterBought") then
+		if not Derived.Flag("starterPack") then
 			local d = Market.ProductDef("StarterPack")
 			add(INFO.StarterPack[1], INFO.StarterPack[2], robux(d), "Robux", function()
 				Market.PromptProduct("StarterPack")
@@ -98,7 +93,7 @@ local function render(force: boolean?)
 	elseif tab == "Coins" then
 		local keys = {}
 		for k, d in Derived.Config.DevProducts or {} do
-			if type(d) == "table" and (d.Coins or string.find(k, "Coin", 1, true)) then
+			if type(d) == "table" and k ~= "StarterPack" and (d.Coins or string.find(k, "Coin", 1, true)) then
 				table.insert(keys, k)
 			end
 		end
@@ -112,23 +107,30 @@ local function render(force: boolean?)
 			end)
 		end
 	else
-		local cfg = Derived.List(Derived.Cfg("Bait"))
-		local list = if #cfg > 0 then cfg else BAIT
-		local inv = State.Tbl("inventory").bait or State.Tbl("bait")
-		for _, b in list do
-			local key = tostring(Derived.Field(b, "key", "id", "name"))
-			local have = if type(inv) == "table" then tonumber(inv[key]) or 0 else 0
-			local price = tonumber(Derived.Field(b, "price", "Price", "cost")) or 0
-			local text = tostring(Derived.Field(b, "text", "desc") or "") .. string.format("  ·  You have %d", have)
-			add(tostring(Derived.Field(b, "title", "Title") or key), text, price .. " Coins", "Sun", function()
+		-- Market stall: restocking bait + rare decor (ShopChanged / GetShop), bought with coins.
+		local shop = State.shop
+		local slots = if type(shop) == "table" and type(shop.slots) == "table" then shop.slots else {}
+		if #slots == 0 then
+			Kit.Body(scroll, "Loading the market...", { Size = UDim2.new(1, 0, 0, 40), TextSize = 22 })
+		end
+		local bait = State.Tbl("bait")
+		for _, sl in slots do
+			local left = tonumber(sl.left) or 0
+			local have = if sl.kind == "bait" then string.format("  ·  You have %d", tonumber(bait[sl.ref]) or 0) else ""
+			local price = tonumber(sl.price) or 0
+			add(tostring(sl.name or sl.ref), string.format("%d left in stock%s", left, have), if left > 0 then Format.Number(price) .. " Coins" else "Sold out", if left > 0 then "Sun" else "Stone", function()
+				if left <= 0 then
+					return
+				end
 				if State.Num("coins") < price then
 					Kit.Sound("Error")
 					Net.Toast("Not enough Coins", "error")
 					return
 				end
-				local remote = if Net.Has("BuyBait") then "BuyBait" else "BuyUpgrade"
-				if Net.Do(remote, nil, key) then
-					Kit.Sound("Purchase")
+				local ok, res = Net.Do("BuyShop", nil, sl.slot)
+				if ok and type(res) == "table" then
+					State.shop = res
+					State.Fire("shop")
 				end
 			end)
 		end
@@ -139,15 +141,22 @@ function ShopWindow.Mount()
 	win = Windows.Create("Shop", "Shop", "Sun", "Shop", Vector2.new(860, 620))
 	local tabs = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 52) }, win.Body)
 	content = Kit.Make("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 64), Size = UDim2.new(1, 0, 1, -64) }, win.Body)
-	choose = Kit.Tabs(tabs, { "Featured", "Passes", "Coins", "Bait" }, function(name)
+	choose = Kit.Tabs(tabs, { "Featured", "Passes", "Coins", "Market" }, function(name)
 		tab = name
 		render(true)
 	end, "Sun")
 	win.OnOpen = function(arg: any)
-		choose(if type(arg) == "string" then arg else "Featured")
+		choose(if arg == "Bait" then "Market" elseif type(arg) == "string" then arg else "Featured")
+		task.spawn(function()
+			local ok, res = Net.Call("GetShop")
+			if ok and type(res) == "table" then
+				State.shop = res
+				State.Fire("shop")
+			end
+		end)
 	end
 	State.OnChange(function(what)
-		if what == "data" and Windows.IsOpen("Shop") then
+		if (what == "data" or what == "shop") and Windows.IsOpen("Shop") then
 			render()
 		end
 	end)

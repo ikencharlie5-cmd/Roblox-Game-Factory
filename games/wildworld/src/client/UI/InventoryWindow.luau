@@ -66,17 +66,16 @@ local function render()
 	if not Windows.IsOpen("Inventory") then
 		return
 	end
-	local inv = State.Tbl("inventory")
-	local sig = Kit.Sig({ inv, State.Get("bait"), State.Get("eggs") })
+	local sig = Kit.Sig({ State.Get("decorInv"), State.Get("bait"), State.Get("eggs") })
 	if sig == lastSig then
 		return
 	end
 	lastSig = sig
 	Kit.Clear(list)
-	section("Bait", 1, "Sun", counts(inv.bait or State.Get("bait")), "Buy bait", function()
+	section("Bait", 1, "Sun", counts(State.Get("bait")), "Buy bait", function()
 		Windows.Open("Shop", "Bait")
 	end)
-	section("Stored items", 10, "Wood", counts(inv.items or inv.decor), "Place items", function()
+	section("Stored items", 10, "Wood", counts(State.Get("decorInv")), "Place items", function()
 		Windows.Close()
 		if buildFn then
 			(buildFn :: () -> ())()
