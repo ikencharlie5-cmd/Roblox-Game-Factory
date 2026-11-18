@@ -10,7 +10,7 @@
   :root {
     --bg: #0d0f17; --panel: #151926; --panel2: #1c2133; --line: #2a3150;
     --text: #e8ebf5; --dim: #8b93b0;
-    --ideas: #ffb02e; --rnd: #2dd4bf; --audio: #f472b6; --gameplay: #4ade80; --graphics: #38bdf8; --ui: #c084fc;
+    --ideas: #ffb02e; --rnd: #2dd4bf; --audio: #f472b6; --animation: #fb7185; --gameplay: #4ade80; --graphics: #38bdf8; --ui: #c084fc;
     --manager: #f87171; --checker: #facc15; --charlie: #fb923c; --done: #34d399; --system: #64748b;
   }
   * { box-sizing: border-box; }
@@ -133,6 +133,7 @@ const ROLES = {
   graphics: { label: "Graphics",  icon: "🎨", color: "var(--graphics)" },
   ui:       { label: "UI",        icon: "🖥️", color: "var(--ui)" },
   audio:    { label: "Audio",     icon: "🎵", color: "var(--audio)" },
+  animation:{ label: "Animation", icon: "🎬", color: "var(--animation)" },
   manager:  { label: "Manager",   icon: "🧑‍💼", color: "var(--manager)" },
   checker:  { label: "Checker",   icon: "🔍", color: "var(--checker)" },
   done:     { label: "Shipped",   icon: "🚀", color: "var(--done)" },
@@ -197,7 +198,7 @@ function renderGames() {
 function nodeState(id, g) {
   if (!g) return { text: "idle", active: false, color: null };
   const si = STAGES.indexOf(g.stage);
-  if (["gameplay", "graphics", "ui", "audio"].includes(id)) {
+  if (["gameplay", "graphics", "ui", "audio", "animation"].includes(id)) {
     const s = g.branches?.[id] || "waiting";
     return { text: s, active: g.stage === "branches" && s === "working", color: BRANCH_COLOR[s] };
   }
@@ -216,15 +217,16 @@ function renderMap() {
     rnd: [870, 170, "🔬", "R&D"],
     charlie: [130, 170, "👑", "Charlie OK"],
     ideas: [500, 170, "💡", "Ideas"],
-    manager: [890, 345, "🧑‍💼", "Manager"],
-    gameplay: [110, 345, "⚙️", "Gameplay"],
-    graphics: [300, 345, "🎨", "Graphics"],
-    ui: [490, 345, "🖥️", "UI / Menus"],
-    audio: [680, 345, "🎵", "Sound / Music"],
+    manager: [900, 345, "🧑‍💼", "Manager"],
+    gameplay: [90, 345, "⚙️", "Gameplay"],
+    graphics: [250, 345, "🎨", "Graphics"],
+    ui: [410, 345, "🖥️", "UI / Menus"],
+    audio: [570, 345, "🎵", "Sound"],
+    animation: [730, 345, "🎬", "Animation"],
     checker: [410, 520, "🔍", "Checker"],
     done: [750, 520, "🚀", "Shipped"],
   };
-  const W = 170, H = 70;
+  const W = 150, H = 70;
   const hot = (from, to) => g && ((g.stage === "research" && to === "rnd") || (g.stage === "ideas" && from === "rnd" && to === "ideas") ||
     (g.stage === "branches" && from === "ideas") || (g.stage === "manager" && to === "manager") ||
     (g.stage === "checker" && to === "checker") || (g.stage === "signoff" && from === "checker" && to === "manager") || (g.stage === "approval" && to === "charlie") || (g.stage === "done" && to === "done"));
@@ -236,18 +238,18 @@ function renderMap() {
   edges += E("rnd", "branches", `M${rx - 60},${ry + H / 2} C${rx - 80},265 ${N.audio[0] + 40},260 ${N.audio[0] + 40},${N.audio[1] - H / 2 - 8}`, "loop");
   edges += E("ideas", "charlie", `M${ix - W / 2},${iy - 8} L${N.charlie[0] + W / 2 + 8},${iy - 8}`);
   edges += E("charlie", "ideas", `M${N.charlie[0] + W / 2},${iy + 10} L${ix - W / 2 - 8},${iy + 10}`, "loop");
-  for (const b of ["gameplay", "graphics", "ui", "audio"]) {
+  for (const b of ["gameplay", "graphics", "ui", "audio", "animation"]) {
     const [bx, by] = N[b];
     edges += E("ideas", b, `M${ix},${iy + H / 2} C${ix},260 ${bx},250 ${bx},${by - H / 2 - 8}`);
     edges += E(b, "checker", `M${bx},${by + H / 2} C${bx},440 ${N.checker[0]},430 ${N.checker[0]},${N.checker[1] - H / 2 - 8}`);
   }
-  edges += E("audio", "manager", `M${N.audio[0] + W / 2},${my} L${mx - W / 2 - 8},${my}`);
+  edges += E("animation", "manager", `M${N.animation[0] + W / 2},${my} L${mx - W / 2 - 8},${my}`);
   edges += E("manager", "ideas", `M${mx + 40},${my - H / 2} C${mx + 120},250 ${mx + 120},${ry + 70} ${rx + 30},${ry + H / 2 + 8}`, "loop");
   edges += E("checker", "manager", `M${N.checker[0] + W / 2},${N.checker[1] - 14} C${mx - 120},${N.checker[1] - 30} ${mx},${N.checker[1] - 60} ${mx},${my + H / 2 + 8}`, "loop");
   edges += E("checker", "done", `M${N.checker[0] + W / 2},${N.checker[1]} L${N.done[0] - W / 2 - 8},${N.done[1]}`);
   edges += E("checker", "branches", `M${N.checker[0] - W / 2},${N.checker[1] + 10} C120,540 60,430 ${N.gameplay[0] - W / 2 - 8},362`, "loop");
 
-  const labels = `<text x="785" y="395" text-anchor="middle" fill="var(--manager)" font-size="11" font-family="Inter">questions</text>
+  const labels = `<text x="815" y="395" text-anchor="middle" fill="var(--manager)" font-size="11" font-family="Inter">questions</text>
     <text x="985" y="300" text-anchor="end" fill="var(--manager)" font-size="11" font-family="Inter">decision → R&D/Ideas → fix</text>
     <text x="700" y="250" text-anchor="middle" fill="#2dd4bf" font-size="11" font-family="Inter">refs for branches</text>
     <text x="985" y="455" text-anchor="end" fill="var(--manager)" font-size="11" font-family="Inter">sign-off checklist</text>
@@ -283,7 +285,7 @@ function panelTabsFor(id, g) {
     case "rnd": return { "Research report": d["RESEARCH.md"] };
     case "ideas": return { "Game design (SPEC)": d["SPEC.md"], "From R&D": section(d["RESEARCH.md"], "For Ideas") };
     case "charlie": return { "Spec to approve": d["SPEC.md"], "Your TODO": d["README.md"] };
-    case "gameplay": case "graphics": case "ui": case "audio": return { [ROLES[id].label + " notes"]: n[id], "Hand-off from Ideas": section(d["SPEC.md"], { gameplay: "For Gameplay", graphics: "For Graphics", ui: "For UI", audio: "For Audio" }[id]), "R&D refs": section(d["RESEARCH.md"], { gameplay: "For Gameplay", graphics: "For Graphics", ui: "For UI", audio: "For Audio" }[id]) };
+    case "gameplay": case "graphics": case "ui": case "audio": case "animation": return { [ROLES[id].label + " notes"]: n[id], "Hand-off from Ideas": section(d["SPEC.md"], { gameplay: "For Gameplay", graphics: "For Graphics", ui: "For UI", audio: "For Audio", animation: "For Animation" }[id]), "R&D refs": section(d["RESEARCH.md"], { gameplay: "For Gameplay", graphics: "For Graphics", ui: "For UI", audio: "For Audio", animation: "For Animation" }[id]) };
     case "manager": return { "Final checklist": d["SIGNOFF.md"], "Decisions": d["DECISIONS.md"], "Questions": d["QUESTIONS.md"] };
     case "checker": return { "Check report": d["CHECK_REPORT.md"] };
     case "done": return { "Game README": d["README.md"] };

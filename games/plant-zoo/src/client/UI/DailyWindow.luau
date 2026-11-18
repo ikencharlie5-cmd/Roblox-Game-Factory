@@ -15,19 +15,20 @@ local infoLabel: TextLabel
 local lastSig = ""
 local badge: ((boolean) -> ())? = nil
 
-local function rewardText(r: any): string
+-- (icon, text) per reward kind. Icons are Style.Icons names (code-drawn badge until uploaded).
+local function reward(r: any): (string, string)
 	if r.Kind == "Income" then
-		return string.format("💵\n%d min of income", r.Minutes)
+		return "Cash", string.format("%d min of income", r.Minutes)
 	elseif r.Kind == "Hope" then
-		return "🌟\n" .. r.Amount .. " Hope"
+		return "Hope", r.Amount .. " Hope"
 	elseif r.Kind == "LuckPotion" then
-		return "🧪\nLuck Potion"
+		return "LuckPotion", "Luck Potion"
 	elseif r.Kind == "GrowTonic" then
-		return "💧\n" .. r.Amount .. " Grow Tonics"
+		return "GrowTonic", r.Amount .. " Grow Tonics"
 	elseif r.Kind == "Seed" then
-		return "🌱\nFree " .. tostring(r.Rarity) .. " seed!"
+		return "Shop", "Free " .. tostring(r.Rarity) .. " seed!"
 	end
-	return "🎁"
+	return "Daily", "Gift"
 end
 
 -- Mirrors DailyRewardService.Next for display: (dayToClaim, canClaim)
@@ -66,48 +67,72 @@ function DailyWindow.Render(force: boolean?)
 	for i, r in Derived.Config.Daily.Rewards do
 		local done = i < day or (i == day and not can)
 		local isToday = i == day and can
-		local color = if isToday then Style.Color.Sun elseif done then Style.Color.Leaf else Style.Color.Card
-		local c = Kit.Panel(strip, color, { LayoutOrder = i, Size = UDim2.new(1 / 7, -6, 1, 0) })
-		Kit.Label(c, "Day " .. i, { Size = UDim2.new(1, -4, 0.2, 0), Position = UDim2.new(0, 2, 0.02, 0) })
-		Kit.Label(c, rewardText(r), {
-			Size = UDim2.new(1, -6, 0.58, 0),
-			Position = UDim2.new(0, 3, 0.22, 0),
-			Font = Style.FontBody,
+		local pal = if isToday then Style.Pal.Sun elseif done then Style.Pal.Leaf else Style.Pal.Card
+		local cell = Kit.Make("Frame", {
+			BackgroundTransparency = 1,
+			LayoutOrder = i,
+			Size = UDim2.new(1 / 7, -8, 1, 0),
+		}, strip)
+		local face = Kit.Slab(cell, pal, 16, 5, 3, true)
+		if pal == Style.Pal.Card then
+			(face:FindFirstChildOfClass("UIStroke") :: UIStroke).Color = Style.Pal.Body.Dark
+			local lip = cell:FindFirstChild("Lip") :: Frame
+			lip.BackgroundColor3 = Style.Pal.Body.Dark
+		end
+		local dark = if pal == Style.Pal.Card then Style.Pal.Body.Dark else pal.Dark
+		Kit.Title(face, "Day " .. i, dark, { Size = UDim2.new(1, -8, 0, 30), Position = UDim2.fromOffset(4, 6), TextSize = 24, ZIndex = 4 })
+		local icon, text = reward(r)
+		Kit.Icon(face, icon, {
+			AnchorPoint = Vector2.new(0.5, 0),
+			Position = UDim2.new(0.5, 0, 0, 40),
+			Size = UDim2.fromOffset(62, 62),
+			Depth = true,
+			ZIndex = 4,
 		})
-		Kit.Label(c, if done then "✅" elseif isToday then "TODAY" else "", {
-			Size = UDim2.new(1, -4, 0.18, 0),
-			Position = UDim2.new(0, 2, 0.8, 0),
+		Kit.Body(face, text, {
+			Position = UDim2.fromOffset(4, 106),
+			Size = UDim2.new(1, -8, 0, 56),
+			TextSize = 18,
+			TextColor3 = if pal == Style.Pal.Card then Style.Color.Ink else Style.Color.White,
+			Stroke = if pal == Style.Pal.Card then nil else dark,
+			StrokeThickness = 2,
+			ZIndex = 4,
 		})
-		if isToday then
-			local s = Kit.Make("UIScale", { Scale = 1 }, c)
-			task.spawn(function()
-				while s.Parent do
-					Kit.Tween(s, 0.5, { Scale = 1.06 })
-					task.wait(0.5)
-					Kit.Tween(s, 0.5, { Scale = 1 })
-					task.wait(0.5)
-				end
-			end)
+		if done then
+			Kit.CodeBadge(cell, "OK", Style.Pal.Leaf, {
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.new(1, -8, 0, 8),
+				Size = UDim2.fromOffset(34, 34),
+				ZIndex = 6,
+			})
+		elseif isToday then
+			Kit.Title(face, "TODAY", dark, {
+				AnchorPoint = Vector2.new(0, 1),
+				Position = UDim2.new(0, 4, 1, -6),
+				Size = UDim2.new(1, -8, 0, 26),
+				TextSize = 22,
+				ZIndex = 4,
+			})
+			Kit.Pulse(cell)
 		end
 	end
-	Kit.SetButtonColor(claimBtn, if can then Style.Color.Leaf else Style.Color.Grey)
-	claimBtn.Text = if can then "🎁 Claim Day " .. day else "Come back tomorrow!"
+	Kit.SetButtonColor(claimBtn, if can then "Leaf" else Style.Color.Grey)
+	claimBtn.Text = if can then "Claim Day " .. day else "Come back tomorrow!"
 end
 
 function DailyWindow.Mount()
-	local win = Windows.Create("Daily", "🎁 Daily Reward", Style.Color.Pink)
-	infoLabel = Kit.Label(win.Body, "Log in every day! Miss a day and the streak restarts.", {
-		Size = UDim2.fromScale(1, 0.1),
-		Font = Style.FontBody,
-		TextColor3 = Style.Color.InkSoft,
+	local win = Windows.Create("Daily", "Daily Reward", "Sun", "Daily", Vector2.new(900, 520))
+	infoLabel = Kit.Body(win.Body, "Log in every day! Miss a day and the streak restarts.", {
+		Size = UDim2.new(1, 0, 0, 34),
+		TextSize = 22,
 	})
 	strip = Kit.Make("Frame", {
 		BackgroundTransparency = 1,
-		Position = UDim2.fromScale(0, 0.13),
-		Size = UDim2.fromScale(1, 0.6),
+		Position = UDim2.fromOffset(0, 50),
+		Size = UDim2.new(1, 0, 1, -146),
 	}, win.Body)
-	Kit.List(strip, true, 6, true)
-	claimBtn = Kit.Button(win.Body, "Claim", Style.Color.Leaf, function()
+	Kit.List(strip, true, 8, true)
+	claimBtn = Kit.Button(win.Body, "Claim", "Leaf", function()
 		local _, can = DailyWindow.Next()
 		if not can then
 			Kit.Sound("Error")
@@ -116,12 +141,18 @@ function DailyWindow.Mount()
 		local ok, res = Net.Do("ClaimDaily", nil)
 		if ok then
 			if type(res) == "table" and type(res.text) == "string" then
-				infoLabel.Text = "🎉 " .. res.text
+				infoLabel.Text = Kit.StripEmoji(res.text)
 			end
 			lastSig = ""
 			DailyWindow.Render()
 		end
-	end, { Size = UDim2.fromScale(0.5, 0.18), Position = UDim2.fromScale(0.25, 0.79) })
+	end, {
+		AnchorPoint = Vector2.new(0.5, 1),
+		Position = UDim2.fromScale(0.5, 1),
+		Size = UDim2.fromOffset(360, 76),
+		TextSize = 30,
+		Shine = true,
+	})
 	win.OnOpen = function()
 		DailyWindow.Render(true)
 	end

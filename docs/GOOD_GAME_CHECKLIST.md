@@ -47,6 +47,11 @@ Any ❌ goes back to the branch in [brackets] to fix.
 - [ ] Big moments (level up, rebirth, rare drop) feel BIG: screen effect + special sound
 - [ ] Nothing feels laggy or unresponsive
 
+## 7b. Animation [Animation]
+- [ ] Creatures never stand frozen: idle bob/squash, occasional hops or wiggles
+- [ ] Key moments animate: plant pop-in, stage-up, bloom/mutation celebration, coin burst, Release
+- [ ] Scenery has gentle motion (sway, flicker) without hurting phone performance
+
 ## 8. Visuals & world [Graphics]
 - [ ] Consistent art style and color palette
 - [ ] No flat grey boxes or untextured filler

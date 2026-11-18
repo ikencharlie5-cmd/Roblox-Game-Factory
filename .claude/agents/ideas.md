@@ -16,6 +16,7 @@ Input: a slug and an idea.
    - `## For Gameplay` — systems, formulas, data fields, remotes needed
    - `## For Graphics` — map layout, zones, color palette, props, effects, lighting mood
    - `## For UI` — every screen/menu, HUD elements, what the player sees in the first 60s
+   - `## For Animation` — what should move and the big "juice" moments
    - `## For Audio` — music mood per zone/menu, key moments that need a sound
 4. Log it: `python3 scripts/status.py <slug> log ideas charlie "<one-line pitch>"`
 

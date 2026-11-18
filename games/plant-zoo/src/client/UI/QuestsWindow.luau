@@ -38,46 +38,54 @@ local function row(
 	claimed: boolean,
 	onClaim: (() -> ())?
 )
-	local r = Kit.Panel(list, if claimable then Style.Color.Cream else Style.Color.Panel, {
+	local r = Kit.Panel(list, if claimable then Style.Color.Sun else Style.Color.Panel, {
 		LayoutOrder = order,
-		Size = UDim2.new(1, -8, 0, 64),
+		Size = UDim2.new(1, -12, 0, 84),
 	})
-	Kit.Label(r, title, {
-		Size = UDim2.new(0.7, -8, 0.5, -2),
-		Position = UDim2.new(0, 8, 0, 4),
+	Kit.Stagger(r)
+	Kit.Label(r, Kit.StripEmoji(title), {
+		Size = UDim2.new(0.7, -16, 0, 34),
+		Position = UDim2.fromOffset(14, 8),
+		TextSize = 26,
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
-	local _, set = Kit.Progress(r, Style.Color.Leaf, {
-		Size = UDim2.new(0.7, -8, 0.26, 0),
-		Position = UDim2.new(0, 8, 0.6, 0),
+	local _, set = Kit.Progress(r, "Leaf", {
+		Size = UDim2.new(0.7, -16, 0, 26),
+		Position = UDim2.fromOffset(14, 48),
 	})
 	set(if goal > 0 then progress / goal else 0)
-	Kit.Label(r, string.format("%d/%d", math.min(progress, goal), goal), {
-		Size = UDim2.new(0.7, -8, 0.26, 0),
-		Position = UDim2.new(0, 8, 0.6, 0),
-		TextColor3 = Style.Color.White,
+	Kit.Title(r, string.format("%d/%d", math.min(progress, goal), goal), Style.Color.Dark, {
+		Size = UDim2.new(0.7, -16, 0, 26),
+		Position = UDim2.fromOffset(14, 48),
+		TextSize = 20,
+		StrokeThickness = 2,
 		ZIndex = 3,
 	})
 	if claimed then
-		Kit.Label(r, "✅ Done", {
+		Kit.Title(r, "Done!", Style.Pal.Leaf.Dark, {
 			AnchorPoint = Vector2.new(1, 0.5),
-			Position = UDim2.new(1, -8, 0.5, 0),
-			Size = UDim2.new(0.26, 0, 0.6, 0),
-			TextColor3 = Style.Color.LeafDark,
+			Position = UDim2.new(1, -14, 0.5, 0),
+			Size = UDim2.new(0.26, 0, 0, 44),
+			TextSize = 32,
+			TextColor3 = Style.Pal.Leaf.Top,
 		})
 	elseif onClaim then
-		Kit.Button(
-			r,
-			if claimable then "Claim!" else "...",
-			if claimable then Style.Color.Sun else Style.Color.Grey,
-			onClaim,
-			{
-				AnchorPoint = Vector2.new(1, 0.5),
-				Position = UDim2.new(1, -8, 0.5, 0),
-				Size = UDim2.new(0.26, 0, 0, 48),
-			}
-		)
+		Kit.Button(r, if claimable then "Claim!" else "...", if claimable then "Sun" else Style.Color.Grey, onClaim, {
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.new(1, -14, 0.5, 0),
+			Size = UDim2.new(0.26, 0, 0, 60),
+			Shine = claimable,
+		})
 	end
+end
+
+local function heading(order: number, text: string)
+	Kit.Label(list, text, {
+		LayoutOrder = order,
+		Size = UDim2.new(1, -12, 0, 36),
+		TextSize = 28,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	})
 end
 
 function QuestsWindow.Render(force: boolean?)
@@ -102,18 +110,10 @@ function QuestsWindow.Render(force: boolean?)
 	Kit.Clear(list)
 	local def, step = QuestsWindow.TutorialStep()
 	if def then
-		Kit.Label(list, string.format("🌱 Getting started (%d/%d)", step, #Derived.Config.Tutorial), {
-			LayoutOrder = 1,
-			Size = UDim2.new(1, -8, 0, 30),
-			TextXAlignment = Enum.TextXAlignment.Left,
-		})
+		heading(1, string.format("Getting started (%d/%d)", step, #Derived.Config.Tutorial))
 		row(2, def.Text, State.Num("tutorialProgress"), def.Goal, false, false, nil)
 	end
-	Kit.Label(list, "📅 Daily quests (+10 🌟 each)", {
-		LayoutOrder = 10,
-		Size = UDim2.new(1, -8, 0, 30),
-		TextXAlignment = Enum.TextXAlignment.Left,
-	})
+	heading(10, "Daily quests (+10 Hope each)")
 	for i, q in quests do
 		local progress, goal = q.progress or 0, q.goal or 1
 		local claimable = not q.claimed and progress >= goal
@@ -126,15 +126,15 @@ function QuestsWindow.Render(force: boolean?)
 		end)
 	end
 	if #quests == 0 then
-		Kit.Label(list, "New quests arrive every day!", { LayoutOrder = 20, Size = UDim2.new(1, -8, 0, 30) })
+		Kit.Body(list, "New quests arrive every day!", { LayoutOrder = 20, Size = UDim2.new(1, -12, 0, 30) })
 	end
 end
 
 function QuestsWindow.Mount()
-	local win = Windows.Create("Quests", "📜 Quests", Style.Color.Wood)
+	local win = Windows.Create("Quests", "Quests", "Pink", "Quests")
 	list = Kit.Scroll(win.Body)
-	Kit.List(list, false, 6)
-	Kit.Padding(list, 4)
+	Kit.List(list, false, 10)
+	Kit.Padding(list, 6)
 	win.OnOpen = function()
 		QuestsWindow.Render(true)
 	end

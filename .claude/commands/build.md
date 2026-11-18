@@ -1,13 +1,13 @@
 ---
-description: Stages 2–6 — the 4 branches build, Manager resolves questions, Checker reviews, Manager signs off. No questions to Charlie.
+description: Stages 2–6 — the 5 branches build, Manager resolves questions, Checker reviews, Manager signs off. No questions to Charlie.
 argument-hint: <slug>
 ---
 Run the full pipeline for `games/$ARGUMENTS`. Do NOT ask Charlie anything.
 Commit + push after every numbered step so the website updates.
 
-1. **Branches.** `python3 scripts/status.py $ARGUMENTS stage branches`, set all 4 branches
-   to `waiting`, then launch the **gameplay**, **graphics**, **ui**, and **audio** subagents IN
-   PARALLEL (one message, four Agent calls), each told the slug and to read their section of
+1. **Branches.** `python3 scripts/status.py $ARGUMENTS stage branches`, set all 5 branches
+   to `waiting`, then launch the **gameplay**, **graphics**, **ui**, **audio**, and **animation**
+   subagents IN PARALLEL (one message, five Agent calls), each told the slug and to read their section of
    `research/RESEARCH.md`.
 2. **Manager loop.** If `games/$ARGUMENTS/QUESTIONS.md` has open items (no ✅):
    a. `status.py $ARGUMENTS stage manager` → **manager** subagent decides. If a question needs

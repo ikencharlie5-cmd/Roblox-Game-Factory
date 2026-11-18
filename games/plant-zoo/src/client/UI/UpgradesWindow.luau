@@ -110,7 +110,7 @@ function UpgradesWindow.Mount()
 		TextSize = 22,
 	})
 	list = Kit.Scroll(win.Body, { Position = UDim2.new(0, 0, 0, 38), Size = UDim2.new(1, 0, 1, -38) })
-	Kit.List(list, false, 10, true)
+	Kit.List(list, false, 10)
 	Kit.Padding(list, 6)
 	win.OnOpen = function()
 		UpgradesWindow.Render(true)
