@@ -7,7 +7,6 @@ local Build = require(script.Parent.Build)
 
 local V = Vector3.new
 local C = CFrame.new
-local A = CFrame.Angles
 local rad = math.rad
 local hex = Color3.fromHex
 local M = Enum.Material
