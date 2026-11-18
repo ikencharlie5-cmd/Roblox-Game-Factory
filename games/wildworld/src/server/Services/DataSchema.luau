@@ -110,6 +110,11 @@ function DataSchema.Fix(data: { [string]: any }): { [string]: any }
 		end
 	end
 	data.plot.items = items
+	for id in data.decorInv do -- items cut from the catalog (v1 scope) disappear from inventory too
+		if not Items.Get(id) then
+			data.decorInv[id] = nil
+		end
+	end
 
 	-- creatures: valid species + genes; pad refs must exist
 	local count = 0

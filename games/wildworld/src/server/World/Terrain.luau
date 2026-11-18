@@ -1,7 +1,7 @@
 --!strict
 -- Brick ground (STUDS_STYLE_GUIDE §6). Studs can't render on Terrain, so the playable area is studded
 -- Plastic plates: 256x4x256 ground tiles (top y = 0) in a GrassTop/GrassAlt checker, path plates, terraced
--- brick hills, a sunken lake basin and the Glade brick cliff. Everything walkable lives in
+-- brick hills, a sunken lake basin and the meadow's back brick cliff. Everything walkable lives in
 -- Workspace.World.Ground (Scatter raycasts against it). Smooth Terrain is cleared.
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -80,7 +80,6 @@ local function lakeRect(): Rect
 end
 
 -- Checkerboard of 256-stud studded plates, top at y = 0, with a hole for the lake basin.
--- Deep forest tiles use the darker forest greens.
 function Terrain.Ground()
 	local holes = { lakeRect() }
 	local n = 0
@@ -88,10 +87,7 @@ function Terrain.Ground()
 	for x = Layout.MinX - 128, Layout.MaxX + 127, TILE do
 		local iz = 0
 		for z = Layout.MinZ, Layout.MaxZ + 127, TILE do
-			local cz = z + TILE / 2
-			local forest = cz < -660 and math.abs(x + TILE / 2) < 300
-			local even = (ix + iz) % 2 == 0
-			local col = if forest then (if even then P.ForestFloor else P.ForestAlt) else (if even then P.GrassTop else P.GrassAlt)
+			local col = if (ix + iz) % 2 == 0 then P.GrassTop else P.GrassAlt
 			local rects = {}
 			subtract({ x0 = x, x1 = x + TILE, z0 = z, z1 = z + TILE }, holes, rects)
 			for _, r in rects do
@@ -198,18 +194,19 @@ function Terrain.Backdrop(rng: Random): { Vector3 }
 	ridge(-600, -470, -460, 470, 160) -- west
 	ridge(260, 600, -600, -470, 120) -- north-east shoulder
 	ridge(-600, -260, -600, -470, 120) -- north-west shoulder
-	ridge(250, 380, -1260, -600, 150) -- forest east flank
-	ridge(-380, -250, -1260, -600, 150) -- forest west flank
+	ridge(250, 380, -1000, -600, 150) -- meadow east flank
+	ridge(-380, -250, -1000, -600, 150) -- meadow west flank
+	ridge(-250, 250, -1000, -890, 125) -- skyline behind the waterfall cliff
 	return tops
 end
 
--- Invisible boundary walls: park box (x/z ±420) + forest corridor (x ±225, down to z -1240).
--- Keeps players off the backdrop ridges / out of the SafetyFloor pit. Clear of plots (r <= 360) and zones (x ±210).
+-- Invisible boundary walls: park box (x/z ±420) + meadow corridor (x ±225, back wall at the meadow's ZMin,
+-- inside the cliff). Keeps players off the backdrop ridges / out of the SafetyFloor pit.
 function Terrain.Bounds(parent: Instance)
 	local folder = Instance.new("Folder")
 	folder.Name = "Bounds"
 	folder.Parent = parent
-	local H, PB, F, S = 400, 420, 225, -1240
+	local H, PB, F, S = 400, 420, 225, Layout.Zones[1].ZMin
 	local function wall(name: string, a: Vector2, b: Vector2)
 		local w = Instance.new("Part")
 		w.Name = name
@@ -234,13 +231,13 @@ function Terrain.Bounds(parent: Instance)
 	wall("ForestEnd", Vector2.new(-F, S), Vector2.new(F, S))
 end
 
--- Glade back wall: stepped brick cliff (Stone base, Dirt band, studded grass cap) the waterfall pours over,
+-- Meadow back wall: stepped brick cliff (Stone base, Dirt band, studded grass cap) the waterfall pours over,
 -- plus a raised stream channel from the cliff foot into the lake.
 function Terrain.Cliff()
 	local top = Layout.WaterfallTop
 	for x = -200, 200, 40 do
 		local h = math.floor((top.Y + math.abs(x - top.X) * 0.12) / 2.4 + 0.5) * 2.4
-		local zf = -1190
+		local zf = top.Z - 46
 		plate(V(40, h * 0.5, 90), CFrame.new(x, h * 0.25, zf), P.Stone, "Cliff")
 		plate(V(40, h * 0.5 - 2.4, 90), CFrame.new(x, h * 0.75 - 1.2, zf), P.Dirt, "Cliff")
 		plate(V(40, 2.4, 90), CFrame.new(x, h - 1.2, zf - 1), if (x / 40) % 2 == 0 then P.GrassTop else P.GrassAlt, "CliffTop")
@@ -248,11 +245,11 @@ function Terrain.Cliff()
 	-- Boulder stacks flanking the falls.
 	for _, s in { { -30, 30, 26 }, { 32, 26, 24 } } do
 		local bx = top.X + s[1]
-		plate(V(s[3], s[2], 20), CFrame.new(bx, s[2] / 2, -1142), P.StoneDark, "Boulder")
-		plate(V(s[3] - 8, 4.8, 14), CFrame.new(bx, s[2] + 2.4, -1142), P.Stone, "Boulder")
+		plate(V(s[3], s[2], 20), CFrame.new(bx, s[2] / 2, top.Z + 2), P.StoneDark, "Boulder")
+		plate(V(s[3] - 8, 4.8, 14), CFrame.new(bx, s[2] + 2.4, top.Z + 2), P.Stone, "Boulder")
 	end
 	-- Stream channel: stone rims + water strip on top of the ground from the falls to the lake edge.
-	local z0, z1 = -1140, Layout.Lake.Center.Z - Layout.Lake.Radius - 2
+	local z0, z1 = top.Z + 4, Layout.Lake.Center.Z - Layout.Lake.Radius - 2
 	local len, zc = z0 - z1, (z0 + z1) / 2
 	for _, side in { -1, 1 } do
 		plate(V(2, 1.2, math.abs(len)), CFrame.new(top.X + side * 10, 0.6, zc), P.Stone, "StreamRim")

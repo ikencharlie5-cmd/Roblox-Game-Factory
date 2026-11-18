@@ -1,5 +1,6 @@
 --!strict
--- Park building: PlaceItem / RotateItem / MoveItem / RemoveItem. Client sends intents only
+-- Helper for PlotService (not a service). Park building: PlaceItem / RotateItem / MoveItem /
+-- RemoveItem. Client sends intents only
 -- ({itemId, cellX, cellZ, rot}); server checks owner, unlock, cost, bounds, occupancy, 300 cap.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -10,14 +11,14 @@ local Config = require(Shared:WaitForChild("Config"))
 local Items = require(Shared:WaitForChild("Items"))
 local Formulas = require(Shared:WaitForChild("Formulas"))
 local DataService = require(script.Parent:WaitForChild("DataService"))
-local PlotService = require(script.Parent:WaitForChild("PlotService"))
+local PlotCore = require(script.Parent:WaitForChild("PlotCore"))
 local MonetizationService = require(script.Parent:WaitForChild("MonetizationService"))
 local PlotGrid = require(script.Parent:WaitForChild("PlotGrid"))
 local Models = require(script.Parent:WaitForChild("Models"))
 local Guard = require(script.Parent:WaitForChild("Guard"))
 local Signals = require(script.Parent:WaitForChild("Signals"))
 
-local PlacementService = {}
+local Placement = {}
 
 local grids: { [Player]: any } = {}
 local models: { [Player]: { [number]: Model } } = {}
@@ -25,7 +26,7 @@ local models: { [Player]: { [number]: Model } } = {}
 local function itemCFrame(plot: number, item: any, def: any): CFrame
 	local w, d = Items.Footprint(def, item.r)
 	local lx, lz = Formulas.CellCentre(item.x, item.z, w, d)
-	return PlotService.ToWorld(plot, lx, lz, 0, item.r)
+	return PlotCore.ToWorld(plot, lx, lz, 0, item.r)
 end
 
 local function spawnModel(player: Player, plot: number, item: any)
@@ -47,7 +48,7 @@ local function spawnModel(player: Player, plot: number, item: any)
 		CollectionService:AddTag(m, "HabitatPad")
 	end
 	CollectionService:AddTag(m, "ParkItem")
-	m.Parent = PlotService.Folder(plot)
+	m.Parent = PlotCore.Folder(plot)
 	models[player][item.u] = m
 end
 
@@ -102,7 +103,7 @@ local function priceCheck(player: Player, data: any, def: any): (string?, string
 end
 
 local function place(player: Player, data: any, itemId: any, x: any, z: any, rot: any)
-	local plot = PlotService.GetPlot(player)
+	local plot = PlotCore.GetPlot(player)
 	local grid = grids[player]
 	local def = Items.Get(itemId)
 	if not plot or not grid then
@@ -150,7 +151,7 @@ local function place(player: Player, data: any, itemId: any, x: any, z: any, rot
 end
 
 local function move(player: Player, data: any, u: any, x: any, z: any, rot: any)
-	local plot = PlotService.GetPlot(player)
+	local plot = PlotCore.GetPlot(player)
 	local grid = grids[player]
 	local item = findItem(data, u)
 	local def = item and Items.Get(item.id)
@@ -214,18 +215,18 @@ end
 
 -- Queries for other services ---------------------------------------------------------------
 
-function PlacementService.Grid(player: Player): any
+function Placement.Grid(player: Player): any
 	return grids[player]
 end
 
-function PlacementService.Model(player: Player, u: number): Model?
+function Placement.Model(player: Player, u: number): Model?
 	return models[player] and models[player][u]
 end
 
 -- Pads: { {u, def, item, model, cf (centre, ground), half (studs)} }
-function PlacementService.GetPads(player: Player): { any }
+function Placement.GetPads(player: Player): { any }
 	local out = {}
-	local grid, plot = grids[player], PlotService.GetPlot(player)
+	local grid, plot = grids[player], PlotCore.GetPlot(player)
 	if not grid or not plot then
 		return out
 	end
@@ -249,8 +250,8 @@ function PlacementService.GetPads(player: Player): { any }
 end
 
 -- Items (records) inside pad u, and their world positions.
-function PlacementService.ItemsInPad(player: Player, padU: number): { any }
-	local grid, plot = grids[player], PlotService.GetPlot(player)
+function Placement.ItemsInPad(player: Player, padU: number): { any }
+	local grid, plot = grids[player], PlotCore.GetPlot(player)
 	if not grid or not plot then
 		return {}
 	end
@@ -262,7 +263,7 @@ function PlacementService.ItemsInPad(player: Player, padU: number): { any }
 	return out
 end
 
-function PlacementService.CountKind(player: Player, kind: string): number
+function Placement.CountKind(player: Player, kind: string): number
 	local grid = grids[player]
 	local n = 0
 	if grid then
@@ -276,8 +277,9 @@ function PlacementService.CountKind(player: Player, kind: string): number
 	return n
 end
 
-function PlacementService.Init()
-	PlotService.OnAssigned(function(player, plot, data)
+-- Called from PlotService.Init.
+function Placement.Bind()
+	PlotCore.OnAssigned(function(player, plot, data)
 		local grid = PlotGrid.new()
 		grids[player] = grid
 		models[player] = {}
@@ -288,7 +290,7 @@ function PlacementService.Init()
 	end, 20)
 	Players.PlayerRemoving:Connect(function(p)
 		grids[p] = nil
-		models[p] = nil -- PlotService clears the folder
+		models[p] = nil -- PlotCore clears the folder
 	end)
 	Guard.Bind("PlaceItem", place)
 	Guard.Bind("RotateItem", function(player, data, u, rot)
@@ -302,4 +304,4 @@ function PlacementService.Init()
 	Guard.Bind("RemoveItem", remove)
 end
 
-return PlacementService
+return Placement

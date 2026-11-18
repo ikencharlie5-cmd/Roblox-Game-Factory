@@ -64,11 +64,8 @@ local list: { any } = {
 	{ "GrottoArch", "Grotto Arch", "decor", 3, 1, 0, 1, { Pass = "CrystalGrotto", Enrich = true } },
 	{ "GlowShroom", "Glow Shroom", "decor", 1, 1, 0, 1, { Pass = "CrystalGrotto", Enrich = true, Fine = true } },
 	{ "StarterArch", "Explorer's Arch", "decor", 3, 1, 0, 1, { Starter = true, Enrich = true } },
-	{ "FieldTent", "Field Tent", "shelter", 2, 2, 0, 2, { RP = 30, Shelter = true } },
-	{ "JournalSign", "Journal Signpost", "decor", 1, 1, 0, 1, { RP = 15, Enrich = true, Fine = true } },
 	{ "MossStatue", "Moss Statue", "decor", 1, 1, 0, 1, { ShopRare = true, Enrich = true, Fine = true } },
 	{ "RainbowFlowers", "Rainbow Flowers", "flower", 1, 1, 0, 1, { ShopRare = true, Tags = { "flower" }, Enrich = true } },
-	{ "StoneTotem", "Stone Totem", "decor", 1, 1, 0, 1, { ShopRare = true, Tags = { "rock" }, Enrich = true } },
 }
 
 local Items = {}

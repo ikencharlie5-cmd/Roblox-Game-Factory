@@ -4,8 +4,9 @@
 --   Theme.Colors        palette (Theme/Palette)
 --   Theme.Rarity        rarity colours; Theme.Mutation mutation colours
 --   Theme.Effects       particle presets (Sparkle, Embers, Hearts, CoinBurst, Confetti, Puff, Discovery,
---                       Fireflies, Mist, Splash, WaterMist, Fall, Weather(kind))
+--                       Fireflies, Mist, Splash, WaterMist, Fall)
 --   Theme.Moments       in-world VFX: Hatch, CaptureBubble, DiscoveryBeam, RatingUp, Coins, Hearts
+--   Theme.IconModels    UI icon brick models: IconModels.Build(name) (Coin, RP, bait, passes, packs, eggs)
 --   Theme.Props         build-item visuals: Items catalog, Build(itemId, seed), Ghost(itemId, valid)
 --   Theme.Nature / Theme.Structures / Theme.Decor / Theme.Kit   lower-level builders (Kit.Brick = studded part)
 --   Theme.Lighting      day/night values; Theme.Zones biome atmosphere per zone (client tweens on entry)
@@ -24,6 +25,7 @@ Theme.Structures = require(script.Structures)
 Theme.Decor = require(script.Decor)
 Theme.Props = require(script.Props)
 Theme.Moments = require(script.Moments)
+Theme.IconModels = require(script.IconModels)
 
 local hex = Color3.fromHex
 
@@ -90,33 +92,13 @@ Theme.Zones = {
 		Music = "Park",
 	},
 	MeadowEdge = {
-		DisplayName = "Meadow Edge",
+		DisplayName = "Greenleaf Meadow",
 		Biome = "Greenleaf",
 		Density = 0.175,
 		Color = hex("#D6F0FF"),
 		Decay = hex("#FFE6C4"),
 		Haze = 0.8,
 		Glare = 0.1,
-		Music = "Forest",
-	},
-	MossyHollow = {
-		DisplayName = "Mossy Hollow",
-		Biome = "Greenleaf",
-		Density = 0.25,
-		Color = hex("#D4EBDC"),
-		Decay = hex("#A9C9A0"),
-		Haze = 1.4,
-		Glare = 0,
-		Music = "Forest",
-	},
-	WaterfallGlade = {
-		DisplayName = "Waterfall Glade",
-		Biome = "Greenleaf",
-		Density = 0.2,
-		Color = hex("#E6DDFF"),
-		Decay = hex("#FFC8E6"),
-		Haze = 1,
-		Glare = 0.2,
 		Music = "Forest",
 	},
 } :: { [string]: ZoneLook }

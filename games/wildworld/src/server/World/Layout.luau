@@ -1,7 +1,8 @@
 --!strict
 -- Map layout constants (studs, ground top y = 0). North = -Z.
 --   Hub plaza at the origin (r = 80). 8 plots (128x128) in a ring at r = 270, the north gap is the forest road.
---   Greenleaf Forest north of the ring: Meadow Edge -> Mossy Hollow -> Waterfall Glade.
+--   Greenleaf Meadow north of the ring (the only v1 wild zone): road -> hills/flowers -> lake + waterfall
+--   at the back edge (brick cliff). Mossy Hollow / Waterfall Glade are cut until update 2.
 local Layout = {}
 
 Layout.PlazaRadius = 80
@@ -36,18 +37,18 @@ export type ZoneDef = {
 	Cost: number,
 }
 
--- Zone gates default to the spec numbers; Config.Zones (gameplay, matched by Id) overrides Level/Cost.
+-- v1: one wild zone. Config.Zones (gameplay, matched by Id) overrides Level/Cost on the ForestGate anchor.
 Layout.Zones = {
-	{ Id = "Meadow", Key = "MeadowEdge", Index = 1, ZMin = -640, ZMax = -370, HalfWidth = 210, RequiredLevel = 1, Cost = 0 },
-	{ Id = "Hollow", Key = "MossyHollow", Index = 2, ZMin = -900, ZMax = -640, HalfWidth = 200, RequiredLevel = 4, Cost = 1000 },
-	{ Id = "Glade", Key = "WaterfallGlade", Index = 3, ZMin = -1160, ZMax = -900, HalfWidth = 200, RequiredLevel = 8, Cost = 5000 },
+	{ Id = "Meadow", Key = "MeadowEdge", Index = 1, ZMin = -800, ZMax = -370, HalfWidth = 210, RequiredLevel = 1, Cost = 0 },
 } :: { ZoneDef }
 
-Layout.Lake = { Center = Vector3.new(40, 0, -1040), Radius = 46 }
-Layout.WaterfallTop = Vector3.new(40, 56, -1144)
+-- Lake + waterfall at the meadow's back edge; the road ends facing them (the zone's focal point).
+Layout.Lake = { Center = Vector3.new(40, 0, -680), Radius = 46 }
+Layout.WaterfallTop = Vector3.new(40, 56, -784)
+Layout.RoadEndZ = -612
 
--- Terrain extent.
+-- Terrain extent (ground plates cover MinZ..MaxZ+127).
 Layout.MinX, Layout.MaxX = -640, 640
-Layout.MinZ, Layout.MaxZ = -1280, 640
+Layout.MinZ, Layout.MaxZ = -1024, 640
 
 return Layout

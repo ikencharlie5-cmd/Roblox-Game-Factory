@@ -11,8 +11,6 @@ local Genetics = require(Shared:WaitForChild("Genetics"))
 local Formulas = require(Shared:WaitForChild("Formulas"))
 local DataService = require(script.Parent:WaitForChild("DataService"))
 local PlotService = require(script.Parent:WaitForChild("PlotService"))
-local PlacementService = require(script.Parent:WaitForChild("PlacementService"))
-local ParkService = require(script.Parent:WaitForChild("ParkService"))
 local CreatureAI = require(script.Parent:WaitForChild("CreatureAI"))
 local Models = require(script.Parent:WaitForChild("Models"))
 local Signals = require(script.Parent:WaitForChild("Signals"))
@@ -47,7 +45,7 @@ local function context(player: Player, padU: number, self: Model): any
 	local c = byPad[padU]
 	if not c then
 		c = { partners = {} }
-		for _, row in PlacementService.ItemsInPad(player, padU) do
+		for _, row in PlotService.ItemsInPad(player, padU) do
 			local k, def = row.def.Kind, row.def
 			if k == "food" and not c.food then
 				c.food, c.foodU = row.pos, row.item.u
@@ -88,7 +86,7 @@ local function spawnModel(player: Player, r: any)
 		return
 	end
 	local pad: any = nil
-	for _, p in PlacementService.GetPads(player) do
+	for _, p in PlotService.GetPads(player) do
 		if p.u == r.padId then
 			pad = p
 		end
@@ -205,8 +203,8 @@ function CreatureService.PadWithRoom(player: Player, data: any, preferSpecies: s
 		return nil
 	end
 	local best: number? = nil
-	for _, pad in PlacementService.GetPads(player) do
-		local here = ParkService.CreaturesOnPad(data, pad.u)
+	for _, pad in PlotService.GetPads(player) do
+		local here = PlotService.CreaturesOnPad(data, pad.u)
 		if #here < (pad.def.PadCapacity or 4) then
 			for _, c in here do
 				if c.species == preferSpecies then
@@ -307,7 +305,7 @@ function CreatureService.Init()
 			padCtx[player] = {}
 		end
 		-- pads may have moved: re-home creatures whose pad moved (cheap: respawn those models)
-		for _, pad in PlacementService.GetPads(player) do
+		for _, pad in PlotService.GetPads(player) do
 			for uid, m in live[player] or {} do
 				local a = CreatureAI.Get(m)
 				if a and m:GetAttribute("PadUid") == pad.u and (a.centre - pad.cf.Position).Magnitude > 0.5 then
@@ -338,6 +336,7 @@ function CreatureService.Init()
 end
 
 function CreatureService.Start()
+	CreatureAI.Run() -- connects the Heartbeat brain (park + wild agents)
 	CreatureCare.Loop()
 end
 

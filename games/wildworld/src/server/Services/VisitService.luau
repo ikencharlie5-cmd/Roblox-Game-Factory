@@ -1,6 +1,6 @@
 --!strict
 -- Social: VisitPlot / ReturnHome teleports, LikePark (+1 park rating per unique visitor per day,
--- cap 20), Top Parks (this server + global best rating board from DataService).
+-- cap Config.Economy.LikeBonusCap), Top Parks (this server + global best rating board from DataService).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -9,9 +9,9 @@ local Config = require(Shared:WaitForChild("Config"))
 local Formulas = require(Shared:WaitForChild("Formulas"))
 local DataService = require(script.Parent:WaitForChild("DataService"))
 local PlotService = require(script.Parent:WaitForChild("PlotService"))
-local ParkService = require(script.Parent:WaitForChild("ParkService"))
 local Guard = require(script.Parent:WaitForChild("Guard"))
 local Signals = require(script.Parent:WaitForChild("Signals"))
+local World = require(script.Parent.Parent:WaitForChild("World")) -- Graphics builder (cached; Main runs Init)
 
 local VisitService = {}
 
@@ -73,7 +73,7 @@ local function like(player: Player, _data: any, userId: any)
 		d.likes.count += 1
 		d.stats.likes += 1
 	end)
-	ParkService.Queue(owner)
+	PlotService.Queue(owner)
 	Guard.Toast(owner, player.DisplayName .. " liked your park! +1 rating", "success")
 	Guard.Sound(owner, "Like")
 	Guard.Sound(player, "Like")
@@ -130,11 +130,10 @@ function VisitService.Init()
 	end)
 end
 
--- Hub "Top Parks" board (Graphics' WorldService.SetTopParks): global board, else this server.
+-- Hub "Top Parks" board (World.SetTopParks): global board, else this server.
 local function updateBoard()
-	local ws = script.Parent:FindFirstChild("WorldService")
-	local ok, mod = pcall(require, ws :: any)
-	if not ws or not ok or not mod.SetTopParks then
+	local mod = World :: any
+	if not mod.SetTopParks then
 		return
 	end
 	local rows = {}

@@ -1,19 +1,18 @@
 --!strict
--- Coins from visitors (income paid as tips every 10 s), offline earnings (50%, cap 2 h),
--- Park Level XP, BuyUpgrade, UnlockZone.
+-- EconomyService: coins from visitors (income paid as tips every 10 s), offline earnings (50%, cap 2 h),
+-- BuyUpgrade, UnlockZone (v1: only Meadow exists; disabled zones answer "future update"), and the
+-- hub shop stall (Shop helper: GetShop / BuyShop / restocks). Park Level XP lives in RewardService.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
-local Items = require(Shared:WaitForChild("Items"))
 local Formulas = require(Shared:WaitForChild("Formulas"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local DataService = require(script.Parent:WaitForChild("DataService"))
 local PlotService = require(script.Parent:WaitForChild("PlotService"))
-local PlacementService = require(script.Parent:WaitForChild("PlacementService"))
-local ParkService = require(script.Parent:WaitForChild("ParkService"))
 local Guard = require(script.Parent:WaitForChild("Guard"))
+local Shop = require(script.Parent:WaitForChild("Shop"))
 local Signals = require(script.Parent:WaitForChild("Signals"))
 
 local EconomyService = {}
@@ -31,8 +30,8 @@ function EconomyService.VisitorTip(player: Player, amount: number)
 	local data = DataService.Get(player)
 	if data then
 		local pads = {}
-		for _, pad in PlacementService.GetPads(player) do
-			if #ParkService.CreaturesOnPad(data, pad.u) > 0 then
+		for _, pad in PlotService.GetPads(player) do
+			if #PlotService.CreaturesOnPad(data, pad.u) > 0 then
 				table.insert(pads, pad)
 			end
 		end
@@ -53,39 +52,6 @@ function EconomyService.VisitorTip(player: Player, amount: number)
 	Signals.Fire("Earn", player, amount)
 end
 
-function EconomyService.AddXP(player: Player, amount: number)
-	local data = DataService.Get(player)
-	if not data or amount <= 0 then
-		return
-	end
-	local gained: { number } = {}
-	DataService.Update(player, function(d)
-		d.xp += amount
-		while d.xp >= Formulas.LevelXP(d.level) do
-			d.xp -= Formulas.LevelXP(d.level)
-			d.level += 1
-			table.insert(gained, d.level)
-		end
-	end)
-	for _, lvl in gained do
-		local unlocks = {}
-		for _, def in Items.List() do
-			if def.Level == lvl and not def.Pass and not def.Starter and not def.ShopRare then
-				table.insert(unlocks, def.Name)
-			end
-		end
-		for _, z in Config.Zones do
-			if z.Level == lvl then
-				table.insert(unlocks, z.Name .. " (forest area)")
-			end
-		end
-		Guard.Reveal(player, "LevelUp", { level = lvl, unlocks = unlocks })
-		Guard.Sound(player, "LevelUp")
-		Signals.Fire("LevelUp", player, lvl)
-	end
-	player:SetAttribute("Level", data.level)
-end
-
 local function offline(player: Player, data: any)
 	player:SetAttribute("Level", data.level)
 	if (data.lastSeen or 0) <= 0 then
@@ -96,7 +62,7 @@ local function offline(player: Player, data: any)
 		return
 	end
 	local secs = math.min(away, Config.Economy.OfflineCapSeconds)
-	local coins = math.floor(ParkService.IncomePerMin(player) * secs / 60 * Config.Economy.OfflineRate)
+	local coins = math.floor(PlotService.IncomePerMin(player) * secs / 60 * Config.Economy.OfflineRate)
 	local readyEggs = 0
 	for _, e in data.eggs do
 		if e.readyAt <= os.time() and e.source ~= "starter" then
@@ -145,6 +111,9 @@ local function unlockZone(player: Player, data: any, zoneId: any)
 	if not zone then
 		return false, "Bad request"
 	end
+	if not zone.Enabled then
+		return Guard.Fail(player, zone.Name .. " opens in a future update!")
+	end
 	if data.zones[zone.Id] then
 		return true, zone.Id
 	end
@@ -166,35 +135,22 @@ function EconomyService.Init()
 	PlotService.OnAssigned(function(player, _plot, data)
 		offline(player, data)
 	end, 60)
-	Signals.On("Hatch", function(p)
-		task.defer(EconomyService.AddXP, p, Config.XP.Hatch)
-	end)
-	Signals.On("Catch", function(p)
-		task.defer(EconomyService.AddXP, p, Config.XP.Catch)
-	end)
-	Signals.On("Breed", function(p)
-		task.defer(EconomyService.AddXP, p, Config.XP.Breed)
-	end)
-	Signals.On("Place", function(p)
-		task.defer(EconomyService.AddXP, p, Config.XP.Place)
-	end)
-	Signals.On("QuestDone", function(p)
-		task.defer(EconomyService.AddXP, p, Config.XP.Quest)
-	end)
 	Players.PlayerRemoving:Connect(function(p)
 		carry[p] = nil
 	end)
 	Guard.Bind("BuyUpgrade", buyUpgrade)
 	Guard.Bind("UnlockZone", unlockZone)
+	Shop.Bind()
 end
 
 function EconomyService.Start()
+	task.spawn(Shop.Loop)
 	local interval = Config.Economy.TipInterval
 	while true do
 		task.wait(interval)
 		for _, p in Players:GetPlayers() do
 			if DataService.Get(p) then
-				local amount = ParkService.IncomePerMin(p) * interval / 60 + (carry[p] or 0)
+				local amount = PlotService.IncomePerMin(p) * interval / 60 + (carry[p] or 0)
 				local whole = math.floor(amount)
 				carry[p] = amount - whole
 				if whole >= 1 then

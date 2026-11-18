@@ -1,5 +1,5 @@
 --!strict
--- Capture: ThrowBait -> trust meter -> CaptureStart opens a server-timed ring window ->
+-- Helper for WildService (not a service). Capture: ThrowBait -> trust meter -> CaptureStart opens a server-timed ring window ->
 -- CaptureRelease is judged on the SERVER clock (±150 ms, ping-compensated). Miss = flee 15 studs,
 -- 2 retries per encounter. Pity: guaranteed after 4 fails on one species. Baiting claims the wild.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -11,13 +11,14 @@ local Formulas = require(Shared:WaitForChild("Formulas"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local DataService = require(script.Parent:WaitForChild("DataService"))
 local CreatureService = require(script.Parent:WaitForChild("CreatureService"))
-local WildService = require(script.Parent:WaitForChild("WildService"))
 local CreatureAI = require(script.Parent:WaitForChild("CreatureAI"))
 local Journal = require(script.Parent:WaitForChild("Journal"))
 local Guard = require(script.Parent:WaitForChild("Guard"))
 local Signals = require(script.Parent:WaitForChild("Signals"))
 
-local CaptureService = {}
+local Capture = {}
+
+local WildService: any = nil -- set by Bind (WildService requires this module; avoids a cycle)
 
 local rng = Random.new()
 local C = Config.Capture
@@ -222,13 +223,16 @@ local function captureRelease(player: Player, data: any, wildId: any)
 	return true, { success = true, uid = uid, species = r.species }
 end
 
-function CaptureService.Init()
+-- Called from WildService.Init with the WildService module.
+function Capture.Bind(wild: any)
+	WildService = wild
 	Guard.Bind("ThrowBait", throwBait)
 	Guard.Bind("CaptureStart", captureStart)
 	Guard.Bind("CaptureRelease", captureRelease)
 end
 
-function CaptureService.Start()
+-- Called from WildService.Start (loops forever; run it in its own thread).
+function Capture.Loop()
 	-- trust slowly decays; claims expire; abandoned windows count as misses
 	while true do
 		task.wait(1)
@@ -256,5 +260,4 @@ function CaptureService.Start()
 	end
 end
 
-
-return CaptureService
+return Capture

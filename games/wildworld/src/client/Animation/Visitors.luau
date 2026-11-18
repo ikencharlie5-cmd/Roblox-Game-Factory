@@ -1,5 +1,5 @@
 --!strict
--- Client-only park visitors: simple 6-part figures walking a square loop just outside each owned
+-- Client-only park visitors: 8-part studded blocky R6 minifigs (Plastic, block head + square eyes) walking a square loop just outside each owned
 -- plot's buildable Land square (so they never cross a habitat), stopping to look in and emote.
 -- No network. Plot = the Base part tagged "Plot" (pivot = floor-top centre; a Plot Model is mapped to its
 -- tagged PrimaryPart). Attributes read from it:
@@ -37,37 +37,44 @@ type Plot = {
 local plots: { [PVInstance]: Plot } = {}
 local folder: Folder
 local rng = Random.new()
-local SHIRTS = { "#FF8A65", "#4FC3F7", "#FFD54F", "#81C784", "#BA68C8", "#F06292", "#4DB6AC" }
-local SKINS = { "#F1C27D", "#E0AC69", "#C68642", "#8D5524", "#FFDBAC" }
-local PANTS = { "#37474F", "#5D4037", "#3949AB", "#00695C" }
--- name, size, rest offset (from feet), colour group, ball
+local Palette = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Theme"):WaitForChild("Palette"))
+local P = Palette :: any
+-- Classic studs minifig: brick-palette shirts, toy-yellow (or skin) block head, dark pants.
+local SHIRTS: { Color3 } = { P.Red, P.Blue, P.Yellow, P.Teal, P.Coral, P.Pink, P.Leaf2, P.White }
+local HEADS: { Color3 } = { P.Yellow, P.Yellow, P.Yellow, P.RockWarm, P.Wood }
+local PANTS: { Color3 } = { P.Blue, P.StoneDark, P.WoodDark, P.Teal }
+-- Blocky R6 at 0.85 scale (feet at y=0). Joint: 1 hip L, 2 hip R, 3 body (idle bob), 5 shoulder L, 6 shoulder R.
+-- name, size, rest offset (from feet), colour group (1 shirt, 2 head, 3 pants, 4 eye), joint, studs on top
 local BODY = {
-	{ "LegL", Vector3.new(0.8, 1.6, 0.8), CFrame.new(-0.45, 0.8, 0), 3 },
-	{ "LegR", Vector3.new(0.8, 1.6, 0.8), CFrame.new(0.45, 0.8, 0), 3 },
-	{ "Torso", Vector3.new(1.8, 1.8, 1), CFrame.new(0, 2.5, 0), 1 },
-	{ "Head", Vector3.new(1.5, 1.5, 1.5), CFrame.new(0, 4.1, 0), 2 },
-	{ "ArmL", Vector3.new(0.6, 1.6, 0.6), CFrame.new(-1.25, 2.55, 0), 2 },
-	{ "ArmR", Vector3.new(0.6, 1.6, 0.6), CFrame.new(1.25, 2.55, 0), 2 },
+	{ "LegL", Vector3.new(0.85, 1.7, 0.85), CFrame.new(-0.425, 0.85, 0), 3, 1, false },
+	{ "LegR", Vector3.new(0.85, 1.7, 0.85), CFrame.new(0.425, 0.85, 0), 3, 2, false },
+	{ "Torso", Vector3.new(1.7, 1.7, 0.85), CFrame.new(0, 2.55, 0), 1, 3, true },
+	{ "Head", Vector3.new(1.2, 1.2, 1.2), CFrame.new(0, 4.0, 0), 2, 3, true },
+	{ "ArmL", Vector3.new(0.85, 1.7, 0.85), CFrame.new(-1.275, 2.55, 0), 1, 5, true },
+	{ "ArmR", Vector3.new(0.85, 1.7, 0.85), CFrame.new(1.275, 2.55, 0), 1, 6, true },
+	{ "EyeL", Vector3.new(0.18, 0.18, 0.05), CFrame.new(-0.24, 4.12, -0.62), 4, 3, false },
+	{ "EyeR", Vector3.new(0.18, 0.18, 0.05), CFrame.new(0.24, 4.12, -0.62), 4, 3, false },
 }
-local HIP_L, HIP_R = Vector3.new(-0.45, 1.6, 0), Vector3.new(0.45, 1.6, 0)
-local SH_L, SH_R = Vector3.new(-1.25, 3.3, 0), Vector3.new(1.25, 3.3, 0)
+local HIP_L, HIP_R = Vector3.new(-0.425, 1.7, 0), Vector3.new(0.425, 1.7, 0)
+local SH_L, SH_R = Vector3.new(-1.275, 3.3, 0), Vector3.new(1.275, 3.3, 0)
 
-local function pick(t: { string }): Color3
-	return Color3.fromHex(t[rng:NextInteger(1, #t)])
+local function pick(t: { Color3 }): Color3
+	return t[rng:NextInteger(1, #t)]
 end
 
 local function newVisitor(plot: Plot): Visitor
 	local m = Instance.new("Model")
 	m.Name = "Visitor"
-	local cols = { pick(SHIRTS), pick(SKINS), pick(PANTS) }
+	local cols = { pick(SHIRTS), pick(HEADS), pick(PANTS), Palette.Eye }
 	local parts, rest = {}, {}
 	for i, def in BODY do
 		local p = Instance.new("Part")
 		p.Name = def[1] :: string
 		p.Size = def[2] :: Vector3
 		p.Color = cols[def[4] :: number]
-		p.Material = Enum.Material.SmoothPlastic
-		p.Shape = if p.Name == "Head" then Enum.PartType.Ball else Enum.PartType.Block
+		p.Material = Enum.Material.Plastic
+		p.TopSurface = if def[6] then Enum.SurfaceType.Studs else Enum.SurfaceType.Smooth
+		p.BottomSurface = if def[6] then Enum.SurfaceType.Inlet else Enum.SurfaceType.Smooth
 		p.Anchored = true
 		p.CanCollide = false
 		p.CanQuery = false
@@ -244,12 +251,17 @@ local function stepVisitor(plot: Plot, v: Visitor, now: number, dt: number)
 	local idle = 0.03 * math.sin(now * 2 + v.phase)
 	local r = v.rest
 	local parts = v.parts
-	Batch.Add(parts[1], root * around(HIP_L, swing) * r[1])
-	Batch.Add(parts[2], root * around(HIP_R, -swing) * r[2])
-	Batch.Add(parts[3], root * CFrame.new(0, idle, 0) * r[3])
-	Batch.Add(parts[4], root * CFrame.new(0, idle, 0) * r[4])
-	Batch.Add(parts[5], root * around(SH_L, -swing * 0.8) * r[5])
-	Batch.Add(parts[6], root * around(SH_R, swing * 0.8) * r[6])
+	local body = root * CFrame.new(0, idle, 0)
+	for i, def in BODY do
+		local j = def[5] :: number
+		local base = if j == 1
+			then root * around(HIP_L, swing)
+			elseif j == 2 then root * around(HIP_R, -swing)
+			elseif j == 5 then root * around(SH_L, -swing * 0.8)
+			elseif j == 6 then root * around(SH_R, swing * 0.8)
+			else body
+		Batch.Add(parts[i], base * r[i])
+	end
 end
 
 function Visitors.Step(now: number, dt: number, camPos: Vector3)

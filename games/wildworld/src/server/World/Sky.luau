@@ -1,10 +1,9 @@
 --!strict
 -- Lighting, Atmosphere, post FX, 14-minute day cycle (70% day, short golden hour, blue readable night),
--- weather visuals (Rain, RainbowShower) and drifting puffy clouds.
+-- and drifting puffy clouds. (Weather visuals were cut for v1.)
 -- Sets Lighting attribute "IsNight" and toggles every "NightLight"-tagged part's light.
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
-local TweenService = game:GetService("TweenService")
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Theme = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Theme"))
@@ -14,10 +13,7 @@ local L = Theme.Lighting
 local Sky = {}
 
 local atmosphere: Atmosphere
-local weatherCC: ColorCorrectionEffect
-local weatherSources: { BasePart } = {}
 local isNight = false
-local currentWeather: string? = nil
 
 local function inst(className: string, name: string?, props: { [string]: any }): Instance
 	local i = (if name then Lighting:FindFirstChild(name) else Lighting:FindFirstChildOfClass(className))
@@ -32,7 +28,7 @@ local function inst(className: string, name: string?, props: { [string]: any }):
 	return i
 end
 
-function Sky.Setup(weatherAreas: { Vector3 })
+function Sky.Setup()
 	-- STUDS_STYLE_GUIDE §7: flatter, brighter light for the brick look.
 	Lighting.Brightness = L.Day.Brightness
 	Lighting.ClockTime = L.ClockTime
@@ -48,17 +44,11 @@ function Sky.Setup(weatherAreas: { Vector3 })
 	inst("BloomEffect", nil, L.Bloom)
 	inst("SunRaysEffect", nil, L.SunRays)
 	inst("ColorCorrectionEffect", "Grade", L.ColorCorrection)
-	weatherCC = inst("ColorCorrectionEffect", "WeatherCC", {}) :: ColorCorrectionEffect
-	Lighting:SetAttribute("IsNight", false)
-
-	local folder = Kit.Folder(Kit.Folder(Workspace, "World"), "WeatherFX")
-	for _, pos in weatherAreas do
-		local p = Kit.Block(folder, Vector3.new(160, 1, 160), CFrame.new(pos + Vector3.new(0, 60, 0)), Color3.new(1, 1, 1))
-		p.Name = "WeatherSource"
-		p.Transparency = 1
-		p.CastShadow = false
-		table.insert(weatherSources, p)
+	local oldCC = Lighting:FindFirstChild("WeatherCC")
+	if oldCC then
+		oldCC:Destroy()
 	end
+	Lighting:SetAttribute("IsNight", false)
 end
 
 local function setNight(night: boolean)
@@ -131,36 +121,6 @@ function Sky.StartCycle()
 			setNight(t >= 18.5 or t < 5.8)
 		end
 	end)
-end
-
--- name: gameplay weather ("Clear" | "Sunny" | "Rain" | "Rainbow Shower"; "RainbowShower" also accepted).
-function Sky.SetWeather(raw: string?)
-	local name: string? = if raw == "Rainbow Shower" then "RainbowShower" elseif raw == "Clear" then nil else raw
-	if name == currentWeather then
-		return
-	end
-	currentWeather = name
-	for _, p in weatherSources do
-		p:ClearAllChildren()
-		if name then
-			local e = Theme.Effects.Weather(name)
-			if e then
-				e.Parent = p
-			end
-		end
-	end
-	local info = TweenInfo.new(3)
-	local tint, sat, bright, dens = Color3.new(1, 1, 1), 0, 0, L.Atmosphere.Density
-	if name == "Rain" then
-		tint, sat, bright, dens = Color3.fromHex("#DCE8FF"), -0.05, -0.03, dens + 0.08
-	elseif name == "RainbowShower" then
-		tint, sat, bright, dens = Color3.fromHex("#FFF2FA"), 0.08, 0.03, dens + 0.02
-	elseif name == "Sunny" then
-		tint, sat, bright, dens = Color3.fromHex("#FFF4E0"), 0.04, 0.03, dens - 0.03
-	end
-	TweenService:Create(weatherCC, info, { TintColor = tint, Saturation = sat, Brightness = bright }):Play()
-	TweenService:Create(atmosphere, info, { Density = dens }):Play()
-	Workspace:SetAttribute("Weather", raw or "Clear")
 end
 
 -- 8 blocky brick clouds around the map edge, drifting slowly in a big circle.

@@ -7,7 +7,8 @@
 --              seed = number (stable hue/size jitter, e.g. hash of uid) }
 --   CreatureBuilder.FromLook(species, look) -> Model?  gameplay look table { genes, mutations, stage, hue, scale, bow }
 --     (scale = final scale incl. size gene + baby scale; hue = hue shift; bow = Starter Pack bow)
---   CreatureBuilder.BuildEgg(species, opts?) -> Model?   opts = { mutations?, seed? }
+--   CreatureBuilder.BuildEgg(species, opts?) -> Model?   opts = { mutations?, seed?, rarity? }
+--     shell tinted by rarity (white/green/blue/purple), not species; model attribute Rarity
 --   CreatureBuilder.ScaleFor(genes, stage, seed) -> number
 --
 -- Model: PrimaryPart = invisible "Hitbox" (CanQuery, the click/prompt target); model pivot = ground point
@@ -32,6 +33,7 @@ export type BuildOpts = {
 	scale: number?, -- absolute scale override (gameplay already folded in size gene / baby scale)
 	hue: number?, -- hue shift override (-0.06..0.06) instead of the seeded jitter
 	bow: boolean?, -- Starter Pack creature bow
+	rarity: string?, -- BuildEgg only: tint tier override (Common/Uncommon/Rare/Epic)
 }
 
 local STAGE_SCALE: { [string]: number } = { Baby = 0.6, Juvenile = 0.75, Adult = 1 } -- matches Config.Growth.BabyScale
@@ -299,7 +301,7 @@ function CreatureBuilder.BuildEgg(species: string, opts: BuildOpts?): Model?
 		return nil
 	end
 	local o: BuildOpts = opts or {}
-	return Mutations.Egg(bp, o.mutations or {}, o.seed or 0)
+	return Mutations.Egg(bp, o.mutations or {}, o.seed or 0, o.rarity)
 end
 
 return CreatureBuilder

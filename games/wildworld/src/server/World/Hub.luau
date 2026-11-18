@@ -211,7 +211,7 @@ function Hub.Build(parent: Instance, rng: Random): SpawnLocation
 	local sp = CFrame.new(10, PLAZA_TOP, -72)
 	Kit.Brick(post, V(1, 8, 1), sp * CFrame.new(0, 4, 0), P.WoodDark, "All", true)
 	local arrow = Kit.Brick(post, V(9, 2, 1), sp * CFrame.new(-2, 7, 0), P.Leaf2, "Top")
-	Kit.Label(arrow, Enum.NormalId.Back, "Greenleaf Forest", P.White)
+	Kit.Label(arrow, Enum.NormalId.Back, "Greenleaf Meadow", P.White)
 	local arrow2 = Kit.Brick(post, V(8, 2, 1), sp * CFrame.new(2, 4.8, 0), P.Yellow, "Top")
 	Kit.Label(arrow2, Enum.NormalId.Back, "Your Park", P.Text)
 

@@ -135,22 +135,6 @@ function Decor.StarterArch(parent: Instance, cf: CFrame)
 	end
 end
 
-function Decor.FieldTent(parent: Instance, cf: CFrame)
-	local l = Kit.Wedge(parent, V(7, 4.4, 3.5), cf * CFrame.new(0, 2.2, 1.75) * CFrame.Angles(0, math.pi, 0), P.Coral)
-	local r = Kit.Wedge(parent, V(7, 4.4, 3.5), cf * CFrame.new(0, 2.2, -1.75), P.White)
-	l.CanCollide, r.CanCollide = true, true
-	Kit.Brick(parent, V(1, 5.6, 1), cf * CFrame.new(-4, 2.8, 0), P.WoodDark, "All")
-	local flag = Kit.Brick(parent, V(0.4, 0.8, 1.2), cf * CFrame.new(-4, 5.2, 1.1), P.Teal, "None")
-	flag.CastShadow = false
-end
-
-function Decor.JournalSign(parent: Instance, cf: CFrame)
-	Kit.Brick(parent, V(1, 4, 1), cf * CFrame.new(0, 2, 0), P.WoodDark, "All", true)
-	local board = Kit.Tile(parent, V(3.4, 2.2, 0.4), cf * CFrame.new(0, 4.4, -0.7), P.White)
-	Kit.Label(board, Enum.NormalId.Front, "Field Notes", P.Teal)
-	Kit.Brick(parent, V(1, 0.4, 1), cf * CFrame.new(1.2, 5.7, -0.7), P.Coral, "Top")
-end
-
 -- Little brick creature statue: stone base, body, big head, moss plate + flower.
 function Decor.MossStatue(parent: Instance, cf: CFrame)
 	Kit.Brick(parent, V(3, 1.2, 3), cf * CFrame.new(0, 0.6, 0), P.RockWarm, "All", true)
@@ -169,17 +153,6 @@ function Decor.RainbowFlowers(parent: Instance, cf: CFrame, rng: Random)
 		local col = Color3.fromHSV(k / 6, 0.55, 1)
 		Nature.Flower(parent, cf * CFrame.new(math.cos(a) * 1.2, 0, math.sin(a) * 1.2), rng:NextNumber(0.9, 1.2), col)
 	end
-end
-
-function Decor.StoneTotem(parent: Instance, cf: CFrame)
-	local cols = { P.Stone, P.RockWarm, P.Stone }
-	for k = 1, 3 do
-		local w = 3 - k * 0.5
-		Kit.Brick(parent, V(w, 1.6, w), cf * CFrame.new(0, k * 1.6 - 0.8, 0) * CFrame.Angles(0, if k == 2 then math.rad(45) else 0, 0), cols[k], "All", true)
-	end
-	local eye = Kit.Brick(parent, V(0.6, 0.6, 0.2), cf * CFrame.new(0, 4.2, -0.85), P.Water, "None")
-	eye.Material = Enum.Material.Neon
-	eye.CastShadow = false
 end
 
 return Decor

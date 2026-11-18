@@ -80,6 +80,14 @@ Palette.Rarity = {
 	Legendary = hex("#FFB400"),
 }
 
+-- Egg shell tints, 4 tiers (SPEC: white / green / blue / purple). Legendary eggs use Epic purple.
+Palette.EggRarity = {
+	Common = hex("#F4F5F7"),
+	Uncommon = Palette.Rarity.Uncommon,
+	Rare = Palette.Rarity.Rare,
+	Epic = Palette.Rarity.Epic,
+}
+
 -- Mutation signature colours (flash, labels, VFX).
 Palette.Mutation = {
 	Golden = hex("#F5C542"),

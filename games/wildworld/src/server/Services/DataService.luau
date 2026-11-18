@@ -1,7 +1,8 @@
 --!strict
 -- The ONLY place that touches DataStores. Session-locked (UpdateAsync + lock {job, t}),
 -- autosave every 60 s, saved on leave + BindToClose, lock released on leave.
--- A server that lost its lock never overwrites newer data. Also owns the Top Parks OrderedDataStore.
+-- A server that lost its lock never overwrites newer data. Also owns the Top Parks OrderedDataStore
+-- and the saved audio settings (DataSettings helper, SaveSettings remote).
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -11,6 +12,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local DataSchema = require(script.Parent:WaitForChild("DataSchema"))
+local DataSettings = require(script.Parent:WaitForChild("DataSettings"))
 
 local DataService = {}
 
@@ -288,6 +290,7 @@ function DataService.GetTopParks(n: number): { { userId: number, value: number }
 end
 
 function DataService.Init()
+	DataSettings.Bind(DataService) -- SaveSettings remote + settings attributes (was SettingsService)
 	Players.PlayerRemoving:Connect(function(p)
 		if cache[p] and not leaving[p] then
 			for _, fn in leavingCbs do

@@ -4,13 +4,14 @@
   "idea": "Multiplayer wildlife park + creature collection/breeding sim (Planet Zoo x Slime Rancher x Pokemon inspired, all original). Explore, capture original creatures, build habitats, breed for genetics + rare mutations, earn from visitors, visit/trade securely.",
   "stage": "art3d",
   "created": "2026-11-18T03:02:43Z",
-  "updated": "2026-11-18T10:13:42Z",
+  "updated": "2026-11-18T10:20:14Z",
   "branches": {
     "gameplay": "done",
     "graphics": "done",
     "ui": "done",
     "audio": "done",
-    "animation": "done"
+    "animation": "done",
+    "art3d": "done"
   },
   "log": [
     {
@@ -234,6 +235,30 @@
       "from": "system",
       "to": "all",
       "text": "Stage \u2192 art3d"
+    },
+    {
+      "time": "2026-11-18T10:14:57Z",
+      "from": "art3d",
+      "to": "all",
+      "text": "57 assets mapped to code builders, 0 in Charlie TODO; 5 flags (icon models missing)"
+    },
+    {
+      "time": "2026-11-18T10:16:56Z",
+      "from": "graphics",
+      "to": "all",
+      "text": "Scope cut done: Meadow-only map (lake+waterfall at back edge, z -370..-800), Hollow/Glade+gates+weather FX removed, WorldService -> World/init (Main must require it + call Init/Start; VisitService SetTopParks path changes)"
+    },
+    {
+      "time": "2026-11-18T10:18:49Z",
+      "from": "gameplay",
+      "to": "all",
+      "text": "Merged to 8 Services (Plot/Wild/Economy/Reward over helpers), Meadow-only, weather cut, 32 items, Main boots World + 8 services"
+    },
+    {
+      "time": "2026-11-18T10:20:14Z",
+      "from": "graphics",
+      "to": "all",
+      "text": "IconModels.luau (Coin/RP/bait/passes/packs/StarterPack/InstantHatch/eggs), rarity-tinted eggs, FieldTent/JournalSign/StoneTotem removed; UI must add Kit.ModelView + route Kit.Icon to IconModels"
     }
   ]
 }

@@ -6,6 +6,8 @@
 -- Budget: at most 1 ParticleEmitter + 1 PointLight per creature; mutation VFX replace native ones.
 local Shapes = require(script.Parent.Parent.CreatureBlueprints.Shapes)
 local Effects = require(script.Parent.Parent.Theme.Effects)
+local Palette = require(script.Parent.Parent.Theme.Palette)
+local SpeciesDefs = require(script.Parent.Parent.Species)
 
 local Mutations = {}
 Mutations.Effects = Effects
@@ -214,15 +216,37 @@ function Mutations.Bow(model: Model, scale: number)
 	brick(model, "BowKnot", Vector3.new(0.4, 0.4, 0.5) * scale, CFrame.new(c), hex("#E04F75"), "Accessory", "Head")
 end
 
+-- Egg tier (4 tints): species rarity, raised to Epic for any non-Golden mutation; Legendary clamps to Epic.
+local TIER: { [string]: number } = { Common = 1, Uncommon = 2, Rare = 3, Epic = 4, Legendary = 4, Mythical = 4 }
+local TIER_NAME = { "Common", "Uncommon", "Rare", "Epic" }
+function Mutations.EggRarity(species: string, list: { string }, override: string?): string
+	local t = TIER[override or ""] or 0
+	if t == 0 then
+		local def = SpeciesDefs[species]
+		t = if def then TIER[def.Rarity] or 1 else 1
+		for _, m in list do
+			if m ~= "Golden" then
+				t = 4
+			end
+		end
+	end
+	return TIER_NAME[t] or "Common"
+end
+
 -- Egg model: stacked studded brick egg (3.2 tall, widest 2.4) + 3 spot tiles, Hitbox PrimaryPart, pivot at
--- the egg's base. Golden = gold bricks (Reflectance 0.2) + sparkle.
-function Mutations.Egg(bp: Shapes.Blueprint, list: { string }, seed: number): Model
+-- the egg's base. Shell tint = rarity (Palette.EggRarity), spots = darker shade of it.
+-- Golden = gold bricks (Reflectance 0.2) + sparkle.
+function Mutations.Egg(bp: Shapes.Blueprint, list: { string }, seed: number, rarity: string?): Model
 	local rng = Random.new(seed)
 	local golden = has(list, "Golden")
 	local model = Instance.new("Model")
 	model.Name = bp.Species .. "Egg"
-	local shellColor = if golden then GOLD.Primary else bp.Palette.Primary
-	local spotColor = if golden then GOLD.Belly else bp.Palette.Secondary
+	local tier = Mutations.EggRarity(bp.Species, list, rarity)
+	local tint = (Palette.EggRarity :: { [string]: Color3 })[tier]
+	local th, ts, tv = tint:ToHSV()
+	local spotTint = if tier == "Common" then hex("#9FD6F0") else Color3.fromHSV(th, math.min(1, ts + 0.15), tv * 0.75)
+	local shellColor = if golden then GOLD.Primary else tint
+	local spotColor = if golden then GOLD.Belly else spotTint
 	-- { width, height } bottom -> top; the biggest layer is named "Shell".
 	local layers = { { 1.6, 0.4 }, { 2.4, 0.8 }, { 2.4, 0.8 }, { 2, 0.8 }, { 1.2, 0.4 } }
 	local y = 0
@@ -272,6 +296,7 @@ function Mutations.Egg(bp: Shapes.Blueprint, list: { string }, seed: number): Mo
 	model:SetAttribute("Species", bp.Species)
 	model:SetAttribute("Mutations", table.concat(list, ","))
 	model:SetAttribute("IsEgg", true)
+	model:SetAttribute("Rarity", if golden then "Golden" else tier)
 	return model
 end
 

@@ -80,8 +80,8 @@ An egg is anything tagged `Egg`, or a Model with `IsEgg` / `EggId` / `HatchAt`, 
   ≥ 97% done, plays the shell halves + sparkles + flash + Egg_Crack. `Tuning.EggShellBurst = false` turns off the client shells.
 
 ## Visitors
-For every plot tagged `Plot` with a non-zero `OwnerId`/`OwnerUserId`, there are 3 visitors (`Visitors` attribute overrides, max 6).
-They are 6-part figures that walk a 16-point square loop 4 studs outside the `LandSize`/`Land` square (so they never cross habitats).
+For every plot tagged `Plot` with a non-zero `OwnerId`/`OwnerUserId`, there are 3 visitors (`Visitors` attribute overrides, max 6). Visitors are 8-part studded blocky R6 minifigs (Plastic, Studs on top, block head + 2 square eyes, shirts from `Palette` brick colours).
+They walk a 16-point square loop 4 studs outside the `LandSize`/`Land` square (so they never cross habitats).
 They pause to look in and emote ("Wow!", hearts). Only plots within 150 studs are simulated. When the plot attribute `Tips` goes up,
 a random visitor throws a coin fountain (coins home in on the player within 30 studs) and shows `+TipAmount`.
 

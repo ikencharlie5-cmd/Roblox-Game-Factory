@@ -1,5 +1,5 @@
 --!strict
--- Helper module: server creature brains (Main calls Start(), which connects the loop).
+-- Helper module: server creature brains (CreatureService.Start calls Run(), which connects the loop).
 -- One Heartbeat loop, max N decisions per frame,
 -- nextThink = now + rand(3, 8). The server never moves parts: it replicates State / Goal / Speed
 -- attributes and dead-reckons its own position (from -> goal over time) for feeding/capture checks.
@@ -259,7 +259,8 @@ function CreatureAI.Force(a: Agent, state: string, goal: Vector3, seconds: numbe
 	a.nextThink = 0
 end
 
-function CreatureAI.Start()
+-- Called once from CreatureService.Start (helper, not a service).
+function CreatureAI.Run()
 	RunService.Heartbeat:Connect(function()
 		local n = #agents
 		if n == 0 then

@@ -1,5 +1,5 @@
 --!strict
--- The Glade's signature waterfall, brick style: stepped translucent blue Plastic bricks (each step juts a
+-- The meadow's signature waterfall (back edge, pours into the lake), brick style: stepped translucent blue Plastic bricks (each step juts a
 -- little further out going down) + highlight streaks, the falling-streak emitter, splash + mist emitters at
 -- the base (mobile rates), stone lip bricks with moss plates and a brick rainbow arc.
 -- Charlie TODO (optional): upload a white streak texture and swap the sheets for scrolling Beams.

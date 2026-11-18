@@ -11,14 +11,31 @@ Shared pure modules UI can use for previews (same math as server):
   `LandSize(lvl)`, `Incubators(lvl, hasPass)`, `UpgradeCost(key, lvl)`, `BreedCost(species)`, `InstantHatchKey(secsLeft)`,
   `BuildRange(landLevel)` (inclusive cell range, 0-based), `CellCentre(x, z, w, d)` (plot-local studs), `Day()`.
 
-## Files (gameplay-owned)
-shared: `Config, Species, Items, Genetics, Habitat, Formulas, Remotes, Format`.
-server/Services: `DataService` (only DataStore user, session lock), `DataSchema`, `Guard` (remote binding/rate limits),
-`Signals` (server event bus), `PlotService`, `PlotGrid`, `PlacementService`, `ParkService` (ratings + income),
-`CreatureService` + `CreatureCare` + `CreatureAI` (brains), `Models` (calls Graphics builders), `GeneticsService`
-(breed/eggs/hatch/scan/starter egg), `Journal`, `WildService` (spawns + zone gating), `CaptureService`,
-`EconomyService` (tips, offline, XP/levels, upgrades, zones), `QuestService` (tutorial + dailies), `DailyRewardService`,
-`ShopService`, `WeatherService`, `VisitService`, `MonetizationService`, `SettingsService` (audio settings).
+## Files (gameplay-owned) — v1 scope: exactly 8 gameplay Services
+shared: `Config, Species, Items (32 build items; FieldTent/JournalSign/StoneTotem cut), Genetics, Habitat, Formulas, Remotes, Format`.
+server/Services — the 8 Services (booted by Main, in this order after DataService):
+1. `MonetizationService` — passes, products, receipts, VIP tag.
+2. `PlotService` — plot claim + building + habitat/park rating + income. Facade that re-exports every function of
+   helpers `PlotCore` (claim/transforms/OnAssigned), `Placement` (Place/Rotate/Move/RemoveItem, uses `PlotGrid`) and
+   `ParkRating` (ratings, IncomePerMin, GetHabitat). Other code only requires `PlotService`.
+3. `CreatureService` — owned creatures; helpers `CreatureCare` (care remotes + needs loop), `CreatureAI` (brains; its
+   loop is now started by `CreatureService.Start` via `CreatureAI.Run()`), `Models`.
+4. `GeneticsService` — breed, eggs, hatch, scan, starter egg (helper `Journal`).
+5. `WildService` — Meadow spawns + capture; helpers `WildRoll` (species/mutation rolls) and `Capture` (ThrowBait /
+   CaptureStart / CaptureRelease; bound by WildService).
+6. `EconomyService` — visitor tips, offline, BuyUpgrade, UnlockZone; helper `Shop` (GetShop / BuyShop / restock).
+7. `RewardService` — daily streak (ClaimDaily), Park Level XP + LevelUp, helper `Quests` (tutorial + ClaimQuest /
+   RerollQuest).
+8. `VisitService` — VisitPlot / LikePark / ReturnHome / GetTopParks + hub board (`require(server.World).SetTopParks`).
+Not counted: `DataService` (+ helpers `DataSchema`, `DataSettings` = the old SettingsService / SaveSettings), `Guard`,
+`Signals`. Helpers have no Init/Start; Main only boots the 9 modules in its ORDER list plus `World` (Graphics).
+**Cut:** WeatherService (no weather, no Sunny bonus, no Rainbow mutation bonus, no Rain spawn boost).
+
+## v1 zone
+One wild zone, `Meadow` ("Greenleaf Meadow", Config.Zones[1], `Enabled = true`): all 5 species, weighted by
+`Config.Capture.SpawnWeights` (Common 70 / Uncommon 22 / Rare 6.8), wild Crystal possible (`Legendary = true`).
+`Hollow` / `Glade` stay in Config with `Enabled = false` (update 2): their WildSpawn nodes are ignored, a player inside
+their ZoneArea is sent back with "<name> opens in a future update!", and `UnlockZone` fails with the same message.
 
 ## Remotes
 Every client->server remote is a **RemoteFunction** returning `(ok: boolean, result)`. On failure `result` is a message
@@ -46,7 +63,7 @@ RotateItem / MoveItem / RemoveItem 0.1 s, ThrowBait / CaptureStart / CaptureRele
 | HatchEgg | (eggId) | creature uid (egg must be ready: `readyAt <= os.time()`) |
 | ScanGenes | (uid) | genes string (15 RP unless already known) |
 | BuyUpgrade | ("Land"\|"Capacity"\|"Incubators"\|"CalmNet") | new level |
-| UnlockZone | ("Hollow"\|"Glade") | zoneId (Park Level + coins) |
+| UnlockZone | (zoneId) | v1: always fails "<name> opens in a future update!" (Hollow/Glade disabled); "Meadow" returns "Meadow" |
 | GetShop | () | shop view (see ShopChanged) |
 | BuyShop | (slot) | new shop view. Bait goes to `data.bait`, rare decor to `data.decorInv` (UI's "BuyBait" = this) |
 | ClaimDaily | () | `{day, text}` |
@@ -62,7 +79,7 @@ RotateItem / MoveItem / RemoveItem 0.1 s, ThrowBait / CaptureStart / CaptureRele
 | RemoteEvent (server -> client) | Args |
 |---|---|
 | DataChanged | (data) full save table, batched max 4x/s |
-| Toast | (text, kind) kind: info / success / error / reward / weather. (`Notify` also exists but is unused) |
+| Toast | (text, kind) kind: info / success / error / reward (server no longer sends "weather"). (`Notify` also exists but is unused) |
 | Reveal | (kind, data) — see below |
 | PlaySound | (name, opts?) opts may have `position: Vector3`, `species: string`, `kind: string` (item kind for place thud) |
 | VisitorTip | (amount, position) coin fountain at a habitat (income is paid this way every 10 s) |
@@ -86,8 +103,8 @@ cappedSeconds, eggsReady} · `Daily` {day, text, streak} · `Tutorial` {step, te
 
 **PlaySound names fired by the server:** Error, Place, Rotate, Remove, Assign, Munch, Pet, GrowUp, Refill, Sell,
 EggLaid, EggCrack, EggReady, Scan, Discovery, JournalStep, BaitThrow, NetCharge, CaptureSuccess, CaptureFail,
-RatingUp, TierUp, LevelUp, Purchase, Unlock, QuestComplete, QuestReady, DailyClaim, Restock, Like,
-Weather_Sunny, Weather_Rain, Weather_RainbowShower, WeatherClear.
+RatingUp, TierUp, LevelUp, Purchase, Unlock, QuestComplete, QuestReady, DailyClaim, Restock, Like.
+(Weather_* / WeatherClear are no longer fired: weather is cut.) `ZoneUnlocked` Reveal can no longer fire in v1.
 
 ## Data (DataChanged payload)
 `coins, rp, xp, level, totalEarned, bestRating, upgrades{Land,Capacity,Incubators,CalmNet}`,
@@ -108,7 +125,7 @@ Incubators = `Formulas.Incubators(upgrades.Incubators, Pass_ExtraIncubator)`.
 ## Attributes
 - **Player:** `PlotIndex`, `DataLoaded`, `Level`, `ParkRating` (0..100), `ParkTier` ("Poor".."Legendary"), `ParkTierIndex`,
   `IncomePerMin`, `TutorialStep` (1..5, 6 = done), `TutorialText`, `DailyReady` (bool), `DailyDay` (1..7),
-  `Zone` ("Park" or "Meadow"/"Hollow"/"Glade"), `Pass_VIP` / `Pass_ExtraIncubator` / `Pass_AutoFeeder` /
+  `Zone` ("Park" or "Meadow"; Hollow/Glade only if those ZoneAreas still exist), `Pass_VIP` / `Pass_ExtraIncubator` / `Pass_AutoFeeder` /
   `Pass_CrystalGrotto`, `VIP` (bool — UI: gold name + chat tag), `MusicVolume` / `SFXVolume` (0..1) /
   `MusicOn` / `SFXOn` (bool) from `data.settings` on load.
 - **Park creature model** (workspace.Creatures, tag `Creature`): `Uid, Species, OwnerId, Personality, Stage, Mutations`
@@ -125,9 +142,8 @@ Incubators = `Formulas.Incubators(upgrades.Incubators, Pass_ExtraIncubator)`.
 - **Plot base part** (Graphics' `Plot` tag): gameplay sets `OwnerId, OwnerName, LandSize, ParkRating, ParkTier`, and on
   every visitor payout (incl. the first-60s +25) `TipAmount` (number) then `Tips` (+1 counter -> client coin fountain).
 - **Starter egg** (in the plot folder): `EggId, OwnerId, Starter=true` + ProximityPrompt "Hatch!".
-- **ReplicatedStorage.GameState:** `Weather` ("Clear" | "Sunny" | "Rain" | "Rainbow Shower"), `WeatherEndsAt`,
-  `NextWeatherAt`, `ShopRestockAt` (os.time).
-- **workspace:** `Weather` ("Clear" | "Sunny" | "Rain" | "RainbowShower" — no spaces) for Audio/Animation.
+- **ReplicatedStorage.GameState:** `ShopRestockAt` (os.time). (`Weather*` attributes are gone; gameplay no longer
+  sets workspace `Weather` either.)
 
 ## First 60 seconds (server side)
 New data = Small Habitat Pad + Food Bowl in the plot centre, 5 Berry bait. On first load a starter egg (random
@@ -139,7 +155,7 @@ Until `goldenGiven`, each wild spawn has a `Config.Capture.StarterSpeciesBias` (
 online player owns exactly one of (WildService.wantedSpecies). Trust doesn't decay while a wild is claimed by the
 baiting player, so one Berry (40 = TrustNeeded) is enough. Capture timing subtracts ping/2 (one-way).
 **Hub prompts:** DailyChest -> Reveal OpenWindow Daily; ShopStall -> ShopChanged + Reveal OpenWindow Shop
-(`Guard.WirePrompt(tag, fn)`). **DiscoverySpot** (Glade) is decor only — no gameplay reads it.
+(`Guard.WirePrompt(tag, fn)`). **DiscoverySpot** is decor only — no gameplay reads it.
 
 ## Saving (never lose data)
 UpdateAsync with a session lock `{job, t}`: a second server waits up to 30 s for the lock, takes over a lock older than
@@ -150,16 +166,15 @@ leaves writes nothing (transform returns nil) so it can't re-take the lock after
 false when the lock was lost, so receipts stay NotProcessedYet (also re-checked for already-cached receipts).
 
 ## Needs from other branches
-- **Graphics:** gameplay uses `Shared.Theme.Props.Build(itemId, seed)` for items and `Shared.CreatureBuilder.Build/BuildEgg`.
-  Footprints must match `Items.luau` (aligned: Burrow 2x2,
-  SandPatch 2x2, Sunspot 2x2, WaterTrough 1x1). Gameplay calls `WorldService.SetWeather(name)` and
-  `WorldService.SetTopParks(rows)`. Locked-zone players are teleported to `ZoneGate` CFrame * (0, 3, 6) (+Z must be
-  outside the zone).
-- **UI:** use `BuyShop(slot)` for bait/decor; Instant Hatch via `RequestInstantHatch(eggId)`; passes/products via
-  `PromptPurchase`. Template `Remotes.Event("ClaimDaily")` is gone (it's a RemoteFunction).
-- **Animation:** creature motion from `Goal`/`Speed`/`State`; moments from `LastFed`, `LastPet`, Reveal events.
-- **Main.server.luau** (not gameplay-owned) loads `DataService, MonetizationService, DailyRewardService` first then
-  everything else; all fine as is. Helper modules without Init/Start are harmless; `CreatureAI.Start` must run (Main does).
+- **Graphics:** gameplay uses `Shared.Theme.Props.Build(itemId, seed)` and `Shared.CreatureBuilder.Build/BuildEgg`.
+  Footprints must match `Items.luau`. `Theme.Props` can drop FieldTent / JournalSign / StoneTotem (no longer in Items;
+  saves holding them drop them on load). VisitService calls `World.SetTopParks(rows)`; nothing calls SetWeather.
+  WildService reads `WildSpawn` parts with `Zone = "Meadow"` (needs ≥ 12 nodes; fallback ring of 8 otherwise).
+- **UI:** ParkWindow's zone-unlock list should skip `Config.Zones` entries with `Enabled == false` (UnlockZone now
+  always fails for them); hide any weather UI (GameState Weather attrs no longer exist).
+- **Audio/Animation:** no weather sounds/attributes from the server any more.
+- **Main.server.luau** (edited by gameplay for the merge, per coordinator): requires `World` and calls `World.Init()`
+  before the Services' Init and `World.Start()` alongside their Start; boots only DataService + the 8 Services.
 
 ## VIP tag (sign-off fix)
 - MonetizationService adds a gold "VipTag" BillboardGui on the Head for players with the `VIP` attribute (on CharacterAdded and when VIP changes mid-session).

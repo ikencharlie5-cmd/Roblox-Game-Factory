@@ -11,8 +11,6 @@ local Genetics = require(Shared:WaitForChild("Genetics"))
 local Formulas = require(Shared:WaitForChild("Formulas"))
 local DataService = require(script.Parent:WaitForChild("DataService"))
 local PlotService = require(script.Parent:WaitForChild("PlotService"))
-local PlacementService = require(script.Parent:WaitForChild("PlacementService"))
-local ParkService = require(script.Parent:WaitForChild("ParkService"))
 local CreatureService = require(script.Parent:WaitForChild("CreatureService"))
 local MonetizationService = require(script.Parent:WaitForChild("MonetizationService"))
 local Models = require(script.Parent:WaitForChild("Models"))
@@ -90,10 +88,10 @@ local function breed(player: Player, data: any, uidA: any, uidB: any)
 	if not DataService.TrySpend(player, cost) then
 		return Guard.Fail(player, "Breeding costs " .. cost .. " coins")
 	end
-	local padA = a.padId and ParkService.PadResult(player, a.padId)
+	local padA = a.padId and PlotService.PadResult(player, a.padId)
 	local mods = {
 		habitat80 = padA ~= nil and padA.rating >= Config.MutationRules.HabitatBonusRating,
-		rainbow = Guard.State():GetAttribute("Weather") == "Rainbow Shower",
+		rainbow = false, -- weather cut from v1 (Rainbow Shower returns with update 2)
 	}
 	local force = if not data.flags.goldenGiven then "Golden" else nil
 	local muts = Genetics.RollMutations(rng, a.mutations, b.mutations, mods, force)
@@ -220,7 +218,7 @@ local function setupStarter(player: Player, plot: number, data: any)
 	if not egg then
 		return
 	end
-	local pads = PlacementService.GetPads(player)
+	local pads = PlotService.GetPads(player)
 	local cf = if pads[1] then pads[1].cf else PlotService.ToWorld(plot, 0, 0)
 	local m = Models.Egg(egg.species, egg.mutations, Models.Seed(egg.id))
 	m:SetAttribute("EggId", egg.id)

@@ -10,8 +10,7 @@ local Config = require(Shared:WaitForChild("Config"))
 local Items = require(Shared:WaitForChild("Items"))
 local Formulas = require(Shared:WaitForChild("Formulas"))
 local DataService = require(script.Parent:WaitForChild("DataService"))
-local ParkService = require(script.Parent:WaitForChild("ParkService"))
-local PlacementService = require(script.Parent:WaitForChild("PlacementService"))
+local PlotService = require(script.Parent:WaitForChild("PlotService"))
 local MonetizationService = require(script.Parent:WaitForChild("MonetizationService"))
 local Guard = require(script.Parent:WaitForChild("Guard"))
 local Signals = require(script.Parent:WaitForChild("Signals"))
@@ -46,7 +45,7 @@ function CreatureCare.Happiness(player: Player, r: any): number
 		return r.happy
 	end
 	local w = Config.Needs.Weights
-	local res = ParkService.PadResult(player, r.padId)
+	local res = PlotService.PadResult(player, r.padId)
 	local rating = if res then res.rating else 0
 	local social = if res then res.social else 0
 	local enrich = if res then res.enrichment else 0
@@ -260,7 +259,7 @@ local function assign(player: Player, data: any, uid: any, padU: any)
 			return false, "Bad request"
 		end
 		local pad: any = nil
-		for _, p in PlacementService.GetPads(player) do
+		for _, p in PlotService.GetPads(player) do
 			if p.u == padU then
 				pad = p
 			end
@@ -271,7 +270,7 @@ local function assign(player: Player, data: any, uid: any, padU: any)
 		if r.padId == padU then
 			return true, padU
 		end
-		if #ParkService.CreaturesOnPad(data, padU) >= (pad.def.PadCapacity or 4) then
+		if #PlotService.CreaturesOnPad(data, padU) >= (pad.def.PadCapacity or 4) then
 			return Guard.Fail(player, "That habitat is full - upgrade to a bigger pad")
 		end
 		local park = CS.Counts(data)

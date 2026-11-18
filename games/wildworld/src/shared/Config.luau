@@ -46,7 +46,7 @@ Config.Grid = {
 	Cell = 4, -- studs
 	PlotSize = 128, -- studs (32 cells)
 	PlotCount = 8,
-	PlotRadius = 220, -- fallback ring radius if WorldService has no tagged plots
+	PlotRadius = 220, -- fallback ring radius if the World builder has no tagged plots
 	LandSizes = { 64, 80, 96, 112, 128 }, -- by Park Land level 0..4
 	MaxObjects = 300,
 }
@@ -99,7 +99,7 @@ Config.MutationRules = {
 	Cap = 0.35,
 	HabitatBonusRating = 80,
 	HabitatBonus = 1.25,
-	RainbowBonus = 2,
+	RainbowBonus = 2, -- unused in v1 (weather cut; returns with update 2)
 	SecondDivisor = 4,
 	Max = 2,
 	Exclusive = { { "Golden", "Albino" } },
@@ -170,24 +170,35 @@ Config.Capture = {
 	FleeDistance = 15,
 	SpawnWeights = { Common = 70, Uncommon = 22, Rare = 6.8 },
 	WildEpicChance = 0.01, -- Golden or Albino
-	WildLegendaryChance = 0.002, -- Crystal, Glade only
+	WildLegendaryChance = 0.002, -- Crystal, zones with Legendary = true
 	StarfruitEpicMult = 2,
 	RecessiveAlleleChance = 0.3,
 }
 
+-- v1 = one wild zone (Greenleaf Meadow, all 5 species by rarity weight). Hollow/Glade are kept for
+-- update 2 with Enabled = false: no spawns, no unlocks (UnlockZone answers "coming in an update").
 Config.Zones = {
-	{ Id = "Meadow", Name = "Meadow Edge", Level = 1, Cost = 0, Species = { "Lumibun", "Mossback", "Emberfox" } },
+	{
+		Id = "Meadow",
+		Name = "Greenleaf Meadow",
+		Enabled = true,
+		Level = 1,
+		Cost = 0,
+		Species = { "Lumibun", "Mossback", "Emberfox", "Pebblehorn", "Thornstag" },
+		Legendary = true, -- wild Crystal (WildLegendaryChance) can appear here
+	},
 	{
 		Id = "Hollow",
 		Name = "Mossy Hollow",
+		Enabled = false,
 		Level = 4,
 		Cost = 1000,
 		Species = { "Lumibun", "Mossback", "Emberfox", "Pebblehorn" },
-		RainBoost = "Pebblehorn",
 	},
 	{
 		Id = "Glade",
 		Name = "Waterfall Glade",
+		Enabled = false,
 		Level = 8,
 		Cost = 5000,
 		Species = { "Mossback", "Emberfox", "Pebblehorn", "Thornstag" },
@@ -204,7 +215,6 @@ Config.Economy = {
 	OfflineMinSeconds = 120,
 	SnackStandBonus = 0.05,
 	VipCoinBonus = 0.1,
-	SunnyBonus = 0.1,
 	ParkTiers = {
 		{ Name = "Poor", Min = 0, Bonus = 0 },
 		{ Name = "Developing", Min = 20, Bonus = 0.05 },
@@ -226,7 +236,7 @@ Config.Upgrades = {
 	CalmNet = { Name = "Calm Net", Costs = { 400, 2000, 7000 } },
 }
 
--- Daily, quests, shop, weather -----------------------------------------------------------
+-- Daily, quests, shop -----------------------------------------------------------
 Config.Daily = {
 	{ Coins = 100 },
 	{ Coins = 200 },
@@ -258,7 +268,7 @@ Config.Tutorial = {
 	{ Kind = "Hatch", Text = "Hatch your egg!", Coins = 0 },
 	{ Kind = "Feed", Text = "Feed your new friend", Coins = 25 },
 	{ Kind = "Place", Text = "Place a tree to raise your rating", Coins = 50, ItemKind = "tree" },
-	{ Kind = "Catch", Text = "Catch a wild friend in Greenleaf Forest", Coins = 100 },
+	{ Kind = "Catch", Text = "Catch a wild friend in Greenleaf Meadow", Coins = 100 },
 	{ Kind = "Breed", Text = "Breed two of the same species", Coins = 150 },
 }
 Config.Shop = {
@@ -269,15 +279,6 @@ Config.Shop = {
 		{ Kind = "bait", Ref = "Honey", Stock = 3 },
 		{ Kind = "bait", Ref = "Starfruit", Stock = 1, Chance = 0.35 },
 		{ Kind = "decor", Stock = 1 }, -- random rare decor (Items with ShopRare)
-	},
-}
-Config.Weather = {
-	MinGap = 600,
-	MaxGap = 900,
-	Kinds = {
-		{ Name = "Sunny", Weight = 45, Seconds = 180 },
-		{ Name = "Rain", Weight = 45, Seconds = 180 },
-		{ Name = "Rainbow Shower", Weight = 10, Seconds = 300 },
 	},
 }
 Config.Visits = { LikeRange = 120, VisitMemorySeconds = 600 }

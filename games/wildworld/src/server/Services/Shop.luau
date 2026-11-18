@@ -1,5 +1,5 @@
 --!strict
--- Shop stall: bait + 1 rare decor slot, restocks every 5 min (same stock for everyone, seeded by
+-- Helper for EconomyService (not a service). Shop stall: bait + 1 rare decor slot, restocks every 5 min (same stock for everyone, seeded by
 -- the restock id; each player has their own quantity left, saved so rejoining can't refill it).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -12,7 +12,7 @@ local DataService = require(script.Parent:WaitForChild("DataService"))
 local PlotService = require(script.Parent:WaitForChild("PlotService"))
 local Guard = require(script.Parent:WaitForChild("Guard"))
 
-local ShopService = {}
+local Shop = {}
 
 local function restockId(): number
 	return os.time() // Config.Shop.RestockSeconds
@@ -93,7 +93,8 @@ local function buy(player: Player, data: any, slot: any)
 	return true, newView
 end
 
-function ShopService.Init()
+-- Called from EconomyService.Init.
+function Shop.Bind()
 	Guard.Bind("GetShop", function(_player, data)
 		return true, view(data)
 	end)
@@ -108,7 +109,8 @@ function ShopService.Init()
 	end, 90)
 end
 
-function ShopService.Start()
+-- Called from EconomyService.Start (loops forever; run it in its own thread).
+function Shop.Loop()
 	local last = restockId()
 	while true do
 		task.wait(1)
@@ -127,4 +129,4 @@ function ShopService.Start()
 	end
 end
 
-return ShopService
+return Shop

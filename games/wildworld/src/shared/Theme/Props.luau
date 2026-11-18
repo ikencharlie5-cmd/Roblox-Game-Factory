@@ -116,20 +116,11 @@ local ROWS: { { any } } = {
 	{ "StarterArch", "Explorer's Arch", "Special", 3, 1, {}, "Enrichment", function(m)
 		Decor.StarterArch(m, O)
 	end },
-	{ "FieldTent", "Field Tent", "Special", 2, 2, {}, "Shelter", function(m)
-		Decor.FieldTent(m, O)
-	end },
-	{ "JournalSign", "Journal Signpost", "Special", 1, 1, {}, "Enrichment", function(m)
-		Decor.JournalSign(m, O)
-	end },
 	{ "MossStatue", "Moss Statue", "Special", 1, 1, {}, "Enrichment", function(m)
 		Decor.MossStatue(m, O)
 	end },
 	{ "RainbowFlowers", "Rainbow Flowers", "Special", 1, 1, { "flower" }, "Enrichment", function(m, rng)
 		Decor.RainbowFlowers(m, O, rng)
-	end },
-	{ "StoneTotem", "Stone Totem", "Special", 1, 1, { "rock" }, "Enrichment", function(m)
-		Decor.StoneTotem(m, O)
 	end },
 }
 

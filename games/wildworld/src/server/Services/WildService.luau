@@ -1,7 +1,8 @@
 --!strict
--- Wild creatures in Greenleaf Forest: spawns at nodes tagged "WildSpawn" (attribute Zone =
--- "Meadow" | "Hollow" | "Glade"), max 12 alive, respawn 45 s. Zone gating: players inside a
--- "ZoneArea" part of a locked zone are sent back (server-enforced). Sets player attribute Zone.
+-- WildService: wild creatures + capture. v1 has one wild zone, Greenleaf Meadow (Id "Meadow"): spawns at
+-- nodes tagged "WildSpawn" whose Zone is an Enabled Config.Zones entry, all 5 species by rarity weight,
+-- max 12 alive, respawn 45 s. Players inside a "ZoneArea" of a disabled/locked zone are sent back
+-- (server-enforced). Sets player attribute Zone. Capture remotes live in the Capture helper.
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -14,6 +15,8 @@ local DataService = require(script.Parent:WaitForChild("DataService"))
 local PlotService = require(script.Parent:WaitForChild("PlotService"))
 local CreatureAI = require(script.Parent:WaitForChild("CreatureAI"))
 local Models = require(script.Parent:WaitForChild("Models"))
+local Capture = require(script.Parent:WaitForChild("Capture"))
+local WildRoll = require(script.Parent:WaitForChild("WildRoll"))
 local Guard = require(script.Parent:WaitForChild("Guard"))
 
 local WildService = {}
@@ -55,7 +58,8 @@ WildService.ZoneDef = zoneDef
 local function findNodes()
 	for _, inst in CollectionService:GetTagged("WildSpawn") do
 		local zone = inst:GetAttribute("Zone")
-		if type(zone) == "string" and zoneDef(zone) then
+		local def = if type(zone) == "string" then zoneDef(zone) else nil
+		if def and def.Enabled then
 			local pos = if inst:IsA("BasePart") then inst.Position elseif inst:IsA("Model") then inst:GetPivot().Position else nil
 			if pos then
 				table.insert(nodes, { pos = pos, zone = zone })
@@ -63,84 +67,13 @@ local function findNodes()
 		end
 	end
 	if #nodes == 0 then
-		warn("[WildService] no parts tagged WildSpawn; using fallback forest nodes north of the hub")
-		local r = Config.Grid.PlotRadius
-		local centres = { Meadow = Vector3.new(0, 0, -(r + 160)), Hollow = Vector3.new(-90, 0, -(r + 300)), Glade = Vector3.new(90, 0, -(r + 440)) }
-		for zone, c in centres do
-			for i = 1, 4 do
-				local a = i * math.pi / 2
-				table.insert(nodes, { pos = c + Vector3.new(math.cos(a) * 30, 0, math.sin(a) * 30), zone = zone })
-			end
+		warn("[WildService] no Meadow WildSpawn parts; using fallback nodes north of the hub")
+		local c = Vector3.new(0, 0, -(Config.Grid.PlotRadius + 160))
+		for i = 1, 8 do
+			local a = i * math.pi / 4
+			table.insert(nodes, { pos = c + Vector3.new(math.cos(a) * 40, 0, math.sin(a) * 40), zone = "Meadow" })
 		end
 	end
-end
-
-local function nearestStarfruit(pos: Vector3): boolean
-	for _, p in Players:GetPlayers() do
-		local d = DataService.Get(p)
-		local root = Guard.RootPos(p)
-		if d and root and d.boosts.starfruit > os.time() and (root - pos).Magnitude < 200 then
-			return true
-		end
-	end
-	return false
-end
-
--- Species that a player who hasn't bred their first (Golden) egg owns exactly one of.
-local function wantedSpecies(zone: any): { string }
-	local out = {}
-	for _, p in Players:GetPlayers() do
-		local d = DataService.Get(p)
-		if d and not d.flags.goldenGiven then
-			local count: { [string]: number } = {}
-			for _, c in d.creatures do
-				count[c.species] = (count[c.species] or 0) + 1
-			end
-			for sp, n in count do
-				if n == 1 and table.find(zone.Species, sp) and not table.find(out, sp) then
-					table.insert(out, sp)
-				end
-			end
-		end
-	end
-	return out
-end
-
-local function pickSpecies(zone: any): string
-	local want = wantedSpecies(zone)
-	if #want > 0 and rng:NextNumber() < Config.Capture.StarterSpeciesBias then
-		return want[rng:NextInteger(1, #want)]
-	end
-	local weights: any = Config.Capture.SpawnWeights
-	local rain = Guard.State():GetAttribute("Weather") == "Rain"
-	local total, list = 0, {}
-	for _, sp in zone.Species do
-		local w = weights[Species[sp].Rarity] or 1
-		if rain and zone.RainBoost == sp then
-			w *= 2
-		end
-		total += w
-		table.insert(list, { sp = sp, w = w })
-	end
-	local roll = rng:NextNumber(0, total)
-	for _, e in list do
-		roll -= e.w
-		if roll <= 0 then
-			return e.sp
-		end
-	end
-	return list[1].sp
-end
-
-local function rollWildMutations(zone: any, pos: Vector3): { string }
-	local mult = if nearestStarfruit(pos) then Config.Capture.StarfruitEpicMult else 1
-	if zone.Legendary and rng:NextNumber() < Config.Capture.WildLegendaryChance * mult then
-		return { "Crystal" }
-	end
-	if rng:NextNumber() < Config.Capture.WildEpicChance * mult then
-		return { if rng:NextNumber() < 0.5 then "Golden" else "Albino" }
-	end
-	return {}
 end
 
 local function spawnOne()
@@ -162,7 +95,7 @@ local function spawnOne()
 	-- has none alive, this spawn goes there as that species, so nobody gets stuck on the tutorial.
 	local firstZone = Config.Zones[1]
 	local forced: string? = nil
-	local want = wantedSpecies(firstZone)
+	local want = WildRoll.WantedSpecies(firstZone)
 	if #want > 0 then
 		local present = false
 		for _, w in wilds do
@@ -185,11 +118,11 @@ local function spawnOne()
 	end
 	local node = nodes[ni]
 	local zone = zoneDef(node.zone)
-	local species = forced or pickSpecies(zone)
+	local species = forced or WildRoll.PickSpecies(zone)
 	local rec = {
 		species = species,
 		genes = Genetics.Random(rng, Config.Capture.RecessiveAlleleChance),
-		mutations = rollWildMutations(zone, node.pos),
+		mutations = WildRoll.Mutations(zone, node.pos),
 		stage = "Adult",
 		hue = rng:NextNumber(-0.06, 0.06),
 		sz = rng:NextNumber(-0.03, 0.03),
@@ -294,7 +227,8 @@ function WildService.Despawn(id: string, delay: number?)
 end
 
 function WildService.ZoneUnlocked(data: any, zone: string): boolean
-	return data.zones[zone] == true
+	local def = zoneDef(zone)
+	return def ~= nil and def.Enabled == true and data.zones[zone] == true
 end
 
 -- Zone of a world position from "ZoneArea" parts (nil = park/hub).
@@ -324,6 +258,7 @@ function WildService.Init()
 	folder = Instance.new("Folder")
 	folder.Name = "WildCreatures"
 	folder.Parent = workspace
+	Capture.Bind(WildService)
 end
 
 function WildService.Start()
@@ -332,6 +267,7 @@ function WildService.Start()
 		task.wait(0.2)
 	end
 	findNodes()
+	task.spawn(Capture.Loop)
 	for _ = 1, math.min(Config.Capture.MaxWild, #nodes) do
 		spawnOne()
 	end
@@ -358,7 +294,9 @@ function WildService.Start()
 						local plot = PlotService.GetPlot(p)
 						char:PivotTo(back or (if plot then PlotService.SpawnCFrame(plot) else CFrame.new(0, 10, 0)))
 					end
-					if def then
+					if def and not def.Enabled then
+						Guard.Toast(p, def.Name .. " opens in a future update!", "info")
+					elseif def then
 						Guard.Toast(p, def.Name .. " unlocks at Park Level " .. def.Level .. " + " .. def.Cost .. " coins", "error")
 					end
 				end

@@ -1,5 +1,5 @@
 --!strict
--- First-60-seconds tutorial chain (flags.tutorialStep) + 3 daily quests (UTC day) with rerolls.
+-- Helper for RewardService (not a service). First-60-seconds tutorial chain (flags.tutorialStep) + 3 daily quests (UTC day) with rerolls.
 -- Progress comes from Signals: Hatch, Feed, Pet, Place, Catch, Breed, Bait, Visit, Earn.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -14,7 +14,7 @@ local EconomyService = require(script.Parent:WaitForChild("EconomyService"))
 local Guard = require(script.Parent:WaitForChild("Guard"))
 local Signals = require(script.Parent:WaitForChild("Signals"))
 
-local QuestService = {}
+local Quests = {}
 
 local rng = Random.new()
 
@@ -160,7 +160,8 @@ local function reroll(player: Player, data: any, index: any)
 	return true, data.quests.list[index]
 end
 
-function QuestService.Init()
+-- Called from RewardService.Init.
+function Quests.Bind()
 	PlotService.OnAssigned(function(player, _plot, data)
 		ensureDay(player, data)
 		setTutorialAttr(player, data)
@@ -181,7 +182,8 @@ function QuestService.Init()
 	Guard.Bind("RerollQuest", reroll)
 end
 
-function QuestService.Start()
+-- Called from RewardService.Start (loops forever; run it in its own thread).
+function Quests.Loop()
 	while true do
 		task.wait(60)
 		for _, p in Players:GetPlayers() do
@@ -193,4 +195,4 @@ function QuestService.Start()
 	end
 end
 
-return QuestService
+return Quests

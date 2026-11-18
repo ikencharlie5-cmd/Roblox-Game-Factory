@@ -158,7 +158,7 @@ function Effects.Fireflies(): ParticleEmitter
 	})
 end
 
--- Mossy Hollow ground mist.
+-- Low ground mist (unused in v1; kept for update 2 zones).
 function Effects.Mist(): ParticleEmitter
 	return emitter("Mist", {
 		Texture = SMOKE,
@@ -223,41 +223,6 @@ function Effects.Fall(): ParticleEmitter
 		Transparency = seq(0.45, 0.9),
 		LightEmission = 0.3,
 	})
-end
-
--- Weather sheets emitted from a flat part high above an area: "Rain" | "RainbowShower".
-function Effects.Weather(kind: string): ParticleEmitter?
-	if kind == "Rain" then
-		return emitter("Rain", {
-			Color = ColorSequence.new(hex("#CFE8FF")),
-			Rate = 90,
-			Lifetime = NumberRange.new(0.8, 1),
-			Speed = NumberRange.new(60, 70),
-			EmissionDirection = Enum.NormalId.Bottom,
-			SpreadAngle = Vector2.new(4, 4),
-			Size = seq(0.12, 0.12),
-			Squash = seq(4, 4),
-			Transparency = seq(0.3, 0.3),
-			LightEmission = 0.2,
-		})
-	elseif kind == "RainbowShower" then
-		local keys = {}
-		for i = 0, 6 do
-			table.insert(keys, ColorSequenceKeypoint.new(i / 6, Color3.fromHSV(i / 7, 0.55, 1)))
-		end
-		return emitter("RainbowShower", {
-			Color = ColorSequence.new(keys),
-			Rate = 40,
-			Lifetime = NumberRange.new(2.5, 3.5),
-			Speed = NumberRange.new(18, 24),
-			EmissionDirection = Enum.NormalId.Bottom,
-			SpreadAngle = Vector2.new(8, 8),
-			Size = seq(0.45, 0.2),
-			Transparency = seq(0, 0.4),
-			LightEmission = 1,
-		})
-	end
-	return nil
 end
 
 return Effects

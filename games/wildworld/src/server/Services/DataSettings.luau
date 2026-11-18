@@ -1,17 +1,18 @@
 --!strict
--- Persisted audio settings. On load sets player attributes MusicVolume / SFXVolume (0..1) and
--- MusicOn / SFXOn (bool) from data.settings. Client saves via SaveSettings RemoteEvent
--- ({music, sfx, musicOn, sfxOn}); values are clamped, rate-limited, and bad fields ignored.
+-- Helper for DataService (not a service): persisted audio settings in data.settings.
+-- On load sets player attributes MusicVolume / SFXVolume (0..1) and MusicOn / SFXOn (bool).
+-- Client saves via the SaveSettings RemoteEvent ({music, sfx, musicOn, sfxOn}); values are clamped,
+-- rate-limited (Config.SettingsSaveCooldown, extra calls dropped) and bad fields ignored.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
-local DataService = require(script.Parent:WaitForChild("DataService"))
 
-local SettingsService = {}
+local DataSettings = {}
 
+local DEFAULTS = { music = 0.5, sfx = 0.7, musicOn = true, sfxOn = true }
 local last: { [Player]: number } = {}
 
 local function apply(player: Player, s: any)
@@ -39,10 +40,9 @@ local function clean(s: any, cur: any): any
 	}
 end
 
-local DEFAULTS = { music = 0.5, sfx = 0.7, musicOn = true, sfxOn = true }
-
-function SettingsService.Init()
-	DataService.OnLoaded(function(player, data)
+-- Called once from DataService.Init (DataService passed in to avoid a require cycle).
+function DataSettings.Bind(DataService: any)
+	DataService.OnLoaded(function(player: Player, data: any)
 		local s = clean(if type(data.settings) == "table" then data.settings else {}, DEFAULTS)
 		data.settings = s
 		apply(player, s)
@@ -68,4 +68,4 @@ function SettingsService.Init()
 	end)
 end
 
-return SettingsService
+return DataSettings
