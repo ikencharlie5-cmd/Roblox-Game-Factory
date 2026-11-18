@@ -248,10 +248,14 @@ end
 function WorldService.Init()
 	local root = Build.Folder(Workspace, "World")
 	local areas = { Vector3.zero }
+	local plotCFs = {}
 	for i = 1, Plots.Count do
 		table.insert(areas, Plots.CFrameFor(i).Position)
+		table.insert(plotCFs, Plots.CFrameFor(i))
 	end
 	Sky.Setup(areas)
+	-- Terrain grass + dirt under part-built areas (synchronous: players stand on it).
+	Scenery.Ground(plotCFs, Hub.Radius)
 	hub = Hub.Build(root)
 	Reserve.Init(Build.Folder(root, "ReserveCreatures"), hub.reserveZones)
 	plots = Plots.Build(Build.Folder(root, "Plots"), function(plot, pad)

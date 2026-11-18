@@ -1,87 +1,90 @@
 --!strict
--- Left button bar (2 columns so it fits a phone in landscape). Red dots = something to claim.
-local Style = require(script.Parent:WaitForChild("Style"))
+-- Left column: 8 square icon buttons (2 columns, more columns on short screens so the bottom-left
+-- joystick zone stays clear on touch). Red "!" badges = something to claim. During the tutorial
+-- only the buttons the player has reached are shown; new ones pop in (staggered 0.06 s).
 local Kit = require(script.Parent:WaitForChild("Kit"))
 local Windows = require(script.Parent:WaitForChild("Windows"))
 
 local SideBar = {}
 
+-- Upgrades lives in the Build window (max 8 left buttons); Store + Settings are top-right.
 local BUTTONS = {
-	{ Name = "Shop", Icon = "🛒", Color = Style.Color.Leaf },
-	{ Name = "Inventory", Label = "Bag", Icon = "🎒", Color = Style.Color.Wood },
-	{ Name = "Build", Icon = "🔨", Color = Style.Color.Sun },
-	{ Name = "Index", Icon = "📖", Color = Style.Color.Sky },
-	{ Name = "Upgrades", Label = "Upgrade", Icon = "⬆️", Color = Style.Color.LeafDark },
-	{ Name = "Release", Icon = "🕊️", Color = Style.Color.Purple },
-	{ Name = "Quests", Icon = "📜", Color = Style.Color.Wood },
-	{ Name = "Daily", Icon = "🎁", Color = Style.Color.Pink },
-	{ Name = "Visit", Icon = "🏡", Color = Style.Color.Sky },
-	{ Name = "Store", Icon = "💎", Color = Style.Color.Robux },
+	{ Name = "Shop", Label = "Shop", Pal = "Leaf" },
+	{ Name = "Inventory", Label = "Bag", Pal = "Sky" },
+	{ Name = "Build", Label = "Build", Pal = "Wood" },
+	{ Name = "Index", Label = "Index", Pal = "Purple" },
+	{ Name = "Release", Label = "Release", Pal = "Teal" },
+	{ Name = "Quests", Label = "Quests", Pal = "Pink" },
+	{ Name = "Daily", Label = "Daily", Pal = "Sun" },
+	{ Name = "Visit", Label = "Visit", Pal = "Sky" },
 }
 
-local buttons: { [string]: TextButton } = {}
-local badges: { [string]: TextLabel } = {}
+local CELL, GAP_X, GAP_Y, TOP = 84, 12, 18, 236
 
-function SideBar.Mount(gui: ScreenGui)
-	local bar = Kit.Make("Frame", {
+local gui: ScreenGui
+local bar: Frame
+local grid: UIGridLayout
+local barScale: UIScale
+local buttons: { [string]: TextButton } = {}
+local badges: { [string]: Frame } = {}
+local shown: { [string]: boolean } = {}
+
+local function fit()
+	local count = 0
+	for _, b in buttons do
+		if b.Visible then
+			count += 1
+		end
+	end
+	count = math.max(count, 1)
+	local v = Kit.Virtual(gui)
+	local bottom = if Kit.IsTouch() then 190 else 24
+	local avail = math.max(120, v.Y - TOP - bottom)
+	local cols, h = 2, 0
+	for c = 2, 4 do
+		cols = c
+		local rows = math.ceil(count / c)
+		h = rows * CELL + (rows - 1) * GAP_Y + 12
+		if h <= avail then
+			break
+		end
+	end
+	local s = math.min(1, avail / h)
+	barScale.Scale = s
+	grid.FillDirectionMaxCells = cols
+	local w = cols * CELL + (cols - 1) * GAP_X
+	bar.Size = UDim2.fromOffset(w, h)
+	-- Vertically centred in the free space under the currency chips (anchored at its centre so
+	-- the UIScale shrink keeps the left edge at 16 px).
+	bar.Position = UDim2.fromOffset(16 + w * s / 2, TOP + math.max(0, (avail - h * s) / 2) + h * s / 2)
+end
+
+function SideBar.Mount(screenGui: ScreenGui)
+	gui = screenGui
+	bar = Kit.Make("Frame", {
 		Name = "SideBar",
 		BackgroundTransparency = 1,
-		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.new(0, 6, 0.58, 0),
-		Size = UDim2.fromScale(0.13, 0.62),
-	}, gui)
-	Kit.Make("UISizeConstraint", { MinSize = Vector2.new(100, 250), MaxSize = Vector2.new(180, 460) }, bar)
-	Kit.Make("UIAspectRatioConstraint", { AspectRatio = 0.4 }, bar)
-	Kit.Grid(bar, UDim2.new(0.5, -3, 0.2, -5), 5)
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromOffset(16, TOP),
+		Size = UDim2.fromOffset(180, 400),
+		ZIndex = 2,
+	}, Kit.Root(gui))
+	barScale = Kit.Make("UIScale", { Scale = 1 }, bar)
+	grid = Kit.Grid(bar, UDim2.fromOffset(CELL, CELL), GAP_X)
+	grid.CellPadding = UDim2.fromOffset(GAP_X, GAP_Y)
+	grid.HorizontalAlignment = Enum.HorizontalAlignment.Left
 
 	for i, def in BUTTONS do
-		local b = Kit.Button(bar, "", def.Color, function()
+		local b = Kit.IconButton(bar, def.Name, def.Label, def.Pal, function()
 			Windows.Toggle(def.Name)
-		end, { LayoutOrder = i, Name = def.Name })
-		-- Grid cells can't use the 44px constraint; the bar's MinSize keeps cells >= ~47px.
-		local c = b:FindFirstChildOfClass("UISizeConstraint")
-		if c then
-			c:Destroy()
-		end
-		Kit.Icon(b, Style.Icons[def.Name] or def.Icon, {
-			Size = UDim2.fromScale(0.9, 0.58),
-			Position = UDim2.fromScale(0.05, 0.04),
-		})
-		local text = Kit.Label(b, def.Label or def.Name, {
-			Size = UDim2.fromScale(1, 0.36),
-			Position = UDim2.fromScale(0, 0.64),
-			TextColor3 = Style.Color.White,
-		})
-		Kit.Make("UIStroke", { Thickness = 1.5, Color = Kit.Darker(def.Color, 0.5) }, text)
-		local dot = Kit.Label(b, "!", {
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			Position = UDim2.fromScale(0.92, 0.08),
-			Size = UDim2.fromScale(0.34, 0.34),
-			BackgroundTransparency = 0,
-			BackgroundColor3 = Style.Color.Red,
-			TextColor3 = Style.Color.White,
-			Visible = false,
-			ZIndex = 3,
-		})
-		Kit.Make("UIAspectRatioConstraint", { AspectRatio = 1 }, dot)
-		Kit.Corner(dot, 99)
+		end, { LayoutOrder = i })
+		b.Name = def.Name
 		buttons[def.Name] = b
-		badges[def.Name] = dot
+		badges[def.Name] = Kit.Badge(b)
+		shown[def.Name] = true
 	end
-
-	-- Bounce badges so they are noticed.
-	task.spawn(function()
-		local up = false
-		while true do
-			up = not up
-			for _, dot in badges do
-				if dot.Visible then
-					Kit.Tween(dot, 0.4, { Size = UDim2.fromScale(if up then 0.4 else 0.32, if up then 0.4 else 0.32) })
-				end
-			end
-			task.wait(0.45)
-		end
-	end)
+	Kit.Resized:Connect(fit)
+	fit()
 end
 
 function SideBar.Badge(name: string, on: boolean)
@@ -93,6 +96,35 @@ end
 
 function SideBar.Button(name: string): TextButton?
 	return buttons[name]
+end
+
+-- Show only these buttons (nil = all). Newly shown buttons pop in, staggered.
+function SideBar.SetVisible(names: { string }?)
+	local want: { [string]: boolean } = {}
+	for _, def in BUTTONS do
+		want[def.Name] = names == nil or table.find(names :: { string }, def.Name) ~= nil
+	end
+	local delay = 0
+	local changed = false
+	for _, def in BUTTONS do
+		local b = buttons[def.Name]
+		if want[def.Name] ~= shown[def.Name] then
+			changed = true
+			shown[def.Name] = want[def.Name]
+			b.Visible = want[def.Name]
+			if want[def.Name] then
+				local press = Kit.ButtonPress(b)
+				press.Scale = 0
+				task.delay(delay, function()
+					Kit.Tween(press, 0.3, { Scale = 1 }, Enum.EasingStyle.Back)
+				end)
+				delay += 0.06
+			end
+		end
+	end
+	if changed then
+		fit()
+	end
 end
 
 return SideBar

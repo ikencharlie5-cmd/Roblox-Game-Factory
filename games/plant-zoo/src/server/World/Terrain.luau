@@ -75,12 +75,7 @@ function Terrain.Paint(cf: CFrame, sizeX: number, sizeZ: number, material: Enum.
 end
 
 function Terrain.PaintDisc(center: Vector3, radius: number, material: Enum.Material?)
-	terrain():FillCylinder(
-		CFrame.new(center.X, -2, center.Z),
-		4,
-		radius,
-		material or M.Ground
-	)
+	terrain():FillCylinder(CFrame.new(center.X, -2, center.Z), 4, radius, material or M.Ground)
 end
 
 -- Pond: sand rim, then water flush with the grass (6 deep).
@@ -105,7 +100,11 @@ function Terrain.Hills(rng: Random, innerR: number, count: number): { Vector3 }
 		local far = Vector3.new(math.cos(ang) * (ring + 110), -r * 0.3, math.sin(ang) * (ring + 110))
 		t:FillBall(far, r * 1.3, M.LeafyGrass)
 		if k % 3 == 1 then
-			t:FillBall(center + Vector3.new(rng:NextNumber(-10, 10), r * 0.5, rng:NextNumber(-10, 10)), r * 0.25, M.Rock)
+			t:FillBall(
+				center + Vector3.new(rng:NextNumber(-10, 10), r * 0.5, rng:NextNumber(-10, 10)),
+				r * 0.25,
+				M.Rock
+			)
 		end
 		if k % 3 == 2 then
 			task.wait()

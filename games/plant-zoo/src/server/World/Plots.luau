@@ -1,10 +1,12 @@
 --!strict
 -- Builds the 6 player plots (80x80) on a ring around the hub. Each plot = 3x3 ExhibitPads.
+-- Border, arch gate + owner sign and floor colour live in PlotDressing.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Theme = require(Shared:WaitForChild("Theme"))
 local Build = require(script.Parent.Build)
 local Biomes = require(script.Parent.Biomes)
+local PlotDressing = require(script.Parent.PlotDressing)
 
 local V = Vector3.new
 local C = CFrame.new
@@ -120,7 +122,7 @@ local function paths(f: Instance, cf: CFrame)
 			Size = V(sx, 0.2, sz),
 			CFrame = cf * C(x, y, z),
 			Color = Theme.Colors.Path,
-			Material = M.Sand,
+			Material = M.SmoothPlastic,
 			Name = "Path",
 		})
 	end
@@ -134,59 +136,6 @@ local function paths(f: Instance, cf: CFrame)
 	strip(h - 3, 0, 6, 68)
 end
 
-local function border(f: Instance, cf: CFrame)
-	local h = Plots.Size / 2
-	local hedge = Theme.Colors.Hedge
-	local function wall(x: number, z: number, sx: number, sz: number)
-		Build.Part(
-			f,
-			{ Size = V(sx, 2, sz), CFrame = cf * C(x, 0.5, z), Color = hedge, Material = M.Grass, Name = "Hedge" }
-		)
-	end
-	wall(0, h + 0.75, 81.5, 1.5)
-	wall(-(h + 0.75), 0, 1.5, 81.5)
-	wall(h + 0.75, 0, 1.5, 81.5)
-	wall(-(h + 0.75) / 2 - 4.6, -(h + 0.75), h - 8, 1.5)
-	wall((h + 0.75) / 2 + 4.6, -(h + 0.75), h - 8, 1.5)
-	for _, x in { -h, h } do
-		for _, z in { -h, h } do
-			Build.Tree(f, (cf * C(x * 1.12, -0.5, z * 1.12)).Position, 1.2, hex("#5FB23A"))
-		end
-	end
-end
-
-local function sign(plot: Plot)
-	local f = Build.Model(plot.model, "Sign")
-	local cf = plot.cf * C(0, 0, -(Plots.Size / 2 + 1))
-	for _, x in { -6, 6 } do
-		Build.Cyl(f, 9, 1, cf * C(x, 4, 0), Theme.Colors.Wood, M.Wood, true)
-		Build.Ball(f, 1.6, cf * C(x, 9, 0), Theme.Colors.Leaf, M.Grass)
-	end
-	local board = Build.Part(
-		f,
-		{ Size = V(13, 3.2, 0.6), CFrame = cf * C(0, 7.4, 0), Color = Theme.Colors.Cream, Name = "Board" }
-	)
-	board.CanCollide = false
-	Build.Tag(board, "PlotSign", { PlotIndex = plot.index })
-	local front = Build.Label(board, Enum.NormalId.Front, "Free Plot", Theme.Colors.Text)
-	local back = Build.Label(board, Enum.NormalId.Back, "Free Plot", Theme.Colors.Text)
-	Build.Deco(f, { Size = V(13.6, 0.5, 1), CFrame = cf * C(0, 9.2, 0), Color = Theme.Colors.Leaf, Material = M.Grass })
-	for i = 0, 4 do
-		Build.Ball(f, 0.7, cf * C(-5 + i * 2.5, 9.6, -0.2), if i % 2 == 0 then hex("#FFD54F") else hex("#FF8FB8"))
-	end
-	local function refresh()
-		local name = plot.model:GetAttribute("OwnerName")
-		local likes = plot.model:GetAttribute("Likes") or 0
-		local text = if typeof(name) == "string" and name ~= ""
-			then string.format("%s's Zoo  ❤ %d", name, likes)
-			else "Free Plot"
-		front.Text = text
-		back.Text = text
-	end
-	plot.model:GetAttributeChangedSignal("OwnerName"):Connect(refresh)
-	plot.model:GetAttributeChangedSignal("Likes"):Connect(refresh)
-end
-
 function Plots.Build(parent: Instance, onPad: (Plot, Pad) -> ()): { Plot }
 	local out: { Plot } = {}
 	for i = 1, Plots.Count do
@@ -195,8 +144,8 @@ function Plots.Build(parent: Instance, onPad: (Plot, Pad) -> ()): { Plot }
 		local floor = Build.Part(model, {
 			Size = V(Plots.Size, 1, Plots.Size),
 			CFrame = cf * C(0, -0.5, 0),
-			Color = Theme.Colors.GrassDark,
-			Material = M.Grass,
+			Color = Theme.Colors.PlotFloorFree,
+			Material = M.SmoothPlastic,
 			Name = "Floor",
 		})
 		floor.PivotOffset = C(0, 0.5, 0)
@@ -215,8 +164,9 @@ function Plots.Build(parent: Instance, onPad: (Plot, Pad) -> ()): { Plot }
 		local plot: Plot =
 			{ index = i, model = model, cf = cf, pads = {}, spawn = spawn, visitors = Build.Folder(model, "Visitors") }
 		paths(Build.Folder(model, "Paths"), cf)
-		border(Build.Folder(model, "Border"), cf)
-		sign(plot)
+		PlotDressing.BindFloor(model, floor)
+		PlotDressing.Border(Build.Folder(model, "Border"), cf, Random.new(1000 + i))
+		PlotDressing.Gate(model, i, cf)
 		for p = 1, 9 do
 			local pad = buildPad(plot, p)
 			plot.pads[p] = pad

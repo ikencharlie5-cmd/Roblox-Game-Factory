@@ -59,7 +59,7 @@ function Reserve.Beam(position: Vector3)
 		Enum.Material.Neon,
 		false
 	)
-	beam.Transparency = 0.2
+	beam.Transparency = 0.5
 	beam.CanQuery = false
 	local puff = Theme.Effects.Puff(Color3.new(1, 1, 1))
 	puff.Parent = beam

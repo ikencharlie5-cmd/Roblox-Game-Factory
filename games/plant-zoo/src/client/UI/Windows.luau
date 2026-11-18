@@ -1,5 +1,8 @@
 --!strict
--- Window frames + manager: only one menu open at a time, pop-in tween, close button, confirm dialog.
+-- Window manager: one menu open at a time, Back-Out pop-in, blur + dim behind, Quad-In close,
+-- staggered card entrances, and a Confirm dialog. Chrome comes from Kit.Window.
+local Lighting = game:GetService("Lighting")
+
 local Style = require(script.Parent:WaitForChild("Style"))
 local Kit = require(script.Parent:WaitForChild("Kit"))
 
@@ -15,59 +18,80 @@ export type Win = {
 }
 
 local gui: ScreenGui
+local root: Frame
+local dim: Frame
+local blur: BlurEffect
 local registry: { [string]: Win } = {}
+local sizes: { [string]: Vector2 } = {}
 local current: Win? = nil
 local openedSignal = Instance.new("BindableEvent")
 Windows.Opened = openedSignal.Event -- (name: string?)
 
-function Windows.Init(screenGui: ScreenGui)
-	gui = screenGui
+-- Fit a window into the safe screen: max its design size, at most 92% wide / screen height - 70.
+local function fit(win: Win)
+	local want = sizes[win.Name] or Vector2.new(820, 560)
+	local v = Kit.Virtual(gui)
+	win.Frame.Size = UDim2.fromOffset(math.min(want.X, v.X * 0.92), math.min(want.Y, v.Y - 70))
 end
 
-function Windows.Create(name: string, title: string, accent: Color3?): Win
-	local color = accent or Style.Color.Leaf
-	local frame = Kit.Panel(gui, Style.Color.Cream, {
-		Name = name,
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.53),
-		Size = UDim2.fromScale(0.64, 0.76),
-		Visible = false,
-		ZIndex = 5,
-	})
-	Kit.Make("UISizeConstraint", { MaxSize = Vector2.new(860, 620), MinSize = Vector2.new(300, 230) }, frame)
-	Kit.Make("UIScale", { Scale = 1 }, frame)
-
-	local bar = Kit.Make("Frame", {
-		BackgroundColor3 = color,
-		BorderSizePixel = 0,
-		Size = UDim2.new(1, 0, 0, 46),
-	}, frame)
-	Kit.Corner(bar, 12)
-	local titleLabel = Kit.Label(bar, title, {
-		Size = UDim2.new(1, -110, 1, -8),
-		Position = UDim2.new(0, 14, 0, 4),
-		TextColor3 = Style.Color.White,
-		TextXAlignment = Enum.TextXAlignment.Left,
-	})
-	Kit.Make("UIStroke", { Thickness = 2, Color = Kit.Darker(color, 0.5) }, titleLabel)
-
-	local body = Kit.Make("Frame", {
-		Name = "Body",
+function Windows.Init(screenGui: ScreenGui)
+	gui = screenGui
+	root = Kit.Root(gui)
+	dim = Kit.Make("Frame", {
+		Name = "Dim",
+		BackgroundColor3 = Color3.new(0, 0, 0),
 		BackgroundTransparency = 1,
-		Position = UDim2.new(0, 10, 0, 54),
-		Size = UDim2.new(1, -20, 1, -62),
-	}, frame)
+		BorderSizePixel = 0,
+		Size = UDim2.fromScale(1, 1),
+		Visible = false,
+		ZIndex = 0,
+	}, root)
+	blur = Kit.Make("BlurEffect", { Name = "SproutUIBlur", Size = 0, Enabled = false }, Lighting)
+	Kit.Resized:Connect(function()
+		for _, w in registry do
+			fit(w)
+		end
+	end)
+end
 
-	local win: Win = { Name = name, Frame = frame, Body = body, Title = titleLabel }
-	Kit.Button(bar, "X", Style.Color.Red, function()
+local function setBackdrop(on: boolean)
+	if on then
+		dim.Visible = true
+		blur.Enabled = true
+		Kit.Tween(dim, 0.2, { BackgroundTransparency = 0.6 })
+		Kit.Tween(blur, 0.2, { Size = 10 })
+	else
+		Kit.Tween(dim, 0.18, { BackgroundTransparency = 1 })
+		Kit.Tween(blur, 0.18, { Size = 0 })
+		task.delay(0.2, function()
+			if current == nil then
+				dim.Visible = false
+				blur.Enabled = false
+			end
+		end)
+	end
+end
+
+-- accent = header colour (palette, name or Color3); icon = Style.Icons name; size = design px.
+function Windows.Create(name: string, title: string, accent: any?, icon: string?, size: Vector2?): Win
+	local parts = Kit.Window(root, title, accent or "Leaf", icon, size, function()
 		Windows.Close()
-	end, {
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, -6, 0.5, 0),
-		Size = UDim2.new(0, 44, 0, 44),
-	})
+	end)
+	parts.Frame.Name = name
+	parts.Frame.Visible = false
+	sizes[name] = size or Vector2.new(820, 560)
+	local win: Win = { Name = name, Frame = parts.Frame, Body = parts.Body, Title = parts.Title }
 	registry[name] = win
+	fit(win)
 	return win
+end
+
+function Windows.SetSize(name: string, size: Vector2)
+	sizes[name] = size
+	local w = registry[name]
+	if w then
+		fit(w)
+	end
 end
 
 function Windows.Get(name: string): Win?
@@ -85,13 +109,14 @@ function Windows.Close()
 	end
 	current = nil
 	Kit.Sound("Close")
-	local scale = win.Frame:FindFirstChildOfClass("UIScale") :: UIScale
-	Kit.Tween(scale, 0.12, { Scale = 0.85 })
-	task.delay(0.12, function()
+	local scale = win.Frame:FindFirstChild("Open") :: UIScale
+	Kit.Tween(scale, 0.18, { Scale = 0.8 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+	task.delay(0.18, function()
 		if current ~= win then
 			win.Frame.Visible = false
 		end
 	end)
+	setBackdrop(false)
 	if win.OnClose then
 		task.spawn(win.OnClose :: () -> ())
 	end
@@ -112,12 +137,18 @@ function Windows.Open(name: string, arg: any?)
 			task.spawn(old.OnClose :: () -> ())
 		end
 	end
+	local wasOpen = current == win
 	current = win
-	Kit.Sound("Open")
-	local scale = win.Frame:FindFirstChildOfClass("UIScale") :: UIScale
-	scale.Scale = 0.7
-	win.Frame.Visible = true
-	Kit.Tween(scale, 0.25, { Scale = 1 }, Enum.EasingStyle.Back)
+	if not wasOpen then
+		Kit.Sound("Open")
+		fit(win)
+		local scale = win.Frame:FindFirstChild("Open") :: UIScale
+		scale.Scale = 0.6
+		win.Frame.Visible = true
+		Kit.Tween(scale, 0.3, { Scale = 1 }, Enum.EasingStyle.Back)
+		setBackdrop(true)
+	end
+	Kit.BeginStagger(0.5)
 	if win.OnOpen then
 		task.spawn(win.OnOpen :: (any) -> (), arg)
 	end
@@ -135,42 +166,42 @@ end
 -- Yes/No popup above everything. onYes runs only on Yes.
 function Windows.Confirm(title: string, text: string, yesText: string, onYes: () -> ())
 	local shade = Kit.Make("TextButton", {
+		Name = "ConfirmShade",
 		Text = "",
 		AutoButtonColor = false,
 		BackgroundColor3 = Color3.new(0, 0, 0),
-		BackgroundTransparency = 0.45,
+		BackgroundTransparency = 1,
 		Size = UDim2.fromScale(1, 1),
 		ZIndex = 50,
-	}, gui)
-	local box = Kit.Panel(shade, Style.Color.Cream, {
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.5),
-		Size = UDim2.fromScale(0.42, 0.42),
-		ZIndex = 51,
-	})
-	Kit.Make("UISizeConstraint", { MinSize = Vector2.new(280, 190), MaxSize = Vector2.new(520, 320) }, box)
-	Kit.Label(box, title, { Size = UDim2.fromScale(0.9, 0.2), Position = UDim2.fromScale(0.05, 0.05), ZIndex = 52 })
-	Kit.Label(box, text, {
-		Size = UDim2.fromScale(0.9, 0.36),
-		Position = UDim2.fromScale(0.05, 0.27),
-		Font = Style.FontBody,
-		TextColor3 = Style.Color.InkSoft,
-		ZIndex = 52,
-	})
+	}, root)
+	Kit.Tween(shade, 0.2, { BackgroundTransparency = 0.5 })
 	local function close()
+		Kit.Sound("Close")
 		shade:Destroy()
 	end
-	Kit.Button(box, "Cancel", Style.Color.Grey, close, {
-		Size = UDim2.fromScale(0.42, 0.24),
-		Position = UDim2.fromScale(0.05, 0.7),
-		ZIndex = 52,
+	local parts = Kit.Window(shade, title, "Red", nil, Vector2.new(560, 330), close)
+	local box = parts.Frame
+	box.ZIndex = 51
+	Kit.Body(parts.Body, text, {
+		Size = UDim2.new(1, 0, 1, -84),
+		TextSize = 24,
+		TextColor3 = Style.Color.Ink,
 	})
-	Kit.Button(box, yesText, Style.Color.Red, function()
-		close()
+	local row = Kit.Make("Frame", {
+		BackgroundTransparency = 1,
+		AnchorPoint = Vector2.new(0, 1),
+		Position = UDim2.fromScale(0, 1),
+		Size = UDim2.new(1, 0, 0, 68),
+	}, parts.Body)
+	Kit.List(row, true, 16, true)
+	Kit.Button(row, "Cancel", "Stone", close, { Size = UDim2.fromOffset(200, 66), LayoutOrder = 1 })
+	Kit.Button(row, yesText, "Red", function()
+		shade:Destroy()
 		onYes()
-	end, { Size = UDim2.fromScale(0.42, 0.24), Position = UDim2.fromScale(0.53, 0.7), ZIndex = 52 })
-	local scale = Kit.Make("UIScale", { Scale = 0.7 }, box)
-	Kit.Tween(scale, 0.25, { Scale = 1 }, Enum.EasingStyle.Back)
+	end, { Size = UDim2.fromOffset(200, 66), LayoutOrder = 2 })
+	Kit.Sound("Open")
+	parts.Scale.Scale = 0.6
+	Kit.Tween(parts.Scale, 0.3, { Scale = 1 }, Enum.EasingStyle.Back)
 end
 
 return Windows

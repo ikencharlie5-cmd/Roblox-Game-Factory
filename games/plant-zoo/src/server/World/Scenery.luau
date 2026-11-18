@@ -1,116 +1,74 @@
 --!strict
--- Ground, spoke paths from hub to plots, lamps, trees, flowers, distant hills and clouds.
+-- Terrain ground, spoke paths hub -> plots, lamps, benches, clustered foliage, ponds, hills, clouds.
+-- Scenery.Ground() runs synchronously in WorldService.Init (players need the floor); Scenery.Build() is async.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
 local Theme = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Theme"))
 local Build = require(script.Parent.Build)
+local Props = require(script.Parent.Props)
+local Terrain = require(script.Parent.Terrain)
 
 local V = Vector3.new
 local C = CFrame.new
-local hex = Color3.fromHex
 local M = Enum.Material
 
 local Scenery = {}
 
-local FLOWER_COLORS = { hex("#FFD54F"), hex("#FF8FB8"), hex("#FFFFFF"), hex("#B57CFF"), hex("#FF6F61") }
+Scenery.PathWidth = 14
+Scenery.SpokeInner = 58
+Scenery.SpokeOuter = 131
+Scenery.PondAngles = { 90, 270 } -- between-spoke slots that get a terrain pond
+Scenery.PondRadius = 100
 
 local function polar(angleDeg: number, r: number, y: number?): Vector3
 	local a = math.rad(angleDeg)
 	return V(math.cos(a) * r, y or 0, math.sin(a) * r)
 end
 
--- Reuse Charlie's Baseplate if the place has one; otherwise make a grass ground. Top surface at y = 0.
-local function ground()
-	local base = Workspace:FindFirstChild("Baseplate")
-	local part: Part
-	if base and base:IsA("Part") then
-		part = base
-		if part.Size.X < 900 then
-			part.Size = V(900, 16, 900)
-		end
-		part.CFrame = C(0, -part.Size.Y / 2, 0)
-	else
-		part = Build.Part(Workspace, { Size = V(900, 16, 900), CFrame = C(0, -8, 0), Name = "Ground" })
-	end
-	part.Anchored = true
-	part.Color = Theme.Colors.Grass
-	part.Material = M.Grass
-	for _, d in part:GetChildren() do
-		if d:IsA("Texture") or d:IsA("Decal") then
-			d:Destroy()
-		end
+local function spokeCF(i: number): (CFrame, number)
+	local len = Scenery.SpokeOuter - Scenery.SpokeInner
+	local p = polar((i - 1) * 60, (Scenery.SpokeInner + Scenery.SpokeOuter) / 2, 0)
+	return CFrame.lookAt(p, V(0, 0, 0)), len
+end
+
+-- Grass terrain + dirt under the hub, every plot and every spoke path (blades must not poke through parts).
+function Scenery.Ground(plotCFs: { CFrame }, hubRadius: number)
+	Terrain.Setup()
+	Terrain.Ground()
+	Terrain.PaintDisc(V(), hubRadius + 4, M.Ground)
+	for i, cf in plotCFs do
+		Terrain.Paint(cf - V(0, cf.Position.Y, 0), 92, 92, M.Ground)
+		local scf, len = spokeCF(i)
+		Terrain.Paint(scf, Scenery.PathWidth + 6, len + 4, M.Ground)
 	end
 end
 
-local function lamp(f: Instance, pos: Vector3)
-	Build.Cyl(f, 7, 0.5, C(pos + V(0, 3.5, 0)), hex("#3B3B4A"), M.Metal, true)
-	local lantern = Build.Deco(
-		f,
-		{ Size = V(1.2, 1.4, 1.2), CFrame = C(pos + V(0, 7.6, 0)), Color = hex("#FFF2B3"), Name = "Lantern" }
-	)
-	Build.Deco(
-		f,
-		{ Size = V(1.6, 0.3, 1.6), CFrame = C(pos + V(0, 8.45, 0)), Color = hex("#3B3B4A"), Material = M.Metal }
-	)
-	local l = Instance.new("PointLight")
-	l.Color = hex("#FFD58A")
-	l.Range = 18
-	l.Brightness = 1.4
-	l.Enabled = false
-	l.Parent = lantern
-	Build.Tag(lantern, "NightLight")
-end
-
-local function spoke(f: Instance, i: number)
-	local angle = (i - 1) * 60
-	local inner, outer = 61, 130
-	local mid = (inner + outer) / 2
-	local p = polar(angle, mid, 0.1)
-	local cf = CFrame.lookAt(p, V(0, 0.1, 0))
-	Build.Part(
-		f,
-		{ Size = V(10, 0.2, outer - inner), CFrame = cf, Color = Theme.Colors.Path, Material = M.Sand, Name = "Spoke" }
-	)
+local function spoke(f: Instance, i: number, rng: Random)
+	local cf, len = spokeCF(i)
+	local w = Scenery.PathWidth
+	Build.Part(f, {
+		Size = V(w, 0.5, len),
+		CFrame = cf,
+		Color = Theme.Colors.Path,
+		Name = "Spoke",
+	})
 	for _, side in { -1, 1 } do
 		Build.Part(f, {
-			Size = V(0.8, 0.3, outer - inner),
-			CFrame = cf * C(side * 5.4, 0.05, 0),
+			Size = V(1, 0.6, len),
+			CFrame = cf * C(side * (w / 2 + 0.5), 0.05, 0),
 			Color = Theme.Colors.PathEdge,
-			Material = M.Cobblestone,
 			Name = "Edge",
 		})
-		for _, z in { -20, 20 } do
-			lamp(f, (cf * C(side * 7, -0.1, z)).Position)
+		for _, z in { -22, 22 } do
+			Props.Lamp(f, (cf * C(side * (w / 2 + 2.5), 0, z)).Position, rng)
+		end
+		-- Flower strips along both edges (skip the lamp spots).
+		for _, seg in { { -len / 2 + 3, -25 }, { -19, 19 }, { 25, len / 2 - 3 } } do
+			local a = (cf * C(side * (w / 2 + 2), 0, seg[1])).Position
+			local b = (cf * C(side * (w / 2 + 2), 0, seg[2])).Position
+			Props.FlowerStrip(f, a, b, 3.5, rng)
 		end
 	end
-end
-
-local function flowerPatch(f: Instance, center: Vector3, rng: Random)
-	Build.Blob(f, V(7, 0.6, 5), C(center), Theme.Colors.GrassDark, M.Grass)
-	for _ = 1, 5 do
-		local off = V(rng:NextNumber(-2.5, 2.5), 0, rng:NextNumber(-1.8, 1.8))
-		Build.Flower(f, center + off, FLOWER_COLORS[rng:NextInteger(1, #FLOWER_COLORS)])
-	end
-end
-
-local function bush(f: Instance, pos: Vector3, rng: Random)
-	local col = Theme.Colors.Leaf:Lerp(Theme.Colors.LeafLight, rng:NextNumber())
-	Build.Ball(f, rng:NextNumber(3, 4.5), C(pos + V(0, 1, 0)), col, M.Grass)
-	Build.Ball(f, 0.6, C(pos + V(0.8, 2.4, -0.6)), FLOWER_COLORS[rng:NextInteger(1, #FLOWER_COLORS)])
-end
-
-local function cloud(f: Instance, pos: Vector3, rng: Random)
-	for k = 0, 2 do
-		local s = rng:NextNumber(14, 22)
-		local b = Build.Ball(
-			f,
-			s,
-			C(pos + V((k - 1) * s * 0.7, rng:NextNumber(-2, 2), rng:NextNumber(-3, 3))),
-			Color3.new(1, 1, 1),
-			M.SmoothPlastic
-		)
-		b.CastShadow = false
-	end
+	Props.Bench(f, cf * C(-(w / 2 + 4.5), 0, 0) * CFrame.Angles(0, math.rad(-90), 0), rng)
 end
 
 local function fireflyZone(f: Instance, pos: Vector3, size: number)
@@ -125,60 +83,84 @@ local function fireflyZone(f: Instance, pos: Vector3, size: number)
 	Build.Tag(p, "Fireflies")
 end
 
+local function pond(f: Instance, center: Vector3, radius: number, rng: Random)
+	Terrain.Pond(center, radius)
+	for k = 0, 6 do
+		local a = k * (360 / 7) + rng:NextNumber(-12, 12)
+		Props.Rock(f, center + polar(a, radius + 3.5), rng:NextNumber(1.5, 3.2), rng)
+	end
+	for k = 0, 3 do
+		local lily = Build.Blob(
+			f,
+			V(2.4, 0.15, 2.4),
+			C(center + polar(k * 90 + rng:NextNumber(0, 40), rng:NextNumber(3, radius - 3), 0.1)),
+			Theme.Colors.LeafLight
+		)
+		lily.CastShadow = false
+		if k % 2 == 0 then
+			Build.Ball(f, 0.7, lily.CFrame * C(0.4, 0.3, 0), Theme.Colors.Blossom).CastShadow = false
+		end
+	end
+	Props.Bush(f, center + polar(rng:NextNumber(0, 360), radius + 7), 1.1, rng)
+	Props.Bush(f, center + polar(rng:NextNumber(0, 360), radius + 7), 0.9, rng)
+end
+
+-- Meadow patch: bushes + loose flowers between two spokes.
+local function meadow(f: Instance, mid: number, rng: Random)
+	for _ = 1, 3 do
+		Props.Bush(f, polar(mid + rng:NextNumber(-12, 12), rng:NextNumber(72, 118)), rng:NextNumber(0.8, 1.3), rng)
+	end
+	for _ = 1, 2 do
+		local c = polar(mid + rng:NextNumber(-10, 10), rng:NextNumber(80, 110))
+		for _ = 1, 7 do
+			Props.Flower(f, c + V(rng:NextNumber(-4, 4), 0, rng:NextNumber(-4, 4)), rng)
+		end
+	end
+end
+
 function Scenery.Build(parent: Instance, plotCount: number, plotRadius: number)
-	ground()
 	local f = Build.Folder(parent, "Scenery")
 	local rng = Random.new(20261117)
 	for i = 1, plotCount do
-		spoke(f, i)
+		spoke(f, i, rng)
 		fireflyZone(f, polar((i - 1) * 60, plotRadius), 70)
-	end
-	fireflyZone(f, V(0, 0, 0), 100)
-	task.wait()
-	-- Between spokes: flower patches + bushes near the hub, tree clusters further out.
-	for i = 1, plotCount do
-		local mid = (i - 1) * 60 + 30
-		flowerPatch(f, polar(mid + rng:NextNumber(-6, 6), 80), rng)
-		flowerPatch(f, polar(mid + rng:NextNumber(-10, 10), 105), rng)
-		for _ = 1, 3 do
-			bush(f, polar(mid + rng:NextNumber(-14, 14), rng:NextNumber(68, 120)), rng)
-		end
-		for k = 0, 3 do
-			local pos = polar(mid + rng:NextNumber(-8, 8), 150 + k * 25)
-			Build.Tree(
-				f,
-				pos,
-				rng:NextNumber(1, 1.6),
-				Theme.Colors.Leaf:Lerp(hex("#FFB7D5"), if k % 2 == 0 then 0 else 0.6)
-			)
-		end
 		task.wait()
 	end
-	-- Outer forest ring + hills so the world feels enclosed.
-	for k = 0, 35 do
-		local ang = k * 10 + rng:NextNumber(-3, 3)
-		Build.Tree(
-			f,
-			polar(ang, rng:NextNumber(270, 300)),
-			rng:NextNumber(1.6, 2.4),
-			Theme.Colors.Leaf:Lerp(hex("#2F8F4E"), rng:NextNumber())
-		)
-		if k % 2 == 0 then
-			local hill = Build.Blob(
-				f,
-				V(rng:NextNumber(60, 90), rng:NextNumber(25, 45), rng:NextNumber(50, 70)),
-				C(polar(ang + 5, 340)),
-				Theme.Colors.GrassDark,
-				M.Grass
-			)
-			hill.CastShadow = false
+	fireflyZone(f, V(0, 0, 0), 100)
+	-- Between spokes: a pond or a meadow near the hub, tree clusters further out, bushes ringing the hub.
+	for i = 1, plotCount do
+		local mid = (i - 1) * 60 + 30
+		if table.find(Scenery.PondAngles, mid) then
+			pond(f, polar(mid, Scenery.PondRadius), 11, rng)
+		else
+			meadow(f, mid, rng)
 		end
-		if k % 6 == 0 then
+		for _, d in { -14, 14 } do
+			Props.Bush(f, polar(mid + d, 66), 1.1, rng)
+		end
+		Props.TreeCluster(f, polar(mid + rng:NextNumber(-4, 4), 158), 1.1, rng, 0.35)
+		Props.TreeCluster(f, polar(mid + rng:NextNumber(-6, 6), 228), 1.3, rng, 0.2)
+		task.wait()
+	end
+	-- Outer forest ring + rocks, then terrain hills (with trees on top) so there's no visible map edge.
+	for k = 0, 23 do
+		local ang = k * 15 + rng:NextNumber(-4, 4)
+		Props.TreeCluster(f, polar(ang, rng:NextNumber(268, 300)), rng:NextNumber(1.4, 1.9), rng, 0.15)
+		if k % 3 == 0 then
+			Props.Rock(f, polar(ang + 7, rng:NextNumber(250, 262)), rng:NextNumber(2, 4), rng)
+		end
+		if k % 4 == 0 then
 			task.wait()
 		end
 	end
-	for k = 0, 7 do
-		cloud(f, polar(k * 45 + rng:NextNumber(-15, 15), rng:NextNumber(150, 320), rng:NextNumber(110, 150)), rng)
+	local tops = Terrain.Hills(rng, 330, 20)
+	for k, top in tops do
+		if k % 2 == 0 then
+			Props.Tree(f, top, rng:NextNumber(1.8, 2.4), rng, rng:NextNumber() < 0.2)
+		end
+	end
+	for k = 0, 9 do
+		Props.Cloud(f, polar(k * 36 + rng:NextNumber(-12, 12), rng:NextNumber(160, 360), rng:NextNumber(110, 160)), rng)
 	end
 end
 

@@ -17,3 +17,5 @@
 - [manager] Cross-branch: Audio biome ambience keys are `Fungus`/`Frost` but pads carry `Biome` = "Fungus Cave"/"Frost Garden" (PlotService + WorldService). Who changes? ✅ [audio] add 'Fungus Cave'/'Frost Garden' keys to Sounds.BiomeAmbience (or normalize via Theme.BiomeKey)
 - [manager] Cross-branch: Audio weather keys are "SnowFlurry"/"BloomSeason" but Config/WeatherService use "Snow Flurry"/"Bloom Season". Who changes? ✅ No change: MusicDirector strips spaces (gsub %s) so 'Snow Flurry'->SnowFlurry already matches
 
+- [graphics] Art pass: mesh creatures are fitted to 3 studs tall × rarity scale (Common 3 → Secret ≈ 5) and colour mutations on textured meshes use a tinted translucent shell instead of Highlights (31-per-client limit). (built: as described in notes/graphics.md "Asset hooks"; tune `CreatureModels/Mesh.luau` Height/Width after seeing real meshes)
+- [graphics] Hub was not lowered 2 studs (guide §7) because spawn/stall/plot heights are shared with Gameplay. (built: height variation comes from terrain hills + raised curbs/arch gates instead)

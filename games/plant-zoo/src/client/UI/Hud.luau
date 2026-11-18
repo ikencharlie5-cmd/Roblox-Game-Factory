@@ -1,5 +1,7 @@
 --!strict
--- Always-on HUD: cash + $/s, Hope, luck, weather banner, restock timer, settings gear, goal card.
+-- Always-on HUD (guide section 7). Top-left: currency chips (Cash + $/s, Hope, Luck). Top-centre:
+-- weather banner. Top-right: restock pill, Store (pulse + shine) and settings gear, goal card,
+-- active boosts. All px at 1080p inside the scaled root.
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Format = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Format"))
@@ -12,11 +14,14 @@ local Windows = require(script.Parent:WaitForChild("Windows"))
 local Hud = {}
 local _skip: any = nil -- sink for unused multiple-return values
 
+local cashChip: Frame
 local cashLabel: TextLabel
 local rateLabel: TextLabel
 local hopeLabel: TextLabel
 local luckLabel: TextLabel
 local weatherBanner: Frame
+local weatherFace: Frame
+local weatherBadge: Frame
 local weatherLabel: TextLabel
 local restockLabel: TextLabel
 local padLabel: TextLabel
@@ -24,124 +29,215 @@ local setPad: (number) -> ()
 local releaseLabel: TextLabel
 local setRelease: (number) -> ()
 local goalCard: Frame
+local boostTile: Frame
+local boostLabel: TextLabel
+local cashValue: NumberValue
 local shownCash = 0
+local cashInit = false
+local lastHope = -1
 local lastRestockId = -1
+local lastWeatherKey = ""
 
-local function pill(parent: Instance, icon: string, color: Color3, width: number, order: number): (Frame, TextLabel)
-	local p = Kit.Panel(parent, Style.Color.Dark, {
-		Size = UDim2.new(width, -6, 1, 0),
-		BackgroundTransparency = 0.15,
-		LayoutOrder = order,
+-- Currency chip: dark translucent pill, big icon overlapping the left edge, white number, optional "+".
+local function chip(
+	parent: Instance,
+	icon: string,
+	y: number,
+	width: number,
+	onPlus: (() -> ())?
+): (Frame, TextLabel)
+	local c = Kit.Make("Frame", {
+		Name = "Chip",
+		BackgroundColor3 = Style.Color.Chip,
+		BackgroundTransparency = 0.35,
+		BorderSizePixel = 0,
+		Position = UDim2.fromOffset(30, y),
+		Size = UDim2.fromOffset(width, 52),
+	}, parent)
+	Kit.Corner(c, 99)
+	Kit.Stroke(c, Style.Color.Chip, 3)
+	Kit.Make("UIScale", { Name = "Pop", Scale = 1 }, c)
+	Kit.Icon(c, icon, {
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, -14, 0.5, 0),
+		Size = UDim2.fromOffset(56, 56),
+		Depth = true,
+		ZIndex = 3,
 	})
-	Kit.Icon(p, icon, { Size = UDim2.new(0.22, 0, 0.9, 0), Position = UDim2.fromScale(0.02, 0.05) })
-	local l = Kit.Label(p, "0", {
-		Size = UDim2.new(0.74, 0, 0.8, 0),
-		Position = UDim2.fromScale(0.24, 0.1),
-		TextColor3 = color,
+	local l = Kit.Title(c, "0", Style.Color.Dark, {
+		Position = UDim2.fromOffset(50, 4),
+		Size = UDim2.new(1, if onPlus then -100 else -60, 1, -8),
+		TextSize = 30,
 		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 3,
 	})
-	return p, l
+	if onPlus then
+		Kit.Button(c, "+", "Leaf", onPlus, {
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.new(1, -6, 0.5, 0),
+			Size = UDim2.fromOffset(40, 42),
+			Radius = 12,
+			Lip = 4,
+			TextSize = 30,
+			ZIndex = 3,
+		})
+	end
+	return c, l
+end
+
+local function pop(obj: Instance)
+	local s = obj:FindFirstChild("Pop") :: UIScale?
+	if s then
+		s.Scale = 1.12
+		Kit.Tween(s, 0.25, { Scale = 1 }, Enum.EasingStyle.Back)
+	end
 end
 
 function Hud.Mount(gui: ScreenGui)
-	-- Top center: currencies
-	local top = Kit.Make("Frame", {
+	local root = Kit.Root(gui)
+	local left = Kit.Make("Frame", {
+		Name = "Currencies",
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(16, 12),
+		Size = UDim2.fromOffset(300, 220),
+		ZIndex = 2,
+	}, root)
+	local openStore = function()
+		Windows.Open("Store")
+	end
+	cashChip, cashLabel = chip(left, "Cash", 0, 270, openStore)
+	cashLabel.Text = "$0"
+	rateLabel = Kit.Title(left, "+$0/s", Style.Pal.Leaf.Dark, {
+		Position = UDim2.fromOffset(84, 54),
+		Size = UDim2.fromOffset(200, 26),
+		TextSize = 22,
+		TextColor3 = Style.Color.Cash,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	})
+	_skip, hopeLabel = chip(left, "Hope", 88, 220, openStore)
+	_skip, luckLabel = chip(left, "Luck", 150, 180, nil)
+	cashValue = Kit.Make("NumberValue", { Value = 0 }, left)
+	cashValue.Changed:Connect(function(v)
+		cashLabel.Text = "$" .. Format.Number(v)
+	end)
+
+	-- Weather banner (top-centre)
+	weatherBanner = Kit.Make("Frame", {
+		Name = "Weather",
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 4),
-		Size = UDim2.fromScale(0.46, 0.075),
-	}, gui)
-	Kit.Make("UISizeConstraint", { MinSize = Vector2.new(300, 36), MaxSize = Vector2.new(640, 56) }, top)
-	Kit.List(top, true, 6, true)
-	local cashPill
-	cashPill, cashLabel = pill(top, Style.Icons.Cash, Style.Color.Cash, 0.46, 1)
-	cashLabel.Size = UDim2.new(0.74, 0, 0.58, 0)
-	rateLabel = Kit.Label(cashPill, "+$0/s", {
-		Size = UDim2.new(0.74, 0, 0.34, 0),
-		Position = UDim2.fromScale(0.24, 0.62),
-		TextColor3 = Style.Color.White,
-		TextXAlignment = Enum.TextXAlignment.Left,
-		Font = Style.FontBody,
-	})
-	_skip, hopeLabel = pill(top, "🌟", Style.Color.Hope, 0.28, 2)
-	_skip, luckLabel = pill(top, "🍀", Style.Color.Luck, 0.26, 3)
-
-	-- Weather banner under the currencies
-	weatherBanner = Kit.Panel(gui, Style.Color.Sky, {
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0.085, 6),
-		Size = UDim2.fromScale(0.4, 0.05),
+		Position = UDim2.new(0.5, 0, 0, 10),
+		Size = UDim2.fromOffset(440, 60),
 		Visible = false,
+		ZIndex = 2,
+	}, root)
+	Kit.Make("UIScale", { Name = "Pop", Scale = 1 }, weatherBanner)
+	weatherFace = Kit.Slab(weatherBanner, Style.Pal.Sky, 99, 4, 3.5, true)
+	weatherBadge = Kit.Make("Frame", {
+		BackgroundTransparency = 1,
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, -6, 0.5, 0),
+		Size = UDim2.fromOffset(62, 62),
+		ZIndex = 4,
+	}, weatherFace)
+	weatherLabel = Kit.Title(weatherFace, "", Style.Pal.Sky.Dark, {
+		Position = UDim2.fromOffset(62, 4),
+		Size = UDim2.new(1, -76, 1, -8),
+		TextSize = 24,
+		ZIndex = 4,
 	})
-	Kit.Make("UISizeConstraint", { MinSize = Vector2.new(260, 26) }, weatherBanner)
-	weatherLabel = Kit.Label(weatherBanner, "", {
-		Size = UDim2.new(1, -12, 1, -4),
-		Position = UDim2.new(0, 6, 0, 2),
-		TextColor3 = Style.Color.White,
-	})
-	Kit.Make("UIStroke", { Thickness = 1.5, Color = Style.Color.Dark }, weatherLabel)
 
-	-- Top right: restock timer (tap = open shop) + settings gear
+	-- Top-right: restock pill + Store + gear
 	local right = Kit.Make("Frame", {
+		Name = "TopRight",
 		BackgroundTransparency = 1,
 		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -6, 0, 4),
-		Size = UDim2.fromScale(0.22, 0.075),
-	}, gui)
-	Kit.Make("UISizeConstraint", { MinSize = Vector2.new(170, 44), MaxSize = Vector2.new(300, 56) }, right)
-	local restockBtn = Kit.Button(right, "", Style.Color.Wood, function()
-		Windows.Open("Shop")
-	end, { Size = UDim2.new(1, -50, 1, 0) })
-	restockLabel = Kit.Label(restockBtn, "🛒 Restock 5:00", { TextColor3 = Style.Color.White })
-	local gear = Kit.Button(right, "", Style.Color.Grey, function()
+		Position = UDim2.new(1, -16, 0, 10),
+		Size = UDim2.fromOffset(400, 100),
+		ZIndex = 2,
+	}, root)
+	local gear = Kit.Button(right, "", "Stone", function()
 		Windows.Toggle("Settings")
-	end, { AnchorPoint = Vector2.new(1, 0), Position = UDim2.fromScale(1, 0), Size = UDim2.new(0, 44, 1, 0) })
-	Kit.Icon(gear, Style.Icons.Settings, { Size = UDim2.fromScale(0.84, 0.84), Position = UDim2.fromScale(0.08, 0.08) })
+	end, {
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.fromScale(1, 0),
+		Size = UDim2.fromOffset(52, 56),
+		Radius = 14,
+		Lip = 4,
+		Icon = "Settings",
+	})
+	gear.Name = "Settings"
+	local store = Kit.IconButton(right, "Store", "Store", "Pink", function()
+		Windows.Toggle("Store")
+	end, { AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -64, 0, 0), Shine = true, Pulse = true })
+	store.Name = "Store"
+	local restock = Kit.Button(right, "", "Wood", function()
+		Windows.Open("Shop")
+	end, {
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -162, 0, 6),
+		Size = UDim2.fromOffset(220, 56),
+		Radius = 99,
+		Lip = 4,
+	})
+	restockLabel = Kit.Title(Kit.ButtonFace(restock), "Restock 5:00", Style.Pal.Wood.Dark, {
+		Size = UDim2.new(1, -20, 1, -8),
+		Position = UDim2.fromOffset(10, 4),
+		TextSize = 24,
+		ZIndex = 5,
+	})
 
-	-- Goal card (top-left): next pad + Release progress
-	goalCard = Kit.Panel(gui, Style.Color.Cream, {
-		Position = UDim2.new(0, 6, 0, 4),
-		Size = UDim2.fromScale(0.2, 0.14),
-		BackgroundTransparency = 0.05,
+	-- Goal card (right, under the top row): next pad + Release progress. Tap = open that screen.
+	goalCard = Kit.Panel(root, Style.Color.Cream, {
+		Name = "GoalCard",
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -16, 0, 126),
+		Size = UDim2.fromOffset(300, 128),
+		ZIndex = 2,
 	})
-	Kit.Make("UISizeConstraint", { MinSize = Vector2.new(150, 58), MaxSize = Vector2.new(280, 110) }, goalCard)
-	local padBtn = Kit.Make("TextButton", {
-		BackgroundTransparency = 1,
-		Text = "",
-		Size = UDim2.fromScale(1, 0.5),
-	}, goalCard)
-	padLabel = Kit.Label(padBtn, "Next: Pad 2 - $500", {
-		Size = UDim2.new(1, -10, 0.55, 0),
-		Position = UDim2.new(0, 5, 0, 2),
-		TextXAlignment = Enum.TextXAlignment.Left,
-	})
-	_skip, setPad = Kit.Progress(padBtn, Style.Color.Leaf, {
-		Size = UDim2.new(1, -10, 0.3, 0),
-		Position = UDim2.new(0, 5, 0.62, 0),
-	})
-	padBtn.Activated:Connect(function()
-		Kit.Sound("Click")
+	local function goalRow(y: number, color: any, onTap: () -> ()): (TextLabel, (number) -> ())
+		local btn = Kit.Make("TextButton", {
+			BackgroundTransparency = 1,
+			Text = "",
+			Position = UDim2.fromOffset(12, y),
+			Size = UDim2.new(1, -24, 0, 56),
+			ZIndex = 3,
+		}, goalCard)
+		local l = Kit.Label(btn, "", { Size = UDim2.new(1, 0, 0, 28), TextSize = 22, ZIndex = 3 })
+		l.TextXAlignment = Enum.TextXAlignment.Left
+		local _, set = Kit.Progress(btn, color, { Position = UDim2.fromOffset(0, 32), Size = UDim2.new(1, 0, 0, 18) })
+		btn.Activated:Connect(function()
+			Kit.Sound("Click")
+			onTap()
+		end)
+		return l, set
+	end
+	padLabel, setPad = goalRow(8, "Leaf", function()
 		Windows.Open("Build", { tab = "Exhibits" })
 	end)
-	local relBtn = Kit.Make("TextButton", {
-		BackgroundTransparency = 1,
-		Text = "",
-		Size = UDim2.fromScale(1, 0.5),
-		Position = UDim2.fromScale(0, 0.5),
-	}, goalCard)
-	releaseLabel = Kit.Label(relBtn, "🕊️ Release: $1M", {
-		Size = UDim2.new(1, -10, 0.55, 0),
-		Position = UDim2.new(0, 5, 0, 0),
-		TextXAlignment = Enum.TextXAlignment.Left,
-	})
-	_skip, setRelease = Kit.Progress(relBtn, Style.Color.Purple, {
-		Size = UDim2.new(1, -10, 0.3, 0),
-		Position = UDim2.new(0, 5, 0.58, 0),
-	})
-	relBtn.Activated:Connect(function()
-		Kit.Sound("Click")
+	releaseLabel, setRelease = goalRow(66, "Teal", function()
 		Windows.Open("Release")
 	end)
+
+	-- Active boost tile (Luck Potion) under the goal card.
+	boostTile = Kit.Make("Frame", {
+		Name = "Boost",
+		BackgroundTransparency = 1,
+		AnchorPoint = Vector2.new(1, 0),
+		Position = UDim2.new(1, -16, 0, 270),
+		Size = UDim2.fromOffset(64, 70),
+		Visible = false,
+		ZIndex = 2,
+	}, root)
+	local bface = Kit.Slab(boostTile, Style.Pal.Purple, 16, 4, 3, true)
+	Kit.Icon(bface, "LuckPotion", { Size = UDim2.fromScale(0.8, 0.8), Position = UDim2.fromScale(0.1, 0.06) })
+	boostLabel = Kit.Title(boostTile, "", Style.Color.Dark, {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 1, -8),
+		Size = UDim2.fromOffset(100, 24),
+		TextSize = 20,
+		ZIndex = 6,
+	})
 
 	State.OnChange(function(what)
 		if what == "data" then
@@ -159,36 +255,39 @@ end
 function Hud.Refresh()
 	local cash = State.Num("cash")
 	if cash ~= shownCash then
-		local grew = cash > shownCash
-		local from = shownCash
+		local gained = cash - shownCash
+		local first = not cashInit
+		cashInit = true
 		shownCash = cash
-		local nv = Instance.new("NumberValue")
-		nv.Value = from
-		nv.Changed:Connect(function(v)
-			cashLabel.Text = "$" .. Format.Number(v)
-		end)
-		Kit.Tween(nv, 0.4, { Value = cash })
-		task.delay(0.5, function()
-			nv:Destroy()
-			cashLabel.Text = "$" .. Format.Number(State.Num("cash"))
-		end)
-		if grew then
-			cashLabel.TextColor3 = Style.Color.White
-			Kit.Tween(cashLabel, 0.4, { TextColor3 = Style.Color.Cash })
+		if first then
+			cashValue.Value = cash
+		else
+			Kit.Tween(cashValue, 0.35, { Value = cash })
+		end
+		if gained > 0 and not first then
+			pop(cashChip)
+			Kit.Float(cashChip, "+$" .. Format.Number(gained), UDim2.new(0.5, 0, 1, 10))
 		end
 	end
-	hopeLabel.Text = Format.Number(State.Num("hope"))
+	local hope = State.Num("hope")
+	if hope ~= lastHope then
+		if lastHope >= 0 and hope > lastHope then
+			pop(hopeLabel.Parent :: Instance)
+		end
+		lastHope = hope
+		hopeLabel.Text = Format.Number(hope)
+	end
 
 	local nextIdx, price = Derived.NextPad()
 	if nextIdx and price then
-		padLabel.Text = string.format("🌱 Next: Pad %d - $%s", nextIdx, Format.Number(price))
+		padLabel.Text = string.format("Next: Pad %d  $%s", nextIdx, Format.Number(price))
 		setPad(cash / price)
 	else
-		padLabel.Text = "🌱 All pads owned!"
+		padLabel.Text = "All pads owned!"
 		setPad(1)
 	end
 	local n, need, rarity = Derived.ReleaseInfo()
-	releaseLabel.Text = string.format("🕊️ Release #%d: $%s + %s", n, Format.Number(need), rarity)
+	releaseLabel.Text = string.format("Release #%d: $%s + %s", n, Format.Number(need), rarity)
 	setRelease(cash / need)
 end
 
@@ -196,17 +295,20 @@ function Hud.Tick()
 	local now = State.Now()
 	rateLabel.Text = "+$" .. Format.Number(Derived.Income()) .. "/s"
 
-	local luck = Derived.Luck()
+	luckLabel.Text = string.format("x%.1f", Derived.Luck())
 	local potion = Derived.LuckPotionLeft()
-	luckLabel.Text = string.format("x%.1f", luck) .. (if potion > 0 then " ⏱" .. Format.Time(potion) else "")
+	boostTile.Visible = potion > 0
+	if potion > 0 then
+		boostLabel.Text = Format.Time(potion)
+	end
 
 	-- Restock countdown is global and deterministic: every RestockSeconds of server time.
 	local period = Derived.Config.Shop.RestockSeconds
 	local restockId = math.floor(now / period)
 	local left = (restockId + 1) * period - now
-	restockLabel.Text = "🛒 Restock " .. Format.Time(left)
+	restockLabel.Text = "Restock " .. Format.Time(left)
 	if lastRestockId ~= -1 and restockId ~= lastRestockId then
-		restockLabel.TextColor3 = Style.Color.Sun
+		restockLabel.TextColor3 = Style.Color.Hope
 		Kit.Tween(restockLabel, 1, { TextColor3 = Style.Color.White })
 	end
 	lastRestockId = restockId
@@ -215,26 +317,37 @@ function Hud.Tick()
 	local w = State.weather
 	local name = if type(w) == "table" then (w.name or w.Name) else nil
 	local endsAt = if type(w) == "table" then (w.endsAt or w.EndsAt or 0) else 0
+	local nextAt = if type(w) == "table" then (w.nextAt or w.NextAt or 0) else 0
+	local key, text, pal, code
 	if type(name) == "string" and name ~= "" and name ~= "Clear" and (endsAt == 0 or endsAt > now) then
 		local info = Style.WeatherInfo(name)
-		weatherBanner.BackgroundColor3 = info.Color
+		key, code, pal = "w" .. name, info.Code, Style.PaletteFor(info.Color)
 		local timer = if endsAt > 0 then "  " .. Format.Time(endsAt - now) else ""
-		weatherLabel.Text = string.format("%s %s! %s%s", info.Icon, name, info.Text, timer)
-		if not weatherBanner.Visible then
+		text = string.format("%s! %s%s", name, info.Text, timer)
+	elseif nextAt > now then
+		-- Clear skies: small teaser so players stick around for the next event.
+		key, code, pal = "next", "Wx", Style.Pal.Stone
+		text = "Next weather in " .. Format.Time(nextAt - now)
+	end
+	if key then
+		weatherLabel.Text = text
+		if key ~= lastWeatherKey then
+			lastWeatherKey = key
+			Kit.SetGradient(weatherFace:FindFirstChildOfClass("UIGradient") :: UIGradient, pal)
+			local stroke = weatherFace:FindFirstChildOfClass("UIStroke") :: UIStroke
+			stroke.Color = pal.Dark
+			local lip = weatherBanner:FindFirstChild("Lip") :: Frame
+			lip.BackgroundColor3 = pal.Dark
+			local textStroke = weatherLabel:FindFirstChildOfClass("UIStroke") :: UIStroke
+			textStroke.Color = pal.Dark
+			Kit.Clear(weatherBadge)
+			Kit.CodeBadge(weatherBadge, code, pal, { Size = UDim2.fromScale(1, 1) })
 			weatherBanner.Visible = true
-			weatherBanner.Size = UDim2.fromScale(0.1, 0.05)
-			Kit.Tween(weatherBanner, 0.35, { Size = UDim2.fromScale(0.4, 0.05) }, Enum.EasingStyle.Back)
+			pop(weatherBanner)
 		end
 	else
-		-- Clear skies: small teaser so players stick around for the next event.
-		local nextAt = if type(w) == "table" then (w.nextAt or w.NextAt or 0) else 0
-		if nextAt > now then
-			weatherBanner.Visible = true
-			weatherBanner.BackgroundColor3 = Style.Color.Grey
-			weatherLabel.Text = "🌤️ Next weather in " .. Format.Time(nextAt - now)
-		else
-			weatherBanner.Visible = false
-		end
+		weatherBanner.Visible = false
+		lastWeatherKey = ""
 	end
 end
 

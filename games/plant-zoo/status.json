@@ -4,10 +4,10 @@
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
   "stage": "branches",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-18T00:42:46Z",
+  "updated": "2026-11-18T00:54:18Z",
   "branches": {
     "gameplay": "done",
-    "graphics": "working",
+    "graphics": "done",
     "ui": "working",
     "audio": "done"
   },
@@ -167,6 +167,12 @@
       "from": "rnd",
       "to": "graphics",
       "text": "ART_STYLE_GUIDE.md: replace primitive creatures with meshes, terrain grass, Future lighting pass, saturation hierarchy"
+    },
+    {
+      "time": "2026-11-18T00:54:18Z",
+      "from": "graphics",
+      "to": "all",
+      "text": "Art pass done: Future lighting + grade, terrain grass/hills/ponds, wood-bordered plots w/ arch gates, landmark stalls, clustered foliage, rarity VFX ladder, no big Neon. Asset hooks: ReplicatedStorage.Assets.{Creatures,Props,Sky} with primitive fallback (notes/graphics.md)."
     }
   ]
 }

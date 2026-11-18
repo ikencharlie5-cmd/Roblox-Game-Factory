@@ -130,7 +130,11 @@ function Kit.Darker(c: Color3, f: number?): Color3
 end
 
 function Kit.Corner(parent: Instance, px: number?): UICorner
-	return Kit.Make("UICorner", { CornerRadius = if px and px >= 99 then UDim.new(1, 0) else UDim.new(0, px or 14) }, parent)
+	return Kit.Make(
+		"UICorner",
+		{ CornerRadius = if px and px >= 99 then UDim.new(1, 0) else UDim.new(0, px or 14) },
+		parent
+	)
 end
 
 -- Border stroke (panels/buttons). Thinnest allowed is 2.5.
@@ -280,10 +284,12 @@ function Kit.StripEmoji(text: string): string
 	local out = string.gsub(text, "[\240-\244][\128-\191][\128-\191][\128-\191]", "")
 	out = string.gsub(out, "\226[\152-\158][\128-\191]", "") -- U+2600-27BF symbols/dingbats
 	out = string.gsub(out, "\226\173[\144-\149]", "") -- stars/circles U+2B50-2B55
+	out = string.gsub(out, "\226\172[\128-\191]", "") -- arrows U+2B00-2B3F
+	out = string.gsub(out, "\226\143[\128-\191]", "") -- clocks/media U+23C0-23FF
 	out = string.gsub(out, "\239\184\143", "") -- variation selector 16
 	out = string.gsub(out, "\226\128\141", "") -- zero-width joiner
-	out = string.gsub(out, "^%s+", "")
-	out = string.gsub(out, "%s%s+", " ")
+	out = string.gsub(out, "^ +", "")
+	out = string.gsub(out, "  +", " ")
 	return out
 end
 
