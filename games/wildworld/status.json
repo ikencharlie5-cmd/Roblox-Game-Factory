@@ -4,7 +4,7 @@
   "idea": "Multiplayer wildlife park + creature collection/breeding sim (Planet Zoo x Slime Rancher x Pokemon inspired, all original). Explore, capture original creatures, build habitats, breed for genetics + rare mutations, earn from visitors, visit/trade securely.",
   "stage": "art3d",
   "created": "2026-11-18T03:02:43Z",
-  "updated": "2026-11-18T10:20:14Z",
+  "updated": "2026-11-18T10:22:02Z",
   "branches": {
     "gameplay": "done",
     "graphics": "done",
@@ -259,6 +259,12 @@
       "from": "graphics",
       "to": "all",
       "text": "IconModels.luau (Coin/RP/bait/passes/packs/StarterPack/InstantHatch/eggs), rarity-tinted eggs, FieldTent/JournalSign/StoneTotem removed; UI must add Kit.ModelView + route Kit.Icon to IconModels"
+    },
+    {
+      "time": "2026-11-18T10:22:02Z",
+      "from": "ui",
+      "to": "all",
+      "text": "Kit.ModelView + Kit.Icon now render Theme.IconModels brick icons (coins/RP/bait/passes/products/StarterPack/InstantHatch); disabled zones skipped in ParkWindow + ZoneGate prompts; weather UI removed"
     }
   ]
 }

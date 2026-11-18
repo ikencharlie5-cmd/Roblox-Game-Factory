@@ -154,7 +154,7 @@ return function(Kit: any, Style: any)
 			end
 	end
 
-	-- Round badge with a white glyph (placeholder icon, biome/weather chips).
+	-- Round badge with a white glyph (fallback icon when no model/image, biome chips).
 	function Kit.CodeBadge(parent: Instance?, glyph: string, pal: any, props: { [string]: any }?): Frame
 		local f = Kit.Make("Frame", {
 			Name = "Badge",
@@ -181,11 +181,28 @@ return function(Kit: any, Style: any)
 
 	local ICON_SKIP = { Depth = true, DepthColor = true }
 
-	-- Icon by name (Style.Icons), raw "rbxassetid://" id, or a code-drawn badge when not uploaded yet.
+	-- Icon by name: brick model (Theme.IconModels via Kit.ModelView), uploaded image (Style.Icons) or
+	-- raw "rbxassetid://" id; a code-drawn letter badge only when the name has neither.
 	-- Props extras: Depth = true adds the darker duplicate 3 px below (images only), DepthColor.
 	function Kit.Icon(parent: Instance?, icon: string, props: { [string]: any }?): GuiObject
 		local p = props or {}
-		local id = if string.sub(icon, 1, 13) == "rbxassetid://" then icon else Style.Icons[icon]
+		local isId = string.sub(icon, 1, 13) == "rbxassetid://"
+		if not isId and Kit.HasIconModel(icon) then
+			local holder = Kit.Make("Frame", { Name = "Icon", BackgroundTransparency = 1 })
+			local vp = Kit.ModelView(holder, icon, { ZIndex = 2 })
+			if vp then
+				Kit.Apply(holder, p, ICON_SKIP)
+				for _, d in holder:GetChildren() do
+					if d:IsA("GuiObject") then
+						d.ZIndex = holder.ZIndex
+					end
+				end
+				holder.Parent = parent
+				return holder
+			end
+			holder:Destroy()
+		end
+		local id = if isId then icon else Style.Icons[icon]
 		if id then
 			local holder = Kit.Make("Frame", { Name = "Icon", BackgroundTransparency = 1 })
 			if p.Depth then

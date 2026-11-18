@@ -138,7 +138,7 @@ local function renderList()
 	end
 end
 
--- Locked wild zones (Config.Zones): Park Level + coins, unlocked by the server via UnlockZone.
+-- Locked wild zones (Config.Zones, Enabled ~= false only): Park Level + coins, unlocked via UnlockZone.
 local function unlockZone(z: { [string]: any })
 	local name, cost = tostring(z.Name or z.Id), tonumber(z.Cost) or 0
 	if Derived.Level() < (tonumber(z.Level) or 1) then
@@ -163,7 +163,7 @@ local function renderZones(order: number)
 	local owned = State.Tbl("zones")
 	local lvlNow = Derived.Level()
 	for i, z in Derived.Cfg("Zones") or {} do
-		if type(z) == "table" and (tonumber(z.Cost) or 0) > 0 and not owned[z.Id] then
+		if type(z) == "table" and z.Enabled ~= false and (tonumber(z.Cost) or 0) > 0 and not owned[z.Id] then
 			local need = tonumber(z.Level) or 1
 			local cost = tonumber(z.Cost) or 0
 			local ready = lvlNow >= need and State.Num("coins") >= cost
@@ -235,7 +235,7 @@ local function addGate(anchor: Instance)
 		return
 	end
 	for _, z in Derived.Cfg("Zones") or {} do
-		if type(z) == "table" and z.Id == anchor:GetAttribute("Zone") and (tonumber(z.Cost) or 0) > 0 then
+		if type(z) == "table" and z.Enabled ~= false and z.Id == anchor:GetAttribute("Zone") and (tonumber(z.Cost) or 0) > 0 then
 			local prompt = Kit.Make("ProximityPrompt", {
 				ActionText = "Unlock " .. tostring(z.Name or z.Id),
 				ObjectText = string.format("Park Lv %d + %s Coins", tonumber(z.Level) or 1, Format.Number(tonumber(z.Cost) or 0)),

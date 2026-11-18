@@ -24,7 +24,6 @@ local KIND_PAL: { [string]: string } = {
 	rp = "Purple",
 	new = "Coral",
 	info = "Sky",
-	weather = "Sky",
 }
 
 function Notify.Init()

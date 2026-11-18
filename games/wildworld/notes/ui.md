@@ -6,7 +6,7 @@ window bodies (`#FFFFFF`->`#E9EEF3`, 10 px corners), navy frame `#1F3B57`, ink `
 category-colour header pills with a stud row, sunset-coral accent. Parchment + stitching are gone.
 Palette/rarity/mutation colours in `UI/Style.luau`.
 Root UIScale = clamp(viewportY/1080, 0.55, 1.25), `CoreUISafeInsets`, one big window at a time, blur + dim.
-No emoji: icons are `Style.Icons` image ids (empty now) with coloured-circle letter fallbacks.
+No emoji: `Kit.Icon(name)` renders a brick model from `Theme.IconModels` via `Kit.ModelView` (static cached ViewportFrame) when `IconModels.Has(name)`; else a `Style.Icons` image id; a coloured-circle letter badge only when neither exists (menu buttons like Collection/Breed until icons are uploaded).
 
 ## Screens / modules
 | Module | What |
@@ -71,7 +71,7 @@ arrow), plot = tag `Plot` part with `OwnerId`, forest arch tag `ForestGate`. Cre
 
 ## Check-report fixes (ui)
 - Build math uses the levelled plot CFrame (`PlotInfo.CFrame`, same as PlotService.PlotCFrame): ToCell/CellCFrame/grid lines in plot space.
-- Zone unlocking: ParkWindow lists locked zones (Config.Zones) with an Unlock button -> confirm -> `UnlockZone(zoneId)`; client ProximityPrompt on each `ZoneGate` anchor opens the same dialog (hidden once owned).
+- Zone unlocking: ParkWindow lists locked zones (Config.Zones, skipping `Enabled == false`; v1 = only Meadow live, so the list is empty) with an Unlock button -> confirm -> `UnlockZone(zoneId)`; client ProximityPrompt on each `ZoneGate` anchor opens the same dialog (hidden once owned; no prompt for disabled zones).
 - Tutorial Feed step: arrow points at the creature; "Feed it" only active within Needs.InteractRange - 2 studs, otherwise "Walk closer".
 
 ## Toy-brick reskin (studs art switch)
@@ -89,3 +89,8 @@ Visual-only; no layout, behaviour or remote changes.
 - `Hud.luau`: currency chip top tint moved to navy ink.
 - Assumption: no loading screen exists in UI, so the sunburst is only used behind creature views; Reveal keeps its
   rarity sunburst.
+
+## Icon models + v1 cuts (update)
+- `Kit/ModelView.luau`: `Kit.ModelView(parent, name|Model, props)` + `Kit.HasIconModel(name)`. Template per name built once, cloned per view; camera framed once (FOV 30, 3/4 front); no WorldModel, no per-frame updates.
+- Icon keys used: HUD `Coins`/`RP`; Shop `StarterPack`, `VIP`, `Pass<Key>`, product keys (`CoinsSmall/Medium/Large`), Market `Bait<Fruit>` (decor refs fall back to letters); Inventory bait names; Nests "skip timer" button `InstantHatch`.
+- Weather: no UI or listeners (Notify `weather` kind removed; server no longer sends Weather_*).

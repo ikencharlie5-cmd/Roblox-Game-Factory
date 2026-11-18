@@ -310,7 +310,7 @@ function Kit.StripEmoji(text: string): string
 end
 
 -- Child modules add the premium pieces (order matters: Fx before Parts/Button).
-for _, name in { "Fx", "Parts", "Button", "Window", "View", "Extras" } do
+for _, name in { "Fx", "ModelView", "Parts", "Button", "Window", "View", "Extras" } do
 	local install = require(script:WaitForChild(name)) :: any
 	install(Kit, Style)
 end

@@ -26,9 +26,9 @@ local choose: (string) -> ()
 local tab = "Featured"
 local lastSig = ""
 
-local function card(parent: Instance, order: number, title: string, text: string, price: string, color: string, onBuy: () -> (), featured: boolean?)
+local function card(parent: Instance, order: number, title: string, text: string, price: string, color: string, onBuy: () -> (), featured: boolean?, icon: string?)
 	local c = Kit.Panel(parent, nil, { Size = UDim2.new(1, -12, 0, if featured then 130 else 96), LayoutOrder = order })
-	Kit.Icon(c, title, {
+	Kit.Icon(c, icon or title, {
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.new(0, 12, 0.5, 0),
 		Size = UDim2.fromOffset(if featured then 96 else 68, if featured then 96 else 68),
@@ -72,11 +72,11 @@ local function render(force: boolean?)
 			local d = Market.ProductDef("StarterPack")
 			add(INFO.StarterPack[1], INFO.StarterPack[2], robux(d), "Robux", function()
 				Market.PromptProduct("StarterPack")
-			end, true)
+			end, true, "StarterPack")
 		end
 		add(INFO.VIP[1], INFO.VIP[2], if Derived.HasPass("VIP") then "Owned" else robux(Market.PassDef("VIP")), "Robux", function()
 			Market.PromptPass("VIP")
-		end, true)
+		end, true, "VIP")
 	elseif tab == "Passes" then
 		local keys = {}
 		for k in Derived.Config.GamePasses or {} do
@@ -88,7 +88,7 @@ local function render(force: boolean?)
 			local info = INFO[k] or { tostring(d.Name or k), tostring(d.Desc or "") }
 			add(info[1], tostring(d.Desc or info[2]), if Derived.HasPass(k) then "Owned" else robux(d), "Robux", function()
 				Market.PromptPass(k)
-			end)
+			end, false, "Pass" .. k)
 		end
 	elseif tab == "Coins" then
 		local keys = {}
@@ -104,7 +104,7 @@ local function render(force: boolean?)
 			local d = Market.ProductDef(k) or {}
 			add(tostring(d.Name or k), (tonumber(d.Coins) and (tostring(d.Coins) .. " Coins") or "Coins"), robux(d), "Robux", function()
 				Market.PromptProduct(k)
-			end)
+			end, false, k)
 		end
 	else
 		-- Market stall: restocking bait + rare decor (ShopChanged / GetShop), bought with coins.
@@ -132,7 +132,7 @@ local function render(force: boolean?)
 					State.shop = res
 					State.Fire("shop")
 				end
-			end)
+			end, false, if sl.kind == "bait" then "Bait" .. tostring(sl.ref) else tostring(sl.ref))
 		end
 	end
 end

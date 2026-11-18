@@ -79,6 +79,7 @@ local function tile(parent: Frame, i: number, egg: { [string]: any }?, locked: b
 		Size = UDim2.new(1, -12, 0, 46),
 		TextSize = 20,
 		Pulse = ready,
+		Icon = if ready then nil else "InstantHatch",
 		ZIndex = 6,
 	})
 end
