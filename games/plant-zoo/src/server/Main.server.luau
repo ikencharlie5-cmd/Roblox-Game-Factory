@@ -6,7 +6,7 @@ require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Remotes"))
 local servicesFolder = script.Parent:WaitForChild("Services")
 
 -- Load order matters: DataService first.
-local ORDER = { "DataService", "MonetizationService", "DailyRewardService" }
+local ORDER = { "AssetLoaderService", "DataService", "MonetizationService", "DailyRewardService" }
 
 local services = {}
 local loaded: { [string]: boolean } = {}

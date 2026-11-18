@@ -1,6 +1,6 @@
 {
   "_note": "Studio AI-generated creature models (published to Charlie's inventory). Live copies are in the place at ReplicatedStorage.Assets.Creatures.<Species>. Re-insert with InsertService:LoadAsset(id) if the folder is lost.",
-  "Sproutling": null,
+  "Sproutling": 75898993594148,
   "Pebble Pea": 88275514383483,
   "Lily Guppy": 103528429682235,
   "Prickle Pup": 78592613040576,
@@ -27,5 +27,5 @@
   "Moonpetal Unicorn": 96827230644108,
   "World Tree Tortoise": 78471992161245,
   "Abyss Bloom Kraken": 119277891943570,
-  "Sandstorm Scorpion": null
+  "Sandstorm Scorpion": 100744346364436
 }

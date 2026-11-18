@@ -35,6 +35,8 @@ local ChatTags = require(UI:WaitForChild("ChatTags"))
 local player = Players.LocalPlayer :: Player
 
 SoundController.Start()
+local AnimationController = require(script.Parent:WaitForChild("Animation"):WaitForChild("AnimationController")) :: any
+AnimationController.Start()
 ChatTags.Start()
 
 -- Camera: a little wider so whole exhibits fit on phones.

@@ -1,0 +1,34 @@
+--!strict
+-- AI-generated creature models (Charlie's inventory). Loaded at server start by AssetLoaderService
+-- into ReplicatedStorage.Assets.Creatures when the place doesn't already contain them.
+-- Source of truth: games/plant-zoo/assets/creature_assets.json
+return {
+	["Sproutling"] = 75898993594148,
+	["Pebble Pea"] = 88275514383483,
+	["Lily Guppy"] = 103528429682235,
+	["Prickle Pup"] = 78592613040576,
+	["Mossmouse"] = 134286677680946,
+	["Snowdrop Bunny"] = 110766658369360,
+	["Dandelion Lion"] = 84751843806515,
+	["Kelp Eel"] = 110165022966238,
+	["Vine Monkey"] = 73893703105360,
+	["Tumbleweed Hog"] = 122611578860612,
+	["Puffball Frog"] = 85394079354071,
+	["Sunflower Owl"] = 99788663586213,
+	["Bubble Lotus Turtle"] = 85156835291828,
+	["Cactus Camel"] = 81138668443447,
+	["Frostfern Fox"] = 72003771193119,
+	["Glowcap Snail"] = 93880518180923,
+	["Orchid Parrot"] = 78389906611804,
+	["Venus Croc"] = 115983615608791,
+	["Crystal Moth"] = 124956555929867,
+	["Pinecone Bear"] = 76991273201526,
+	["Blossom Stag"] = 98117533207165,
+	["Bonsai Dragon"] = 82985123558944,
+	["Glacier Yeti"] = 131446486066531,
+	["Phoenix Fern"] = 72651436031548,
+	["Moonpetal Unicorn"] = 96827230644108,
+	["World Tree Tortoise"] = 78471992161245,
+	["Abyss Bloom Kraken"] = 119277891943570,
+	["Sandstorm Scorpion"] = 100744346364436,
+}
