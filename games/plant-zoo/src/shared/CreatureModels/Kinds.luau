@@ -98,8 +98,8 @@ end
 function Kinds.snail(add: Add, b: Color3, a: Color3): (CFrame, number)
 	add("blob", V(1.8, 0.8, 4), C(0, 0.4, 0), b)
 	add("blob", V(1.3, 2, 1.3), C(0, 1.3, -1.4), b)
-	add("ball", V(2.8, 2.8, 2.8), C(0, 2, 0.7), a, { mat = Enum.Material.Neon, transparency = 0.15 })
-	add("blob", V(1.6, 1.6, 0.6), C(0, 2, 2.1), a:Lerp(Color3.new(1, 1, 1), 0.4), { mat = Enum.Material.Neon })
+	add("ball", V(2.8, 2.8, 2.8), C(0, 2, 0.7), a)
+	add("blob", V(1.6, 1.6, 0.6), C(0, 2, 2.1), a:Lerp(Color3.new(1, 1, 1), 0.4))
 	return C(0, 2, -1.45), 0.75
 end
 

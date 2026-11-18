@@ -1,5 +1,6 @@
 --!strict
--- Builds cute plant-creature models from primitives (works on server or client, e.g. ViewportFrames).
+-- Builds cute plant-creature models (works on server or client, e.g. ViewportFrames).
+-- Grown stage uses ReplicatedStorage.Assets.Creatures.<Species> if present (Mesh.luau), else primitives.
 --   CreatureModels.Build(species, stage, opts?) -> Model  (PrimaryPart = "Root" at the feet, front = -Z)
 --   CreatureModels.ApplyLook(model, {Color=?, Weather=?, Thriving=?})  -- mutations / Thriving FX
 --   CreatureModels.StepRainbow(model, hue)                               -- call repeatedly for Rainbow
@@ -10,6 +11,7 @@ local Looks = require(script.Looks)
 local Kinds = require(script.Kinds)
 local Tops = require(script.Tops)
 local Effects = require(script.Effects)
+local Mesh = require(script.Mesh)
 
 local CreatureModels = {}
 CreatureModels.Stages = { "Seed", "Sprout", "Bud", "Grown" }
@@ -183,7 +185,10 @@ function CreatureModels.Build(species: string, stage: (string | number)?, opts: 
 	model.PrimaryPart = root
 
 	local add = makeAdd(model, body, s)
-	if stageName == "Grown" then
+	if stageName == "Grown" and Mesh.Attach(model, body, species, s) then
+		-- Real mesh: no primitive face/top needed.
+		model:SetAttribute("Mesh", true)
+	elseif stageName == "Grown" then
 		local b, a = Color3.fromHex(look.Body), Color3.fromHex(look.Accent)
 		local kindFn = (Kinds :: any)[look.Kind] or Kinds.blob
 		local head, r = kindFn(add, b, a)

@@ -4,11 +4,11 @@
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
   "stage": "branches",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-18T00:20:21Z",
+  "updated": "2026-11-18T00:42:46Z",
   "branches": {
     "gameplay": "done",
-    "graphics": "done",
-    "ui": "done",
+    "graphics": "working",
+    "ui": "working",
     "audio": "done"
   },
   "log": [
@@ -155,6 +155,18 @@
       "from": "checker",
       "to": "all",
       "text": "Studio playtest: boots clean after DataService fix; plot, UI, tutorial working"
+    },
+    {
+      "time": "2026-11-18T00:41:48Z",
+      "from": "rnd",
+      "to": "ui",
+      "text": "UI_STYLE_GUIDE.md: gradient+thick dark stroke+lip buttons, white FredokaOne w/ stroke, no emoji, root UIScale, Back-Out juice"
+    },
+    {
+      "time": "2026-11-18T00:41:48Z",
+      "from": "rnd",
+      "to": "graphics",
+      "text": "ART_STYLE_GUIDE.md: replace primitive creatures with meshes, terrain grass, Future lighting pass, saturation hierarchy"
     }
   ]
 }

@@ -8,27 +8,34 @@ local function hex(h: string): Color3
 end
 Theme.hex = hex
 
+-- Saturation hierarchy (ART_STYLE_GUIDE §4): ground medium, props higher, creatures + VFX brightest.
 Theme.Colors = {
-	Grass = hex("#7BD148"),
-	GrassDark = hex("#5FB23A"),
-	Path = hex("#E8D3A3"),
-	PathEdge = hex("#CDB27E"),
-	Wood = hex("#A8673A"),
-	WoodDark = hex("#6B4A2E"),
-	Leaf = hex("#4CAF50"),
-	LeafLight = hex("#8BD65A"),
-	Hedge = hex("#3E8E3E"),
+	Grass = hex("#6CC644"), -- terrain grass (hub)
+	GrassDark = hex("#5FB13D"), -- backdrop hills
+	PlotFloor = hex("#8BD65E"), -- owned plot floor (lighter/warmer than terrain)
+	PlotFloorFree = hex("#A7C495"), -- unclaimed plot floor (grey-green)
+	Path = hex("#EBD5A6"),
+	PathEdge = hex("#C9A979"),
+	TerrainPath = hex("#D9B98A"),
+	Wood = hex("#B8784A"),
+	WoodDark = hex("#7A4A2A"),
+	Leaf = hex("#4FBF4A"),
+	LeafLight = hex("#7AD65A"),
+	LeafPale = hex("#A8E36A"),
+	Blossom = hex("#FFB3D9"),
+	Hedge = hex("#3E9E45"),
 	Dirt = hex("#8A5A3B"),
-	Stone = hex("#B9B4A8"),
-	Water = hex("#2EA6D9"),
+	Stone = hex("#C9C2B2"),
+	Rock = hex("#9AA3B5"),
+	Water = hex("#3CC3E8"),
 	White = hex("#FFFFFF"),
 	Cream = hex("#FFF6E0"),
 	Gold = hex("#FFC83D"),
 	Pink = hex("#FF8FB8"),
-	Sky = hex("#9EDCFF"),
+	Sky = hex("#CDEBFF"),
 	Sunset = hex("#FF9E5E"),
-	Night = hex("#1E2A4A"),
-	Firefly = hex("#FFF27A"),
+	Night = hex("#5A6A9A"),
+	Firefly = hex("#FFF3A0"),
 	Thriving = hex("#6BFF7A"),
 	Text = hex("#3B2A1A"),
 }
@@ -183,6 +190,14 @@ function Theme.CellOffset(cell: number, rot: number?): CFrame
 	return CFrame.new((col - mid) * s, 0, (row - mid) * s) * CFrame.Angles(0, math.rad(deg), 0)
 end
 
+-- Palettes for scenery variety (pick randomly; mix 3 leaf colours per cluster).
+Theme.LeafColors = { hex("#4FBF4A"), hex("#7AD65A"), hex("#A8E36A") }
+Theme.FlowerColors = { hex("#FF6FA8"), hex("#FFD54F"), hex("#FFF6E6"), hex("#8F7CFF"), hex("#FF8A3D") }
+Theme.RoofColors = { hex("#FF7B7B"), hex("#FFD45C"), hex("#7FD0FF"), hex("#C79BFF") }
+Theme.RoofStripe = hex("#FFF6E6")
+
 Theme.Effects = require(script.Effects)
+-- Asset hooks: ReplicatedStorage.Assets.{Creatures,Props}. See notes/graphics.md "Asset hooks".
+Theme.Assets = require(script.Assets)
 
 return Theme

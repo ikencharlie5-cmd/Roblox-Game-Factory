@@ -14,7 +14,18 @@
       }
     },
     "Lighting": {
-      "$properties": { "ClockTime": 14, "Brightness": 2 }
+      "$properties": {
+        "Technology": "Future",
+        "ClockTime": 14,
+        "Brightness": 3,
+        "GlobalShadows": true,
+        "ShadowSoftness": 0.25,
+        "Ambient": [0.55, 0.55, 0.58],
+        "OutdoorAmbient": [0.52, 0.52, 0.56],
+        "EnvironmentDiffuseScale": 1,
+        "EnvironmentSpecularScale": 0.35,
+        "GeographicLatitude": 35
+      }
     }
   }
 }

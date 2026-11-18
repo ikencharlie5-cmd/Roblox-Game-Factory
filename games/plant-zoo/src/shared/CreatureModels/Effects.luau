@@ -39,6 +39,59 @@ local function light(parent: Instance, color: Color3, brightness: number, range:
 	l.Parent = parent
 end
 
+-- Flat disc under the feet (SmoothPlastic, not Neon: big Neon surfaces blow out with bloom).
+local function ring(folder: Folder, root: BasePart, d: number, color: Color3, transparency: number): Part
+	local p = Instance.new("Part")
+	p.Name = "RarityRing"
+	p.Shape = Enum.PartType.Cylinder
+	p.Size = Vector3.new(0.12, d, d)
+	p.CFrame = root.CFrame * CFrame.new(0, 0.1, 0) * CFrame.Angles(0, 0, math.rad(90))
+	p.Color = color
+	p.Material = Enum.Material.SmoothPlastic
+	p.Transparency = transparency
+	p.CanCollide = false
+	p.CanTouch = false
+	p.CanQuery = false
+	p.Massless = true
+	p.CastShadow = false
+	local w = Instance.new("WeldConstraint")
+	w.Part0 = root
+	w.Part1 = p
+	w.Parent = p
+	p.Parent = folder
+	return p
+end
+
+-- Tinted translucent copy of a textured mesh part (mutation colour for meshes). Skin=true so
+-- StepRainbow cycles it too.
+local function shell(folder: Folder, src: BasePart, color: Color3, mat: Enum.Material, alpha: number, refl: number)
+	local c = src:Clone()
+	c:ClearAllChildren()
+	if c:IsA("MeshPart") then
+		c.TextureID = ""
+	end
+	c.Size = src.Size * 1.04
+	c.CFrame = src.CFrame
+	c.Color = color
+	c.Material = mat
+	c.Transparency = alpha
+	c.Reflectance = refl
+	c.Anchored = false
+	c.CanCollide = false
+	c.CanTouch = false
+	c.CanQuery = false
+	c.Massless = true
+	c.CastShadow = false
+	c:SetAttribute("Textured", nil)
+	c:SetAttribute("Skin", true)
+	c.Name = "MutationShell"
+	local w = Instance.new("WeldConstraint")
+	w.Part0 = src
+	w.Part1 = c
+	w.Parent = c
+	c.Parent = folder
+end
+
 local Effects = {}
 
 -- opts: { Color = "Gold"|"Diamond"|"Rainbow"|nil, Weather = "Dewy"|"Sunkissed"|"Frosted"|"Electric"|"Starlit"|nil,
@@ -96,19 +149,37 @@ function Effects.ApplyLook(model: Model, opts: { [string]: any }?)
 	local folder = Instance.new("Folder")
 	folder.Name = "FX"
 	folder.Parent = model
+	-- Textured mesh parts ignore Color: draw a tinted translucent shell over them instead.
+	if mut or (mark and mark.Tint) then
+		local tint = if mut then mut.Color else (mark :: any).Tint :: Color3
+		local mat = if mut then mut.Material else Enum.Material.SmoothPlastic
+		local alpha = if color == "Diamond" then 0.45 elseif mut then 0.35 else 0.7
+		for _, d in model:GetDescendants() do
+			if d:IsA("BasePart") and d:GetAttribute("Textured") then
+				shell(folder, d, tint, mat, alpha, if color == "Diamond" then 0.25 else 0)
+			end
+		end
+	end
 	local h = if grown then 2.5 * s else 1.5
 	local core = fxPart(folder, body, Vector3.new(2.5, 2.5, 2.5) * s, body.CFrame * CFrame.new(0, h, 0))
 
 	if grown then
-		local rarity = model:GetAttribute("Rarity")
-		local rc = Theme.Rarity[rarity :: string]
+		-- Rarity VFX ladder (ART_STYLE_GUIDE §8): sparkles -> ring -> light -> aura -> rainbow.
+		local rarity = model:GetAttribute("Rarity") :: string?
+		local rc = Theme.Rarity[rarity or "Common"] or Color3.new(1, 1, 1)
+		local rank = table.find(Theme.RarityOrder, rarity or "Common") or 1
 		if rarity == "Secret" then
 			Theme.Effects.RainbowAura().Parent = core
 			light(core, Color3.fromHex("#C77DFF"), 1.5, 12)
-		elseif rarity == "Mythical" or rarity == "Legendary" then
-			Theme.Effects.Aura(rc).Parent = core
-			if rarity == "Mythical" then
-				light(core, rc, 1.2, 10)
+			ring(folder, root, 3.8 * s, Color3.fromHex("#2B1B3A"), 0.35)
+		elseif rank >= 3 then
+			Theme.Effects.Sparkle(rc, ({ 2, 4, 6, 6 })[rank - 2]).Parent = core
+			if rank >= 4 then
+				ring(folder, root, 3.8 * s, rc, 0.6)
+			end
+			if rank >= 5 then
+				Theme.Effects.Aura(rc).Parent = core
+				light(core, rc, 1, 8)
 			end
 		end
 	end
@@ -128,25 +199,8 @@ function Effects.ApplyLook(model: Model, opts: { [string]: any }?)
 		end
 	end
 	if thriving then
-		local d = 4.6 * math.max(s, 1)
-		local ring = Instance.new("Part")
-		ring.Name = "ThrivingRing"
-		ring.Shape = Enum.PartType.Cylinder
-		ring.Size = Vector3.new(0.12, d, d)
-		ring.CFrame = root.CFrame * CFrame.new(0, 0.12, 0) * CFrame.Angles(0, 0, math.rad(90))
-		ring.Color = Theme.Colors.Thriving
-		ring.Material = Enum.Material.Neon
-		ring.Transparency = 0.55
-		ring.CanCollide = false
-		ring.CanTouch = false
-		ring.CanQuery = false
-		ring.Massless = true
-		ring.CastShadow = false
-		local w = Instance.new("WeldConstraint")
-		w.Part0 = root
-		w.Part1 = ring
-		w.Parent = ring
-		ring.Parent = folder
+		local r = ring(folder, root, 4.6 * math.max(s, 1), Theme.Colors.Thriving, 0.45)
+		r.Name = "ThrivingRing"
 		Theme.Effects.Sparkle(Theme.Colors.Thriving, 5).Parent = core
 		Theme.Effects.Leaves().Parent = core
 	end

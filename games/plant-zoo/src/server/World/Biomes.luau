@@ -154,7 +154,13 @@ KITS["Fungus Cave"] = function(f, top, k)
 		if i % 2 == 1 then
 			Build.Cyl(f, 0.8, 0.3, cf * C(0, 0.4, 0), Theme.Colors.Cream, nil, false)
 			local cap =
-				Build.Blob(f, V(1.6, 0.7, 1.6), cf * C(0, 0.9, 0), if i % 4 == 1 then k.Accent else k.Accent2, M.Neon)
+				Build.Blob(
+					f,
+					V(1.6, 0.7, 1.6),
+					cf * C(0, 0.9, 0),
+					if i % 4 == 1 then k.Accent else k.Accent2,
+					M.SmoothPlastic
+				)
 			if i == 1 then
 				light(cap, k.Accent, 16)
 			end

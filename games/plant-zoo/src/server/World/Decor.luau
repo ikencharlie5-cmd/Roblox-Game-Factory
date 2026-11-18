@@ -225,7 +225,7 @@ end
 
 B["Glow Shroom"] = function(m)
 	cyl(m, 1.8, 0.6, C(0, 0.9, 0), hex("#FFF6E0"))
-	local cap = blob(m, V(2.6, 1.2, 2.6), C(0, 2, 0), hex("#B57CFF"), M.Neon)
+	local cap = blob(m, V(2.6, 1.2, 2.6), C(0, 2, 0), hex("#B57CFF"), M.SmoothPlastic)
 	glow(cap, hex("#B57CFF"), 10)
 	cyl(m, 0.9, 0.3, C(1.1, 0.45, 0.7), hex("#FFF6E0"))
 	blob(m, V(1, 0.5, 1), C(1.1, 1, 0.7), hex("#7CF7FF"), M.Neon)
@@ -233,9 +233,9 @@ end
 
 B["Crystal"] = function(m)
 	local cols = { hex("#B57CFF"), hex("#7CF7FF"), hex("#D9B8FF") }
-	local main = blk(m, V(0.9, 3, 0.9), C(0, 1.4, 0) * A(0, rad(45), rad(5)), cols[1], M.Neon)
-	blk(m, V(0.6, 2, 0.6), C(0.8, 0.9, 0.3) * A(0, rad(20), rad(-25)), cols[2], M.Neon)
-	blk(m, V(0.5, 1.6, 0.5), C(-0.7, 0.7, -0.3) * A(rad(15), rad(60), rad(25)), cols[3], M.Neon)
+	local main = blk(m, V(0.9, 3, 0.9), C(0, 1.4, 0) * A(0, rad(45), rad(5)), cols[1], M.Glass)
+	blk(m, V(0.6, 2, 0.6), C(0.8, 0.9, 0.3) * A(0, rad(20), rad(-25)), cols[2], M.Glass)
+	blk(m, V(0.5, 1.6, 0.5), C(-0.7, 0.7, -0.3) * A(rad(15), rad(60), rad(25)), cols[3], M.Glass)
 	blob(m, V(2.6, 0.5, 2.2), C(0, 0.2, 0), hex("#4A4A5A"), M.Slate)
 	glow(main, cols[1], 10)
 end

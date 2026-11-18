@@ -288,3 +288,17 @@ Keep from existing Roblox research (below): random-rarity seed restock, $/s per 
 - https://www.youtube.com/watch?v=Q8oVezLKbYw (title reference)
 - https://www.youtube.com/watch?v=lXHH6D6356g (title reference)
 - https://www.youtube.com/watch?v=HFNE4i9yU_M (Build a Zoo beginner guide video)
+
+## Request: What does GOOD Roblox simulator UI look like? (Charlie: UI "looks cheap and bad")
+Full answer: [UI_STYLE_GUIDE.md](UI_STYLE_GUIDE.md). Key findings:
+- Premium simulator UI = a white-base face + UIGradient (Rotation 90, light top → dark bottom), a thick 3.5 px UIStroke in a *dark shade of the same hue*, a darker 6 px "lip" frame under each button, a glossy highlight strip, and white FredokaOne text with a Contextual UIStroke.
+- No emoji icons. Use Charlie's uploaded icons + one consistent Creator Store icon pack; ViewportFrames for creatures.
+- One root UIScale (viewport height / 1080) so strokes and text scale together; max 8 left HUD buttons; keep the joystick/jump zones clear.
+- Juice: Back Out popups (0.3 s), press squash 0.92, shine sweep (gradient offset -1 → 1), number tick-up + coin fly to the counter.
+- GothamBold/GothamBlack are removed fonts (they map to Montserrat). Use BuilderSansExtraBold for body text.
+
+## Request: Why does the whole game look bad? (art direction)
+Full answer: [ART_STYLE_GUIDE.md](ART_STYLE_GUIDE.md). Key findings:
+- Primitive-built creatures are the #1 cheap tell. Use real meshes (Studio Assistant `/generate_mesh`, 2–4k triangles, or matching Creator Store models).
+- Terrain grass with Decoration on, plus hills and water. Lighting: Future, ClockTime 14, Brightness 3, neutral lifted ambient, Atmosphere Density 0.22 / Haze 1.2, CC Saturation 0.25.
+- Saturation hierarchy (ground < props < creatures), dense clustered foliage, readable plots, landmark stalls, a rarity VFX ladder.
