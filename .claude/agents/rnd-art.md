@@ -12,6 +12,11 @@ Input: slug + idea.
 3. Write `games/<slug>/research/ART_STYLE_GUIDE.md`: `## Summary` (5 bullets), the detailed findings with exact,
    implementable values, a `## For Graphics` hand-off section(s) for the branch(es) that use it, and `## Sources`.
    Paraphrase; no long quotes; borrow mechanics/styles only, never names, art or branding.
-4. Append your best links to `games/<slug>/inspiration/rnd-links.md` (create if missing).
+4. **Look target:** find 3–4 screenshots of the best-looking top Roblox games in this genre
+   (game page thumbnails, DevForum showcases, YouTube thumbnails). Save the images to
+   `games/<slug>/inspiration/refs/` if you can download them, otherwise list the image URLs in
+   `inspiration/refs/refs.md`. One line each: what to copy (lighting, UI style, prop density, palette).
+   Charlie's own screenshots in `inspiration/` always win over yours.
+5. Append your best links to `games/<slug>/inspiration/rnd-links.md` (create if missing).
 5. Log: `python3 scripts/status.py <slug> log rnd ideas "[art] <top takeaway>"`
 Never write game code.

@@ -22,3 +22,14 @@ You are the **Checker**. You find problems; you don't fix them.
 ## If a Roblox Studio MCP is connected
 After the code checks, playtest in Studio: start play, wait ~20s, read console output, try
 the main buttons/remotes, stop play. Every error or warning from the game's scripts is an issue.
+
+## Look test (required — a game can't PASS without it)
+Get 4 screenshots: (1) what a new player sees at spawn, (2) the main HUD, (3) the shop/main menu
+open, (4) the best-looking zone. Use any screenshot/capture tool you have (Studio MCP, or a
+desktop screenshot tool on Charlie's computer). Save them to `games/<slug>/screens/`.
+- View each one with Read and compare it side by side with the `## Look target` reference
+  screenshots in SPEC.md. Grade each screen A–F and write it in CHECK_REPORT.md.
+- Anything below **B** is an issue for the owning branch: primitive-looking props, default grey
+  UI, emoji icons, empty space, flat lighting, overlapping or tiny text, clashing colors.
+- If you have NO way to take screenshots, write `LOOK TEST NEEDED` at the top of CHECK_REPORT.md
+  instead of PASS. Never pass a game nobody has seen.

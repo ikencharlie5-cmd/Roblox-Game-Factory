@@ -4,6 +4,19 @@
 **Inspired by:** <1–2 popular Roblox games>
 **Genre:** tycoon / simulator / obby / incremental / combat / other
 
+## Look target
+- 2–4 reference screenshots of real top Roblox games this should look like (paths in
+  `inspiration/refs/` or image URLs), each with one line: what to copy (lighting, UI, density…)
+- Palette: <4–6 hex colors>  •  Lighting mood: <e.g. warm golden hour, Future lighting>
+
+## v1 scope (hard cap)
+- ONE core loop, ONE zone, ≤ 8 gameplay Services. Polish beats features.
+- Systems in v1: <list, max 8>
+- Saved for updates: <everything else — zones 2–3, trading, breeding, events…>
+
+## Asset list (3D Art gets these BEFORE branches build)
+- <every prop, building, creature, and icon, with style notes — no primitive-built props>
+
 ## Core loop (first 60 seconds)
 1. <player spawns and immediately ...>
 2. <earns ...>

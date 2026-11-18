@@ -11,10 +11,14 @@ modules, and `games/<slug>/src/shared/Theme.luau` (colors, materials, particle p
 ## Steps
 1. `python3 scripts/status.py <slug> branch graphics working`
 2. Read `research/RESEARCH.md` (your section + links), SPEC.md (esp. `## For Graphics`) and the inspiration images.
-3. Build the whole map in code with `Instance.new`: terrain/baseplate, spawn, zones, paths,
-   props made from Parts/Unions-free primitives, signs (SurfaceGui), lighting
-   (Lighting props, Atmosphere, Sky), and reusable effects (`Theme.Effects`).
-   Make it look good: varied colors/materials, no flat grey boxes, a clear focal point.
+3. Build the map in code: terrain, spawn, zones, paths, signs (SurfaceGui), lighting
+   (Future lighting, Atmosphere, Sky, ColorCorrection, Bloom), and reusable effects (`Theme.Effects`).
+   **Every prop, building, tree, rock, creature, and decoration comes from 3D Art's
+   `assets/assets.json` via AssetLoaderService.** Primitive Parts are only allowed for ground,
+   paths, invisible collision, and simple trim. If an asset is missing, leave a tagged placeholder
+   spot and add it to QUESTIONS.md — never build the prop out of blocks.
+   Match the `## Look target` screenshots: same density, palette, and lighting mood.
+   Make it look good: no flat grey boxes, a clear focal point visible from spawn, open sightlines.
    Tag interactive parts with CollectionService tags + Attributes so Gameplay can find them,
    and list every tag in your notes.
 4. Write `games/<slug>/notes/graphics.md`: map layout, every tag/attribute, Theme API.

@@ -9,6 +9,8 @@ builds complete, publishable Roblox games with minimal input from Charlie.
                             ↓ research report (+ refs for every branch)
  Charlie → [ IDEAS ] ──spec──→ Charlie OKs
                    ↓
+              [ 3D ART ] ← real models/meshes for everything, BEFORE branches build
+                   ↓
      ┌──────────┬──────────┬───┴──────┬──────────┐
  [GAMEPLAY] [GRAPHICS]   [UI]    [AUDIO]  [ANIMATION]   ← run in parallel
      └──── questions ──→ [MANAGER] ──decision──→ [IDEAS] ──solution──→ back to branches
@@ -20,9 +22,16 @@ builds complete, publishable Roblox games with minimal input from Charlie.
 You are the orchestrator: you run the stages, launch subagents, and keep `status.json`
 up to date with `scripts/status.py` so Charlie can watch on the website (`site/`).
 
-## Charlie checkpoints (only two)
+## Quality rules (non-negotiable — learned from Sprout Zoo + Wildworld looking bad)
+1. **Small and deep.** v1 = one core loop, one zone, ≤ 8 gameplay Services. Polish beats features.
+2. **Real models, not Parts.** 3D Art gets every prop/creature/icon before branches build.
+3. **Nobody ships blind.** A game is only "done" after the Look test: real screenshots graded B+
+   against the SPEC's Look target. No screenshots → LOOK TEST NEEDED, not APPROVED.
+
+## Charlie checkpoints (only two, plus screenshots if blind)
 1. Spec approval after `/new-game`.
 2. The final "done" message after `/build`.
+(If no Studio/screenshot tool was available, the final message asks for 4 screenshots.)
 Never stop mid-build to ask. Manager decides; anything only Charlie can do (pass IDs,
 publishing) goes in the game README's "Charlie TODO".
 

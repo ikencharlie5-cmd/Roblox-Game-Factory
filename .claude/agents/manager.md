@@ -23,7 +23,9 @@ those go in the game README's "Charlie TODO" instead.
 2. Go through EVERY item by reading the code, notes, and CHECK_REPORT.md (and playtesting
    in Studio if a Studio MCP is connected). Mark each `✅`, `❌ <what's missing>`, or
    `➖ <why it doesn't apply>`. Be strict — "probably fine" is ❌.
-3. At the top write `**Result: APPROVED**` or `**Result: NEEDS WORK — <n> items**`.
+3. At the top write `**Result: APPROVED**`, `**Result: NEEDS WORK — <n> items**`, or
+   `**Result: LOOK TEST NEEDED**`. APPROVED requires section 0 (Look test) to be all ✅ from real
+   screenshots. Items you could only judge from code are ❌ or ➖, never ✅.
 4. For every ❌, add `- [<branch>] <what to fix>` to QUESTIONS.md so it goes back to that branch.
 5. Log: `python3 scripts/status.py <slug> log manager all "Sign-off: APPROVED"` or
    `"Sign-off: <n> items need work"`.
