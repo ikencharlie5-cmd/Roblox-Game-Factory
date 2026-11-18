@@ -17,7 +17,11 @@ end
 
 function Terrain.Setup()
 	local t = terrain()
-	t.Decoration = true
+	-- Decoration (animated grass) can't be set by game scripts; it's set once in Studio and saved
+	-- in the place (see README). pcall so the build never stops here.
+	pcall(function()
+		t.Decoration = true
+	end)
 	t:SetMaterialColor(M.Grass, hex("#6CC644"))
 	t:SetMaterialColor(M.LeafyGrass, hex("#5FB13D"))
 	t:SetMaterialColor(M.Ground, hex("#D9B98A"))

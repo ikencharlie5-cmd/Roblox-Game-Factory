@@ -4,7 +4,7 @@
   "idea": "Collect, grow & show off plants/creatures in your own zoo \u2014 inspired by Plant Zoo 2nd Generation",
   "stage": "branches",
   "created": "2026-11-17T06:59:14Z",
-  "updated": "2026-11-18T01:08:54Z",
+  "updated": "2026-11-18T01:26:55Z",
   "branches": {
     "gameplay": "done",
     "graphics": "done",
@@ -186,6 +186,12 @@
       "from": "animation",
       "to": "all",
       "text": "Animation done: client AnimationController (creature idle/wander/squash, pop/bounce/celebrate/happy hops/thud, coin burst, release float-away, client visitors, scenery sway + lantern flicker). Server Motion.luau reduced to no-ops + visitor Count/Origin attrs."
+    },
+    {
+      "time": "2026-11-18T01:26:55Z",
+      "from": "checker",
+      "to": "all",
+      "text": "Studio playtest v2: boots clean (terrain Decoration fix)"
     }
   ]
 }
