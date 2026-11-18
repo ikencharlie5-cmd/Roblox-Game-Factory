@@ -1,16 +1,56 @@
 --!strict
 -- Declare every remote here. Server creates them; client waits for them.
+-- Client -> server remotes are RemoteFunctions returning (ok: boolean, result).
+-- On failure `result` is an error string and the server already sent Toast + PlaySound("Error").
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+-- server -> client
 local EVENTS = {
-	"DataChanged", -- server -> client: (data)
-	"Notify", -- server -> client: (text)
-	"ClaimDaily", -- client -> server: ()
-	"PlaySound", -- server -> client: (soundName)
+	"DataChanged", -- (data) full save table, batched
+	"Toast", -- (text, kind) kind: "info" | "success" | "error" | "reward" | "weather"
+	"Notify", -- alias of Toast (template UI)
+	"Reveal", -- (kind, data) see notes/gameplay.md
+	"PlaySound", -- (name, opts?) opts = {position=Vector3?, pitch=number?, species=string?}
+	"VisitorTip", -- (amount, position) coin fountain at the habitat
+	"HabitatChanged", -- (padUid, result) rating + checklist for one of YOUR pads
+	"ShopChanged", -- (shop)
+	"CaptureState", -- (wildId, state) state: {trust, claimedBy, attemptsLeft} or nil
 }
 
-local FUNCTIONS: { string } = {}
+-- client -> server (RemoteFunction, all validated + rate-limited)
+local FUNCTIONS = {
+	"PlaceItem", -- (itemId, cellX, cellZ, rot)
+	"RotateItem", -- (itemUid, rot)
+	"MoveItem", -- (itemUid, cellX, cellZ, rot)
+	"RemoveItem", -- (itemUid)
+	"RefillStation", -- (itemUid) food bowl
+	"GetHabitat", -- (padUid) -> rating + checklist
+	"AssignCreature", -- (uid, padUid | nil)
+	"FeedCreature", -- (uid)
+	"PetCreature", -- (uid)
+	"RenameCreature", -- (uid, name)
+	"SellCreature", -- (uid)
+	"ThrowBait", -- (position, baitId?)
+	"CaptureStart", -- (wildId) -> window
+	"CaptureRelease", -- (wildId) -> result
+	"Breed", -- (uidA, uidB) -> eggId
+	"HatchEgg", -- (eggId) -> creature uid
+	"ScanGenes", -- (uid)
+	"BuyUpgrade", -- (key)
+	"UnlockZone", -- (zoneId)
+	"BuyShop", -- (slotIndex)
+	"GetShop", -- () -> shop
+	"ClaimDaily", -- ()
+	"ClaimQuest", -- (index)
+	"RerollQuest", -- (index)
+	"VisitPlot", -- (userId)
+	"LikePark", -- (userId)
+	"ReturnHome", -- ()
+	"RequestInstantHatch", -- (eggId) -> prompts the right product
+	"PromptPurchase", -- (kind "pass"|"product", key)
+	"GetTopParks", -- () -> list
+}
 
 local Remotes = {}
 

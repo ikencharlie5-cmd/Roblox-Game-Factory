@@ -1,0 +1,191 @@
+--!strict
+-- 8 player plots (128x128) in a ring around the hub. Model "Plot<i>": pivot = floor-top centre, -Z faces
+-- the hub (entrance). Children: Base, Land (unlocked square), Border, Gate (arch + glowing name sign),
+-- Spawn (tag PlotSpawn), Dressing, Items/, Creatures/.
+-- The Base part carries tag "Plot" (its top surface = plot ground, LookVector -> hub) with attributes
+-- PlotIndex, OwnerId (0 = free), OwnerName, LandSize (studs 64..128). Gameplay (PlotService) writes
+-- OwnerId/OwnerName/LandSize; this module listens and updates the sign, floor colour and Land square.
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Theme = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Theme"))
+local Layout = require(script.Parent.Layout)
+local Terrain = require(script.Parent.Terrain)
+local Scatter = require(script.Parent.Scatter)
+
+local Kit, Nature, Structures, P = Theme.Kit, Theme.Nature, Theme.Structures, Theme.Colors
+local M = Enum.Material
+local Plots = {}
+
+local SIZE = Layout.PlotSize
+local HALF = SIZE / 2
+local GATE_W = 14
+
+local plots: { Model } = {}
+
+local function sign(m: Model, cf: CFrame): TextLabel
+	local gate = Kit.Model(m, "Gate")
+	for _, x in { -GATE_W / 2 - 1, GATE_W / 2 + 1 } do
+		Kit.Solid(gate, Vector3.new(1.6, 11, 1.6), cf * CFrame.new(x, 5.5, 0), P.WoodDark, M.Wood)
+		Kit.Ball(gate, 2.2, cf * CFrame.new(x, 11.4, 0), P.Leaf2)
+	end
+	Kit.Block(gate, Vector3.new(GATE_W + 5, 1.2, 1.4), cf * CFrame.new(0, 10.4, 0), P.Wood, M.Wood)
+	local board = Kit.Block(gate, Vector3.new(GATE_W - 1, 2.8, 0.4), cf * CFrame.new(0, 8.4, -0.3), P.Teal)
+	board.Name = "NameSign"
+	local label = Kit.Label(board, Enum.NormalId.Front, "Free Plot", P.Discovery, true)
+	local back = Kit.Label(board, Enum.NormalId.Back, "Free Plot", P.Discovery, true)
+	back.Name = "BackText"
+	-- Glowing trim + lanterns for the "glowing sign" look.
+	local trim = Kit.Block(gate, Vector3.new(GATE_W - 0.6, 0.25, 0.5), cf * CFrame.new(0, 6.9, -0.3), P.Discovery, M.SmoothPlastic)
+	trim.Name = "Trim"
+	Structures.Lantern(gate, cf * CFrame.new(-GATE_W / 2 - 3.5, 0, -1) * CFrame.Angles(0, math.rad(180), 0))
+	Structures.Lantern(gate, cf * CFrame.new(GATE_W / 2 + 3.5, 0, -1))
+	return label
+end
+
+local function border(m: Model, cf: CFrame)
+	local b = Kit.Model(m, "Border")
+	local h = 1.2
+	-- Back and sides full length; front split around the gate.
+	Kit.Solid(b, Vector3.new(SIZE + 2, h, 2), cf * CFrame.new(0, h / 2 - 0.2, HALF + 1), P.Wood, M.WoodPlanks)
+	Kit.Solid(b, Vector3.new(2, h, SIZE + 2), cf * CFrame.new(HALF + 1, h / 2 - 0.2, 0), P.Wood, M.WoodPlanks)
+	Kit.Solid(b, Vector3.new(2, h, SIZE + 2), cf * CFrame.new(-HALF - 1, h / 2 - 0.2, 0), P.Wood, M.WoodPlanks)
+	local seg = (SIZE + 4 - GATE_W) / 2
+	for _, side in { -1, 1 } do
+		Kit.Solid(b, Vector3.new(seg, h, 2), cf * CFrame.new(side * (GATE_W / 2 + seg / 2), h / 2 - 0.2, -HALF - 1), P.Wood, M.WoodPlanks)
+	end
+	-- Dark trim cap + corner posts.
+	for _, c in { { 1, 1 }, { -1, 1 }, { 1, -1 }, { -1, -1 } } do
+		local pos = cf * CFrame.new(c[1] * (HALF + 1), 1.4, c[2] * (HALF + 1))
+		Kit.Solid(b, Vector3.new(2.6, 3.2, 2.6), pos, P.WoodDark, M.Wood)
+		Kit.Ball(b, 1.6, pos * CFrame.new(0, 2.2, 0), P.Leaf1)
+	end
+end
+
+local function dressing(m: Model, cf: CFrame, rng: Random)
+	local d = Kit.Model(m, "Dressing")
+	-- Hedge bushes + flowers along the outside of the side and back borders.
+	for _, side in { -1, 1 } do
+		for z = -HALF + 10, HALF - 10, 16 do
+			Nature.Bush(d, cf * CFrame.new(side * (HALF + 5), -0.5, z), 1.1, rng, rng:NextNumber() < 0.25)
+		end
+	end
+	for x = -HALF + 10, HALF - 10, 16 do
+		Nature.Bush(d, cf * CFrame.new(x, -0.5, HALF + 5), 1.1, rng, rng:NextNumber() < 0.25)
+	end
+	-- Flower strips flanking the front border.
+	for _, side in { -1, 1 } do
+		local a = (cf * CFrame.new(side * (GATE_W / 2 + 6), -0.5, -HALF - 3.5)).Position
+		local b = (cf * CFrame.new(side * (HALF - 2), -0.5, -HALF - 3.5)).Position
+		Scatter.FlowerLine(d, a, b, rng, 5)
+	end
+	-- One tree cluster behind each back corner.
+	for _, side in { -1, 1 } do
+		local p = (cf * CFrame.new(side * (HALF + 16), 0, HALF + 14)).Position
+		Scatter.Cluster(d, p.X, p.Z, rng, "Mixed", 1)
+	end
+end
+
+function Plots.Build(parent: Instance, rng: Random): { Model }
+	local folder = Kit.Folder(parent, "Plots")
+	for i = 1, Layout.PlotCount do
+		local cf = Layout.PlotCFrame(i)
+		local m = Kit.Model(folder, "Plot" .. i)
+		Terrain.Paint(cf, SIZE + 12, SIZE + 12, M.Ground)
+		local base = Kit.Solid(m, Vector3.new(SIZE, 1, SIZE), cf * CFrame.new(0, -0.5, 0), P.PlotLocked, M.Grass)
+		base.Name = "Base"
+		base.CastShadow = false
+		local land = Kit.Solid(m, Vector3.new(64, 0.06, 64), cf * CFrame.new(0, 0.03, 0), P.PlotFree, M.SmoothPlastic)
+		land.Name = "Land"
+		land.CastShadow = false
+		border(m, cf)
+		local label = sign(m, cf * CFrame.new(0, -0.5, -HALF - 1))
+		label.Name = "Text"
+		local spawnPad = Kit.Block(m, Vector3.new(6, 1, 6), cf * CFrame.new(0, 0.5, -HALF + 10) * CFrame.Angles(0, math.rad(180), 0), P.Cream)
+		spawnPad.Name = "Spawn"
+		spawnPad.Transparency = 1
+		spawnPad.CanQuery = false
+		Kit.Tag(spawnPad, "PlotSpawn", { PlotIndex = i })
+		dressing(m, cf, rng)
+		Kit.Folder(m, "Items")
+		Kit.Folder(m, "Creatures")
+		base.PivotOffset = CFrame.new(0, 0.5, 0)
+		m.PrimaryPart = base
+		m:SetAttribute("PlotIndex", i)
+		Kit.Tag(base, "Plot", { PlotIndex = i, OwnerId = 0, OwnerName = "", LandSize = 64 })
+		plots[i] = m
+		base:GetAttributeChangedSignal("OwnerId"):Connect(function()
+			Plots.Refresh(i)
+		end)
+		base:GetAttributeChangedSignal("OwnerName"):Connect(function()
+			Plots.Refresh(i)
+		end)
+		base:GetAttributeChangedSignal("LandSize"):Connect(function()
+			Plots.Refresh(i)
+		end)
+		task.wait()
+	end
+	return plots
+end
+
+function Plots.Get(i: number): Model?
+	return plots[i]
+end
+
+function Plots.All(): { Model }
+	return plots
+end
+
+local function basePart(i: number): BasePart?
+	local m = plots[i]
+	return if m then m:FindFirstChild("Base") :: BasePart? else nil
+end
+
+-- Re-apply visuals from the Base attributes (owner sign, floor colour, unlocked square).
+function Plots.Refresh(i: number)
+	local m, base = plots[i], basePart(i)
+	if not m or not base then
+		return
+	end
+	local owner = (base:GetAttribute("OwnerId") :: number?) or 0
+	local name = (base:GetAttribute("OwnerName") :: string?) or ""
+	local studs = (base:GetAttribute("LandSize") :: number?) or 64
+	local owned = owner ~= 0
+	local text = if owned then name .. "'s Park" else "Free Plot"
+	local gate = m:FindFirstChild("Gate")
+	local board = gate and gate:FindFirstChild("NameSign")
+	if board then
+		for _, gui in board:GetChildren() do
+			local l = gui:FindFirstChildOfClass("TextLabel")
+			if l then
+				l.Text = text
+			end
+		end
+	end
+	local land = m:FindFirstChild("Land") :: BasePart?
+	if land then
+		local s = math.clamp(if owned then studs else 64, 16, SIZE)
+		land.Size = Vector3.new(s, 0.06, s)
+		land.Color = if owned then P.PlotFloor else P.PlotFree
+		land.Material = if owned then M.Grass else M.SmoothPlastic
+	end
+end
+
+-- Direct setters (gameplay may instead just write the Base attributes).
+function Plots.SetLand(i: number, studs: number)
+	local base = basePart(i)
+	if base then
+		base:SetAttribute("LandSize", studs)
+	end
+end
+
+function Plots.SetOwner(i: number, player: Player?)
+	local base = basePart(i)
+	if base then
+		base:SetAttribute("OwnerId", if player then player.UserId else 0)
+		base:SetAttribute("OwnerName", if player then player.DisplayName else "")
+		if not player then
+			base:SetAttribute("LandSize", 64)
+		end
+	end
+end
+
+return Plots

@@ -4,13 +4,13 @@
   "idea": "Multiplayer wildlife park + creature collection/breeding sim (Planet Zoo x Slime Rancher x Pokemon inspired, all original). Explore, capture original creatures, build habitats, breed for genetics + rare mutations, earn from visitors, visit/trade securely.",
   "stage": "branches",
   "created": "2026-11-18T03:02:43Z",
-  "updated": "2026-11-18T03:24:32Z",
+  "updated": "2026-11-18T03:45:27Z",
   "branches": {
-    "gameplay": "waiting",
-    "graphics": "waiting",
-    "ui": "waiting",
-    "audio": "waiting",
-    "animation": "waiting"
+    "gameplay": "working",
+    "graphics": "working",
+    "ui": "working",
+    "audio": "done",
+    "animation": "done"
   },
   "log": [
     {
@@ -84,6 +84,18 @@
       "from": "system",
       "to": "all",
       "text": "Stage \u2192 branches"
+    },
+    {
+      "time": "2026-11-18T03:29:29Z",
+      "from": "audio",
+      "to": "all",
+      "text": "Audio done: 90 named sounds, zone music with silences, ambience beds + 3D one-shots, rarity stinger ladder with ducking, per-species creature voices. 22 Id=0 in README Charlie TODO; 4 contract questions in QUESTIONS.md."
+    },
+    {
+      "time": "2026-11-18T03:45:27Z",
+      "from": "animation",
+      "to": "all",
+      "text": "Client procedural animation done: Goal-driven walking (client also moves Hitbox), idle/blink/ears/tail/legs, moods (sleep/eat/hungry/happy), personality idle actions, Hatch with delayed mutation reveal, egg wobble+crack, visitors + Tips coin fountain, tree sway, lantern flicker, placement thud; LOD tiers + one BulkMoveTo. See notes/animation.md; 5 [animation] items in QUESTIONS.md."
     }
   ]
 }

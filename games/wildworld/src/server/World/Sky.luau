@@ -1,0 +1,185 @@
+--!strict
+-- Lighting, Atmosphere, post FX, 14-minute day cycle (70% day, short golden hour, blue readable night),
+-- weather visuals (Rain, RainbowShower) and drifting puffy clouds.
+-- Sets Lighting attribute "IsNight" and toggles every "NightLight"-tagged part's light.
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local CollectionService = game:GetService("CollectionService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Theme = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Theme"))
+local Kit = Theme.Kit
+
+local L = Theme.Lighting
+local Sky = {}
+
+local atmosphere: Atmosphere
+local weatherCC: ColorCorrectionEffect
+local weatherSources: { BasePart } = {}
+local isNight = false
+local currentWeather: string? = nil
+
+local function inst(className: string, name: string?, props: { [string]: any }): Instance
+	local i = (if name then Lighting:FindFirstChild(name) else Lighting:FindFirstChildOfClass(className))
+		or Instance.new(className)
+	if name then
+		i.Name = name
+	end
+	for k, v in props do
+		(i :: any)[k] = v
+	end
+	i.Parent = Lighting
+	return i
+end
+
+function Sky.Setup(weatherAreas: { Vector3 })
+	Lighting.Brightness = L.Day.Brightness
+	Lighting.ClockTime = 14
+	Lighting.GeographicLatitude = 30
+	Lighting.Ambient = L.Day.Ambient
+	Lighting.OutdoorAmbient = L.Day.OutdoorAmbient
+	Lighting.EnvironmentDiffuseScale = 1
+	Lighting.EnvironmentSpecularScale = 0.4
+	Lighting.ShadowSoftness = 0.3
+	Lighting.GlobalShadows = true
+	atmosphere = inst("Atmosphere", nil, L.Atmosphere) :: Atmosphere
+	inst("Sky", nil, { StarCount = 3000, SunAngularSize = 14, MoonAngularSize = 9, CelestialBodiesShown = true })
+	inst("BloomEffect", nil, L.Bloom)
+	inst("SunRaysEffect", nil, L.SunRays)
+	inst("ColorCorrectionEffect", "Grade", L.ColorCorrection)
+	weatherCC = inst("ColorCorrectionEffect", "WeatherCC", {}) :: ColorCorrectionEffect
+	Lighting:SetAttribute("IsNight", false)
+
+	local folder = Kit.Folder(Kit.Folder(Workspace, "World"), "WeatherFX")
+	for _, pos in weatherAreas do
+		local p = Kit.Block(folder, Vector3.new(160, 1, 160), CFrame.new(pos + Vector3.new(0, 60, 0)), Color3.new(1, 1, 1))
+		p.Name = "WeatherSource"
+		p.Transparency = 1
+		p.CastShadow = false
+		table.insert(weatherSources, p)
+	end
+end
+
+local function setNight(night: boolean)
+	if night == isNight then
+		return
+	end
+	isNight = night
+	Lighting:SetAttribute("IsNight", night)
+	Workspace:SetAttribute("IsNight", night)
+	for _, p in CollectionService:GetTagged("NightLight") do
+		local l = p:FindFirstChildWhichIsA("Light")
+		if l then
+			l.Enabled = night
+		end
+		if p:IsA("BasePart") and p:GetAttribute("GlowAtNight") then
+			p.Material = if night then Enum.Material.Neon else Enum.Material.SmoothPlastic
+		end
+	end
+	for _, p in CollectionService:GetTagged("Fireflies") do
+		local e = p:FindFirstChildOfClass("ParticleEmitter")
+		if e then
+			e.Enabled = night
+		end
+	end
+end
+
+function Sky.IsNight(): boolean
+	return isNight
+end
+
+-- (atmosphere colour, night blend 0..1) by clock time.
+local function palette(t: number): (Color3, number)
+	local day, sunset, night = L.Atmosphere.Color, Theme.Colors.Sunset, Theme.Colors.Night
+	if t >= 7 and t < 17 then
+		return day, 0
+	elseif t >= 17 and t < 18.2 then
+		return day:Lerp(sunset, (t - 17) / 1.2), 0.1
+	elseif t >= 18.2 and t < 19.5 then
+		local k = (t - 18.2) / 1.3
+		return sunset:Lerp(night, k), 0.1 + 0.9 * k
+	elseif t >= 5.5 and t < 7 then
+		local k = (t - 5.5) / 1.5
+		return night:Lerp(sunset, math.min(1, k * 1.6)):Lerp(day, math.max(0, k * 2 - 1)), 1 - k
+	end
+	return night, 1
+end
+
+-- 70% of real time is day (9–16): ClockTime moves slower then.
+local function speed(t: number): number
+	return if t >= 9 and t < 16 then 0.417 else 2.36
+end
+
+function Sky.StartCycle()
+	local length = L.DayLengthSeconds
+	task.spawn(function()
+		while true do
+			local dt = task.wait(1)
+			local t = (Lighting.ClockTime + 24 * dt / length * speed(Lighting.ClockTime)) % 24
+			Lighting.ClockTime = t
+			local col, n = palette(t)
+			atmosphere.Color = col
+			Lighting.Ambient = L.Day.Ambient:Lerp(L.Night.Ambient, n)
+			Lighting.OutdoorAmbient = L.Day.OutdoorAmbient:Lerp(L.Night.OutdoorAmbient, n)
+			Lighting.Brightness = L.Day.Brightness + (L.Night.Brightness - L.Day.Brightness) * n
+			setNight(t >= 18.5 or t < 5.8)
+		end
+	end)
+end
+
+-- name: gameplay weather ("Clear" | "Sunny" | "Rain" | "Rainbow Shower"; "RainbowShower" also accepted).
+function Sky.SetWeather(raw: string?)
+	local name: string? = if raw == "Rainbow Shower" then "RainbowShower" elseif raw == "Clear" then nil else raw
+	if name == currentWeather then
+		return
+	end
+	currentWeather = name
+	for _, p in weatherSources do
+		p:ClearAllChildren()
+		if name then
+			local e = Theme.Effects.Weather(name)
+			if e then
+				e.Parent = p
+			end
+		end
+	end
+	local info = TweenInfo.new(3)
+	local tint, sat, bright, dens = Color3.new(1, 1, 1), 0, 0, L.Atmosphere.Density
+	if name == "Rain" then
+		tint, sat, bright, dens = Color3.fromHex("#DCE8FF"), -0.05, -0.03, 0.35
+	elseif name == "RainbowShower" then
+		tint, sat, bright, dens = Color3.fromHex("#FFF2FA"), 0.12, 0.03, 0.27
+	elseif name == "Sunny" then
+		tint, sat, bright, dens = Color3.fromHex("#FFF4E0"), 0.06, 0.03, 0.2
+	end
+	TweenService:Create(weatherCC, info, { TintColor = tint, Saturation = sat, Brightness = bright }):Play()
+	TweenService:Create(atmosphere, info, { Density = dens }):Play()
+	Workspace:SetAttribute("Weather", raw or "Clear")
+end
+
+-- 8 puffy clouds around the map edge, drifting slowly in a big circle.
+function Sky.Clouds(rng: Random)
+	local folder = Kit.Folder(Kit.Folder(Workspace, "World"), "Clouds")
+	local clouds: { { m: Model, r: number, a: number, y: number, z: number } } = {}
+	for i = 1, 8 do
+		local m = Kit.Model(folder, "Cloud")
+		Theme.Nature.Cloud(m, CFrame.new(), rng:NextNumber(1, 1.6), rng)
+		for _, d in m:GetDescendants() do
+			if d:IsA("BasePart") then
+				d.CanQuery = false
+			end
+		end
+		table.insert(clouds, { m = m, r = rng:NextNumber(420, 620), a = i / 8 * math.pi * 2, y = rng:NextNumber(150, 200), z = -300 })
+	end
+	task.spawn(function()
+		while true do
+			for _, c in clouds do
+				c.a += 0.0012
+				c.m:PivotTo(CFrame.new(math.cos(c.a) * c.r, c.y, c.z + math.sin(c.a) * c.r * 1.3))
+			end
+			task.wait(0.5)
+		end
+	end)
+end
+
+return Sky
