@@ -52,7 +52,7 @@ return function(Kit: any, Style: any)
 		return face, base, sh
 	end
 
-	-- Inset panel on cream windows (white card look). A dark colour gives a translucent dark chip.
+	-- Inset panel on white-plastic windows (white card look). A dark colour gives a translucent dark chip.
 	function Kit.Panel(parent: Instance?, color: Color3?, props: { [string]: any }?): Frame
 		local f = Kit.Make("Frame", { BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0 })
 		Kit.Corner(f, 14)
@@ -88,6 +88,13 @@ return function(Kit: any, Style: any)
 		local stroke = Kit.Stroke(c, Style.Pal.Body.Dark, 3)
 		if rarity then
 			Kit.RarityFx(stroke, rarity)
+			local cs = Style.Studs.Card
+			if Style.RarityIndex(rarity) >= cs.MinRarity then
+				-- Top-left corner: the top-right is the mutation dots.
+				local studs = Kit.StudRow(c, Style.RarityPalette(rarity), cs.Count, cs.Size, 6, 4)
+				studs.AnchorPoint = Vector2.new(0, 0.5)
+				studs.Position = UDim2.fromOffset(6, cs.Size / 2 + 6)
+			end
 			if p.Band ~= false then
 				local r = Style.NormRarity(rarity)
 				local band = Kit.Make("Frame", {

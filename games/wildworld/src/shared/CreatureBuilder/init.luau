@@ -1,5 +1,6 @@
 --!strict
--- Builds code-built creature models from shared/CreatureBlueprints + genes + mutations (Graphics).
+-- Builds code-built brick-figure creatures (studded Plastic, STUDS_STYLE_GUIDE §4) from
+-- shared/CreatureBlueprints + genes + mutations (Graphics).
 --
 --   CreatureBuilder.Build(species, opts?) -> Model?
 --     opts = { genes = "Cc|Pp|Ss|Gg", mutations = {"Golden", ...}, stage = "Baby"|"Juvenile"|"Adult",
@@ -33,9 +34,9 @@ export type BuildOpts = {
 	bow: boolean?, -- Starter Pack creature bow
 }
 
-local STAGE_SCALE: { [string]: number } = { Baby = 0.5, Juvenile = 0.75, Adult = 1 }
+local STAGE_SCALE: { [string]: number } = { Baby = 0.6, Juvenile = 0.75, Adult = 1 } -- matches Config.Growth.BabyScale
 local HEAD_GROUP: { [string]: boolean } = { Head = true, EarL = true, EarR = true }
-local HUE_JITTER = 0.06
+local HUE_JITTER = 0.02 -- catalogue brick colours, not muddy
 local SIZE_JITTER = 0.03
 local CACHE_MAX = 64
 
@@ -76,38 +77,40 @@ local function shiftHue(c: Color3, dh: number): Color3
 	return Color3.fromHSV((h + dh) % 1, s, v)
 end
 
+-- Brick -> studded Plastic Part (legacy Studs surfaces, Inlet below); Tile -> SmoothPlastic face tile;
+-- Wedge -> smooth Plastic slope brick (STUDS_STYLE_GUIDE §2.1 / §4.1).
 local function makePart(spec: Shapes.PartSpec): BasePart
-	local part: BasePart
-	if spec.Shape == "Wedge" then
-		part = Instance.new("WedgePart")
-	else
-		local p = Instance.new("Part")
-		if spec.Shape == "Ball" then
-			p.Shape = Enum.PartType.Ball
-		elseif spec.Shape == "Cyl" then
-			p.Shape = Enum.PartType.Cylinder
-		end
-		part = p
-		if spec.Shape == "Blob" then
-			local mesh = Instance.new("SpecialMesh")
-			mesh.MeshType = Enum.MeshType.Sphere
-			mesh.Parent = p
-		end
-	end
+	local part: BasePart = if spec.Shape == "Wedge" then Instance.new("WedgePart") else Instance.new("Part")
 	part.Anchored = true
 	part.CanCollide = false
 	part.CanTouch = false
 	part.CanQuery = false
 	part.Massless = true
-	part.Material = Enum.Material.SmoothPlastic
-	part.TopSurface = Enum.SurfaceType.Smooth
-	part.BottomSurface = Enum.SurfaceType.Smooth
+	local S = Enum.SurfaceType
+	local studs = if spec.Shape == "Brick" then spec.Studs or "All" else "None"
+	part.Material = if spec.Shape == "Tile" then Enum.Material.SmoothPlastic else Enum.Material.Plastic
+	local side = if studs == "All" then S.Studs else S.Smooth
+	part.TopSurface = if studs == "None" then S.Smooth else S.Studs
+	part.BottomSurface = if studs == "None" then S.Smooth else S.Inlet
+	part.FrontSurface = side
+	part.BackSurface = side
+	part.LeftSurface = side
+	part.RightSurface = side
 	part.CastShadow = spec.Shadow == true
 	part.Transparency = spec.Transparency or 0
 	part.Name = spec.Name
 	part:SetAttribute("Role", spec.Role)
 	part:SetAttribute("Anim", spec.Anim)
 	return part
+end
+
+-- Seam shading: even slab layers ×0.95 value.
+local function shade(c: Color3, layer: number?): Color3
+	if not layer or layer % 2 == 1 then
+		return c
+	end
+	local h, s, v = c:ToHSV()
+	return Color3.fromHSV(h, s, v * 0.95)
 end
 
 local function build(species: string, opts: BuildOpts): Model?
@@ -132,9 +135,10 @@ local function build(species: string, opts: BuildOpts): Model?
 	end
 	palette.Primary = shiftHue(palette.Primary, hue)
 	palette.Secondary = shiftHue(palette.Secondary, hue)
-	palette.Eye = Color3.fromHex("#1E1B2E")
+	palette.Eye = Color3.fromHex("#1B1B1F")
 	palette.EyeShine = Color3.new(1, 1, 1)
 	palette.Cheek = Color3.fromHex("#FF9EB5")
+	palette.Nose = palette.Eye
 	local showPattern = recessive(g.Pattern)
 	local neonMarks = recessive(g.Glow)
 	local baby = stage == "Baby"
@@ -155,7 +159,7 @@ local function build(species: string, opts: BuildOpts): Model?
 		end
 		part.Size = size * scale
 		part.CFrame = CFrame.new(cf.Position * scale) * cf.Rotation
-		part.Color = palette[spec.Role] or palette.Primary
+		part.Color = shade(palette[spec.Role] or palette.Primary, spec.Layer)
 		if neonMarks and spec.Role == "Glow" then
 			part.Material = Enum.Material.Neon
 		end
@@ -288,7 +292,7 @@ function CreatureBuilder.FromLook(species: string, look: any?): Model?
 	})
 end
 
--- Egg: ellipsoid shell in the species Primary with Secondary spots (Golden mutation = gold Metal + sparkle).
+-- Egg: stacked studded brick egg in the species Primary with Secondary spot tiles (Golden = gold + sparkle).
 function CreatureBuilder.BuildEgg(species: string, opts: BuildOpts?): Model?
 	local bp = Blueprints[species]
 	if not bp then

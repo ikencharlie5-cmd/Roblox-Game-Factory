@@ -4,7 +4,7 @@
   "idea": "Multiplayer wildlife park + creature collection/breeding sim (Planet Zoo x Slime Rancher x Pokemon inspired, all original). Explore, capture original creatures, build habitats, breed for genetics + rare mutations, earn from visitors, visit/trade securely.",
   "stage": "done",
   "created": "2026-11-18T03:02:43Z",
-  "updated": "2026-11-18T06:56:22Z",
+  "updated": "2026-11-18T07:15:59Z",
   "branches": {
     "gameplay": "done",
     "graphics": "done",
@@ -210,6 +210,18 @@
       "from": "rnd",
       "to": "ideas",
       "text": "[art] Studs style: legacy SurfaceType.Studs on Plastic block parts (no assets); creatures = 18-30 grid-snapped bricks, 3x3/4x4 cube heads, square eyes; UI = toy-brick reskin of Kit"
+    },
+    {
+      "time": "2026-11-18T06:59:59Z",
+      "from": "ui",
+      "to": "all",
+      "text": "Toy-brick UI reskin done: white plastic + navy frame, header/button/card studs, no parchment/stitch; thumbnails FOV30 yaw25 + blue sunburst. No remote changes."
+    },
+    {
+      "time": "2026-11-18T07:15:59Z",
+      "from": "graphics",
+      "to": "all",
+      "text": "Studs restyle done: Theme (palette, Kit.Brick/Studs/Snap, brick nature/structures/decor/props), 5 brick-figure creatures + builder/mutations/egg (API, Role/Anim/Rest, Hitbox unchanged; new role Nose), part-based studded world (ground plates, terraced hills/ridges, lake basin, brick cliff/waterfall), \u00a77 lighting. Tags/zone ids unchanged. See notes/graphics.md + QUESTIONS.md (creature sizes)."
     }
   ]
 }

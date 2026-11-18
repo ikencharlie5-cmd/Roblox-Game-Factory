@@ -78,15 +78,73 @@ return function(Kit: any, Style: any)
 		local radius = math.max(size.X, size.Y, size.Z) * 0.62
 		local dist = radius / math.tan(math.rad(15)) * 1.05
 		local center = box.Position
-		local dir = Vector3.new(-0.55, 0.42, -1).Unit -- 3/4 front view (front = -Z)
+		-- Brick 3/4 front view (STUDS_STYLE_GUIDE §4.4): FOV 30, yaw 25 deg, shows head top + front studs.
+		local yaw = math.rad(25)
+		local dir = Vector3.new(-math.sin(yaw), 0.42, -math.cos(yaw)).Unit -- front = -Z
 		local t = { model = m, cf = CFrame.lookAt(center + dir * dist, center), center = center, dist = dist }
 		templates[k] = t
 		return t
 	end
 
-	local SKIP = { Silhouette = true, Genes = true, Mutations = true, Stage = true, Rarity = true }
+	local SKIP = { Silhouette = true, Genes = true, Mutations = true, Stage = true, Rarity = true, Burst = true }
 
-	-- props extras: Silhouette (black tint), Genes, Mutations, Stage, Rarity (fallback badge colour).
+	-- Blue sunburst backdrop (#3D8FE0 -> #7EC4FF, STUDS_STYLE_GUIDE "For UI"): linear gradient + soft
+	-- centre glow + 4 crossed rays (8 spokes). Rays stay inside the inscribed circle, so no clipping needed.
+	local BURST_EDGE = Color3.fromHex("#3D8FE0")
+	local BURST_MID = Color3.fromHex("#7EC4FF")
+	function Kit.Sunburst(parent: Instance?, props: { [string]: any }?): Frame
+		local f = Kit.Make("Frame", { Name = "Sunburst", BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0 })
+		Kit.Corner(f, 12)
+		Kit.Make("UIGradient", {
+			Rotation = 90,
+			Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, BURST_EDGE),
+				ColorSequenceKeypoint.new(0.5, BURST_MID),
+				ColorSequenceKeypoint.new(1, BURST_EDGE),
+			}),
+		}, f)
+		local fade = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.5, 0.55),
+			NumberSequenceKeypoint.new(1, 1),
+		})
+		for i = 0, 3 do
+			local ray = Kit.Make("Frame", {
+				Name = "Ray",
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				Position = UDim2.fromScale(0.5, 0.5),
+				Size = UDim2.fromScale(0.16, 0.98),
+				SizeConstraint = Enum.SizeConstraint.RelativeYY,
+				Rotation = i * 45,
+				BackgroundColor3 = Color3.new(1, 1, 1),
+				BackgroundTransparency = 0.55,
+				BorderSizePixel = 0,
+			}, f)
+			Kit.Make("UIGradient", { Rotation = 90, Transparency = fade }, ray)
+		end
+		Kit.Apply(f, props)
+		for _, d in f:GetChildren() do
+			if d:IsA("GuiObject") then
+				d.ZIndex = f.ZIndex
+			end
+		end
+		f.Parent = parent
+		return f
+	end
+
+	-- Puts a sunburst behind `view` in the same parent, matching its placement.
+	local function burstBehind(view: GuiObject, parent: Instance?)
+		Kit.Sunburst(parent, {
+			AnchorPoint = view.AnchorPoint,
+			Position = view.Position,
+			Size = view.Size,
+			ZIndex = math.max(1, view.ZIndex - 1),
+			LayoutOrder = view.LayoutOrder,
+		})
+	end
+
+	-- props extras: Silhouette (black tint), Genes, Mutations, Stage, Rarity (fallback badge colour),
+	-- Burst (blue sunburst backdrop placed behind the view in the same parent).
 	function Kit.CreatureView(parent: Instance?, species: string, props: { [string]: any }?): GuiObject
 		local p = props or {}
 		local t = template(species, { genes = p.Genes, mutations = p.Mutations, stage = p.Stage })
@@ -99,6 +157,9 @@ return function(Kit: any, Style: any)
 				Position = UDim2.fromScale(0.5, 0.5),
 				Size = UDim2.fromScale(0.7, 0.7),
 			})
+			if p.Burst and not p.Silhouette then
+				burstBehind(holder, parent)
+			end
 			holder.Parent = parent
 			return holder
 		end
@@ -119,6 +180,9 @@ return function(Kit: any, Style: any)
 		t.model:Clone().Parent = vp
 		vp:SetAttribute("Dist", t.dist)
 		vp:SetAttribute("Center", t.center)
+		if p.Burst and not p.Silhouette then
+			burstBehind(vp, parent)
+		end
 		vp.Parent = parent
 		return vp
 	end

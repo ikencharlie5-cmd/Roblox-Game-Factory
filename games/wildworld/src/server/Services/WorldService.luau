@@ -1,6 +1,8 @@
 --!strict
 -- WorldService (Graphics): builds the whole map in code on Init and exposes world helpers to gameplay.
--- Build order: terrain -> hub -> spokes -> 8 plots -> Greenleaf Forest -> lighting/day cycle/clouds.
+-- Classic studs look (research/STUDS_STYLE_GUIDE.md): studded Plastic ground plates, terraced brick hills,
+-- brick trees/fences/buildings. Build order: ground -> hub -> spokes -> 8 plots -> Greenleaf Forest ->
+-- lighting/day cycle/clouds.
 -- Gameplay: call WorldService.WaitReady() before touching plots (Init yields while terrain fills).
 local Workspace = game:GetService("Workspace")
 local CollectionService = game:GetService("CollectionService")
@@ -30,9 +32,9 @@ local function spokes(parent: Instance, rng: Random)
 	for i = 1, Layout.PlotCount do
 		local a = Layout.PlotAngle(i)
 		local dir = Vector3.new(math.cos(a), 0, math.sin(a))
-		local from = dir * (Layout.PlazaRadius - 2)
+		local from = dir * (Layout.PlazaRadius - 4)
 		local to = dir * (Layout.PlotRing - Layout.PlotSize / 2)
-		Terrain.Road(from, to, 12)
+		Terrain.Road(folder, from, to, 12)
 		local side = Vector3.new(-dir.Z, 0, dir.X)
 		for _, t in { 0.35, 0.75 } do
 			local p = from:Lerp(to, t) + side * 8

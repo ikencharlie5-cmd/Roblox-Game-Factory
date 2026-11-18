@@ -1,5 +1,5 @@
 --!strict
--- Wildworld visual theme (owned by Graphics). Shared so server world, UI viewports and the build ghost
+-- Wildworld visual theme (owned by Graphics), classic studs look (research/STUDS_STYLE_GUIDE.md). Shared so server world, UI viewports and the build ghost
 -- all use the same palette, item visuals, grid math and effects.
 --   Theme.Colors        palette (Theme/Palette)
 --   Theme.Rarity        rarity colours; Theme.Mutation mutation colours
@@ -7,7 +7,7 @@
 --                       Fireflies, Mist, Splash, WaterMist, Fall, Weather(kind))
 --   Theme.Moments       in-world VFX: Hatch, CaptureBubble, DiscoveryBeam, RatingUp, Coins, Hearts
 --   Theme.Props         build-item visuals: Items catalog, Build(itemId, seed), Ghost(itemId, valid)
---   Theme.Nature / Theme.Structures / Theme.Decor / Theme.Kit   lower-level builders
+--   Theme.Nature / Theme.Structures / Theme.Decor / Theme.Kit   lower-level builders (Kit.Brick = studded part)
 --   Theme.Lighting      day/night values; Theme.Zones biome atmosphere per zone (client tweens on entry)
 --   Theme.Grid          plot grid math (4-stud cells, 128-stud plot)
 local Palette = require(script.Palette)
@@ -27,13 +27,15 @@ Theme.Moments = require(script.Moments)
 
 local hex = Color3.fromHex
 
--- ART_STYLE_GUIDE §1 (ShadowMap set in default.project.json).
+-- STUDS_STYLE_GUIDE §7: flatter, brighter light for the brick look (ShadowMap set in default.project.json).
 Theme.Lighting = {
 	DayLengthSeconds = 14 * 60,
+	ClockTime = 14.5,
+	Env = { DiffuseScale = 0.5, SpecularScale = 0.2, ShadowSoftness = 0.2, Latitude = 30 },
 	Day = {
-		Brightness = 2.8,
-		Ambient = Color3.new(0.53, 0.53, 0.55),
-		OutdoorAmbient = Color3.new(0.5, 0.5, 0.53),
+		Brightness = 3,
+		Ambient = Color3.new(0.55, 0.55, 0.58),
+		OutdoorAmbient = Color3.new(0.6, 0.6, 0.62),
 	},
 	Night = {
 		Brightness = 1.0,
@@ -41,20 +43,21 @@ Theme.Lighting = {
 		OutdoorAmbient = hex("#4A5A8C"),
 	},
 	Atmosphere = {
-		Density = 0.25,
-		Offset = 0.25,
-		Color = hex("#CDEBFF"),
-		Decay = hex("#FFE0BF"),
-		Glare = 0.3,
-		Haze = 1.3,
+		Density = 0.18,
+		Offset = 0.1,
+		Color = hex("#BFE3FF"),
+		Decay = hex("#9CCBFF"),
+		Glare = 0,
+		Haze = 0.5,
 	},
-	ColorCorrection = { Saturation = 0.22, Contrast = 0.08, Brightness = 0.02, TintColor = hex("#FFF8EE") },
-	Bloom = { Intensity = 0.35, Size = 24, Threshold = 1.7 },
-	SunRays = { Intensity = 0.05, Spread = 0.6 },
+	ColorCorrection = { Saturation = 0.12, Contrast = 0.12, Brightness = 0.03, TintColor = hex("#FFFFFF") },
+	Bloom = { Intensity = 0.2, Size = 18, Threshold = 2.2 },
+	SunRays = { Intensity = 0.03, Spread = 0.5 },
 }
 
--- Zone looks. Every zone volume in the world (tag "WorldZone") has attribute Zone = one of these keys.
+-- Zone looks. Every zone volume in the world (tag "WorldZone") has attribute ZoneKey = one of these keys.
 -- The client tweens Atmosphere to these values over 2 s on entry (UI/Animation owns the client side).
+-- Biome tints from ART_STYLE_GUIDE §1 kept; densities ×0.7 for the brick look.
 export type ZoneLook = {
 	DisplayName: string,
 	Biome: string,
@@ -69,51 +72,51 @@ Theme.Zones = {
 	Park = {
 		DisplayName = "Your Park",
 		Biome = "Park",
-		Density = 0.25,
-		Color = hex("#CDEBFF"),
-		Decay = hex("#FFE0BF"),
-		Haze = 1.3,
-		Glare = 0.3,
+		Density = 0.18,
+		Color = hex("#BFE3FF"),
+		Decay = hex("#9CCBFF"),
+		Haze = 0.5,
+		Glare = 0,
 		Music = "Park",
 	},
 	Hub = {
 		DisplayName = "Wildworld Plaza",
 		Biome = "Park",
-		Density = 0.25,
-		Color = hex("#CDEBFF"),
-		Decay = hex("#FFE0BF"),
-		Haze = 1.3,
-		Glare = 0.3,
+		Density = 0.18,
+		Color = hex("#BFE3FF"),
+		Decay = hex("#9CCBFF"),
+		Haze = 0.5,
+		Glare = 0,
 		Music = "Park",
 	},
 	MeadowEdge = {
 		DisplayName = "Meadow Edge",
 		Biome = "Greenleaf",
-		Density = 0.25,
+		Density = 0.175,
 		Color = hex("#D6F0FF"),
 		Decay = hex("#FFE6C4"),
-		Haze = 1.2,
-		Glare = 0.3,
+		Haze = 0.8,
+		Glare = 0.1,
 		Music = "Forest",
 	},
 	MossyHollow = {
 		DisplayName = "Mossy Hollow",
 		Biome = "Greenleaf",
-		Density = 0.36,
+		Density = 0.25,
 		Color = hex("#D4EBDC"),
 		Decay = hex("#A9C9A0"),
-		Haze = 2,
-		Glare = 0.1,
+		Haze = 1.4,
+		Glare = 0,
 		Music = "Forest",
 	},
 	WaterfallGlade = {
 		DisplayName = "Waterfall Glade",
 		Biome = "Greenleaf",
-		Density = 0.28,
+		Density = 0.2,
 		Color = hex("#E6DDFF"),
 		Decay = hex("#FFC8E6"),
-		Haze = 1.4,
-		Glare = 0.5,
+		Haze = 1,
+		Glare = 0.2,
 		Music = "Forest",
 	},
 } :: { [string]: ZoneLook }

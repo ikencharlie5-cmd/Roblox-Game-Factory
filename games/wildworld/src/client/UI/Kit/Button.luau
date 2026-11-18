@@ -1,7 +1,8 @@
 --!strict
 -- Premium buttons (guide section 3): white face + UIGradient + 3.5 px same-hue dark stroke, dark lip
 -- under it, soft shadow, gloss strip, white FredokaOne label with a dark outline, press squash
--- (face sinks onto the lip), hover grow, Back-Out release, click sound.
+-- (face sinks onto the lip), hover grow, Back-Out release, click sound. Wide text buttons get 2
+-- toy-brick studs on the top edge.
 --   Kit.Button(parent, text, color, onClick, props) -> TextButton (the root; setting .Text updates the label)
 --   props extras: Icon (name or id), IconSize, TextSize, Lip, Radius, Shine, Pulse
 local TweenService = game:GetService("TweenService")
@@ -90,10 +91,38 @@ return function(Kit: any, Style: any)
 				DepthColor = pal.Dark,
 			})
 		end
+		-- Toy-brick studs: 2 small studs on the top edge of wide text buttons (never icon buttons).
+		local studs: { Frame }? = nil
+		local function setStuds(show: boolean)
+			if show and not studs then
+				local sz = Style.Studs.Button.Size
+				-- Use the face's current colours (SetButtonColor may have recoloured it since).
+				local cur = pal
+				local g = face:FindFirstChildOfClass("UIGradient")
+				local fs = face:FindFirstChildOfClass("UIStroke")
+				if g and fs then
+					cur = { Top = g.Color.Keypoints[1].Value, Bottom = pal.Bottom, Dark = fs.Color }
+				end
+				studs = {}
+				for _, x in { 0.3, 0.7 } do
+					table.insert(
+						studs :: { Frame },
+						Kit.Stud(face, cur, sz, { Position = UDim2.new(x, 0, 0, 0), ZIndex = 4 })
+					)
+				end
+			end
+			if studs then
+				for _, st in studs do
+					st.Visible = show
+				end
+			end
+		end
 		local function layout()
-			local h = face.AbsoluteSize.Y / math.max(0.01, Kit.Scale() * scale.Scale)
+			local k = math.max(0.01, Kit.Scale() * scale.Scale)
+			local h = face.AbsoluteSize.Y / k
 			local hasText = root.Text ~= ""
 			label.Visible = hasText
+			setStuds(hasText and face.AbsoluteSize.X / k >= Style.Studs.Button.MinWidth)
 			if icon then
 				local size = math.clamp(h * 0.74, 16, p.IconSize or 44)
 				local ic = icon :: GuiObject
@@ -189,6 +218,15 @@ return function(Kit: any, Style: any)
 		if lip and lip:IsA("Frame") then
 			lip.BackgroundColor3 = pal.Dark
 		end
+		for _, st in face:GetChildren() do
+			if st.Name == "Stud" and st:IsA("Frame") then
+				st.BackgroundColor3 = pal.Top:Lerp(Color3.new(1, 1, 1), Style.StudLighten)
+				local ss = st:FindFirstChildOfClass("UIStroke")
+				if ss then
+					ss.Color = pal.Dark
+				end
+			end
+		end
 		local label = face:FindFirstChild("Label")
 		if label and label:IsA("TextLabel") then
 			label.TextColor3 = pal.Text or Color3.new(1, 1, 1)
@@ -257,7 +295,7 @@ return function(Kit: any, Style: any)
 	-- Returns choose(name). Optional color picks the category palette (default Sun).
 	function Kit.Tabs(parent: Instance, names: { string }, onSelect: (string) -> (), color: any?): (string) -> ()
 		local pal = Style.PaletteFor(color or "Sun")
-		local off = { Top = Color3.new(1, 1, 1), Bottom = Color3.fromHex("#EDE3C8"), Dark = pal.Dark, Text = pal.Dark }
+		local off = { Top = Color3.new(1, 1, 1), Bottom = Style.Pal.Body.Bottom, Dark = pal.Dark, Text = pal.Dark }
 		local row =
 			Kit.Make("Frame", { Name = "Tabs", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1) }, parent)
 		Kit.List(row, true, 8)

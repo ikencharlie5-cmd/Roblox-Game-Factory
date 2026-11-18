@@ -1,36 +1,39 @@
 --!strict
--- Lumibun (Common, shy): tiny round bun. Hero feature: long ears with glowing tips.
+-- Lumibun (Common, shy) -> the inspo white brick bunny. 3x3 BrickHeadz head on a 3x3 body, stubby feet.
+-- Hero feature: tall brick ears with glowing tips (night light). ~23 parts.
 local S = require(script.Parent.Shapes)
 local V = Vector3.new
 local hex = Color3.fromHex
 
-local parts: { S.PartSpec } = {
-	S.Shadow(S.Ball("Body", 1.7, V(0, 0.95, 0.25), "Primary", "Body")),
-	S.Blob("Belly", V(1.15, 1.1, 0.45), V(0, 0.85, -0.45), "Belly", "Body"),
-	S.Shadow(S.Ball("Head", 1.95, V(0, 2.25, -0.3), "Primary", "Head")),
-	S.Blob("FootL", V(0.6, 0.4, 0.9), V(-0.45, 0.2, -0.35), "Secondary", "LegFL"),
-	S.Blob("FootR", V(0.6, 0.4, 0.9), V(0.45, 0.2, -0.35), "Secondary", "LegFR"),
-	S.Ball("Tail", 0.75, V(0, 1.0, 1.1), "Secondary", "Tail"),
-	S.Blob("EarL", V(0.5, 2.4, 0.28), CFrame.new(-0.42, 3.75, -0.15) * CFrame.Angles(0, 0, math.rad(12)), "Primary", "EarL"),
-	S.Blob("EarR", V(0.5, 2.4, 0.28), CFrame.new(0.42, 3.75, -0.15) * CFrame.Angles(0, 0, math.rad(-12)), "Primary", "EarR"),
-	S.Blob("EarInL", V(0.3, 1.7, 0.1), CFrame.new(-0.42, 3.6, -0.3) * CFrame.Angles(0, 0, math.rad(12)), "Secondary", "EarL"),
-	S.Blob("EarInR", V(0.3, 1.7, 0.1), CFrame.new(0.42, 3.6, -0.3) * CFrame.Angles(0, 0, math.rad(-12)), "Secondary", "EarR"),
-	S.Blob("EarTipL", V(0.46, 0.62, 0.3), CFrame.new(-0.67, 4.8, -0.15) * CFrame.Angles(0, 0, math.rad(12)), "Glow", "EarL"),
-	S.Blob("EarTipR", V(0.46, 0.62, 0.3), CFrame.new(0.67, 4.8, -0.15) * CFrame.Angles(0, 0, math.rad(-12)), "Glow", "EarR"),
-	S.Ball("Nose", 0.2, V(0, 2.0, -1.25), "Cheek", "Head"),
-	S.Pattern(S.Blob("SpotA", V(0.6, 0.5, 0.2), CFrame.new(0.45, 1.25, 0.95) * CFrame.Angles(0, math.rad(-30), 0), "Accent", "Body")),
-	S.Pattern(S.Blob("SpotB", V(0.45, 0.4, 0.2), CFrame.new(-0.5, 1.45, 0.85) * CFrame.Angles(0, math.rad(30), 0), "Accent", "Body")),
-}
-S.Face(parts, 0.42, 2.05, -1.12, 0.5, true)
+local parts: { S.PartSpec } = {}
+-- Body 3x2.4x3 (2 slabs), head 3x3.2x3 (1.2/1.2/0.8) with a 0.4 overlap, top at y 5.6.
+S.Slab(parts, "Body", 3, 3, 0, 0.4, 0.3, { 1.2, 1.2 }, "Primary", "Body", true)
+S.Slab(parts, "Head", 3, 3, 0, 2.4, 0, { 1.2, 1.2, 0.8 }, "Primary", "Head", true)
+table.insert(parts, S.Tile("Belly", V(2, 1.6, 0.1), V(0, 1.6, -1.25), "Belly", "Body"))
+-- Feet poke 0.6 forward of the body.
+table.insert(parts, S.Brick("FootL", V(1, 0.8, 1.6), V(-0.9, 0.4, -1.0), "Secondary", "LegFL"))
+table.insert(parts, S.Brick("FootR", V(1, 0.8, 1.6), V(0.9, 0.4, -1.0), "Secondary", "LegFR"))
+-- Ears 1x3.2x0.6 tilted ±8°, pink inner tile, glow tip brick.
+for _, side in { -1, 1 } do
+	local tag = if side < 0 then "L" else "R"
+	local base = CFrame.new(side * 0.8, 5.4, 0.2) * CFrame.Angles(0, 0, math.rad(-side * 8))
+	table.insert(parts, S.Brick("Ear" .. tag, V(1, 3.2, 0.6), base * CFrame.new(0, 1.6, 0), "Primary", "Ear" .. tag))
+	table.insert(parts, S.Tile("EarIn" .. tag, V(0.6, 2.4, 0.1), base * CFrame.new(0, 1.5, -0.35), "Secondary", "Ear" .. tag))
+	table.insert(parts, S.Brick("EarTip" .. tag, V(1, 0.8, 0.6), base * CFrame.new(0, 3.6, 0), "Glow", "Ear" .. tag))
+end
+table.insert(parts, S.Brick("Tail", V(1, 1, 1), V(0, 1.4, 2.3), "Secondary", "Tail"))
+table.insert(parts, S.Pattern(S.Tile("SpotA", V(0.1, 1, 1.2), V(1.55, 1.8, 0.8), "Accent", "Body")))
+table.insert(parts, S.Pattern(S.Tile("SpotB", V(0.1, 0.8, 0.8), V(-1.55, 1.2, 0.4), "Accent", "Body")))
+S.BrickFace(parts, 3, 3.2, 2.4, -1.5, { NoseRole = "Cheek" })
 
 local bp: S.Blueprint = {
 	Species = "Lumibun",
 	Palette = {
-		Primary = hex("#F7F1FF"),
-		Secondary = hex("#FFC8E0"),
+		Primary = hex("#F4F5F7"),
+		Secondary = hex("#FFB7CE"),
 		Belly = hex("#FFFFFF"),
 		Accent = hex("#D9C6F5"),
-		Feature = hex("#F7F1FF"),
+		Feature = hex("#F4F5F7"),
 		Glow = hex("#9FE8FF"),
 	},
 	AltPalette = {
@@ -39,15 +42,15 @@ local bp: S.Blueprint = {
 		Accent = hex("#A87C55"),
 		Glow = hex("#FFE27A"),
 	},
-	HeadPivot = V(0, 1.55, -0.2),
+	HeadPivot = V(0, 2.6, 0),
 	Parts = parts,
 	Shards = {
-		S.Shard(V(-0.5, 1.6, 0.6), -20, 15, 0.9),
-		S.Shard(V(0.5, 1.6, 0.7), -20, -15, 0.8),
-		S.Shard(V(0, 1.75, 0.8), -30, 0, 1.1),
-		S.Shard(V(-0.35, 3.4, 0.0), 0, 0, 0.7, "Head"),
+		S.Shard(V(-1.1, 2.8, 1.5), -10, 10, 0.7),
+		S.Shard(V(1.1, 2.8, 1.5), -10, -10, 0.7),
+		S.Shard(V(0, 1.9, 2.3), 0, 0, 0.6, "Tail"),
+		S.Shard(V(0, 5.6, 0.8), 0, 0, 0.7, "Head"),
 	},
 	EmitterPart = "EarTipR",
-	Native = { NightLight = 5 },
+	Native = { NightLight = 6 },
 }
 return bp

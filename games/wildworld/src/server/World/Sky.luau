@@ -33,14 +33,15 @@ local function inst(className: string, name: string?, props: { [string]: any }):
 end
 
 function Sky.Setup(weatherAreas: { Vector3 })
+	-- STUDS_STYLE_GUIDE §7: flatter, brighter light for the brick look.
 	Lighting.Brightness = L.Day.Brightness
-	Lighting.ClockTime = 14
-	Lighting.GeographicLatitude = 30
+	Lighting.ClockTime = L.ClockTime
+	Lighting.GeographicLatitude = L.Env.Latitude
 	Lighting.Ambient = L.Day.Ambient
 	Lighting.OutdoorAmbient = L.Day.OutdoorAmbient
-	Lighting.EnvironmentDiffuseScale = 1
-	Lighting.EnvironmentSpecularScale = 0.4
-	Lighting.ShadowSoftness = 0.3
+	Lighting.EnvironmentDiffuseScale = L.Env.DiffuseScale
+	Lighting.EnvironmentSpecularScale = L.Env.SpecularScale
+	Lighting.ShadowSoftness = L.Env.ShadowSoftness
 	Lighting.GlobalShadows = true
 	atmosphere = inst("Atmosphere", nil, L.Atmosphere) :: Atmosphere
 	inst("Sky", nil, { StarCount = 3000, SunAngularSize = 14, MoonAngularSize = 9, CelestialBodiesShown = true })
@@ -73,7 +74,12 @@ local function setNight(night: boolean)
 			l.Enabled = night
 		end
 		if p:IsA("BasePart") and p:GetAttribute("GlowAtNight") then
-			p.Material = if night then Enum.Material.Neon else Enum.Material.SmoothPlastic
+			-- Remember the day material (Plastic keeps its studs, lamp glass is SmoothPlastic).
+			if p:GetAttribute("DayMaterial") == nil then
+				p:SetAttribute("DayMaterial", p.Material.Name)
+			end
+			local day = (Enum.Material :: any)[p:GetAttribute("DayMaterial")] or Enum.Material.SmoothPlastic
+			p.Material = if night then Enum.Material.Neon else day
 		end
 	end
 	for _, p in CollectionService:GetTagged("Fireflies") do
@@ -146,18 +152,18 @@ function Sky.SetWeather(raw: string?)
 	local info = TweenInfo.new(3)
 	local tint, sat, bright, dens = Color3.new(1, 1, 1), 0, 0, L.Atmosphere.Density
 	if name == "Rain" then
-		tint, sat, bright, dens = Color3.fromHex("#DCE8FF"), -0.05, -0.03, 0.35
+		tint, sat, bright, dens = Color3.fromHex("#DCE8FF"), -0.05, -0.03, dens + 0.08
 	elseif name == "RainbowShower" then
-		tint, sat, bright, dens = Color3.fromHex("#FFF2FA"), 0.12, 0.03, 0.27
+		tint, sat, bright, dens = Color3.fromHex("#FFF2FA"), 0.08, 0.03, dens + 0.02
 	elseif name == "Sunny" then
-		tint, sat, bright, dens = Color3.fromHex("#FFF4E0"), 0.06, 0.03, 0.2
+		tint, sat, bright, dens = Color3.fromHex("#FFF4E0"), 0.04, 0.03, dens - 0.03
 	end
 	TweenService:Create(weatherCC, info, { TintColor = tint, Saturation = sat, Brightness = bright }):Play()
 	TweenService:Create(atmosphere, info, { Density = dens }):Play()
 	Workspace:SetAttribute("Weather", raw or "Clear")
 end
 
--- 8 puffy clouds around the map edge, drifting slowly in a big circle.
+-- 8 blocky brick clouds around the map edge, drifting slowly in a big circle.
 function Sky.Clouds(rng: Random)
 	local folder = Kit.Folder(Kit.Folder(Workspace, "World"), "Clouds")
 	local clouds: { { m: Model, r: number, a: number, y: number, z: number } } = {}

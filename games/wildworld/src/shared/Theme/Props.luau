@@ -1,5 +1,5 @@
 --!strict
--- Build-item visuals (ids + footprints match shared/Items.luau, which gameplay owns for prices/unlocks).
+-- Build-item visuals, brick style (every piece uses Kit.Brick on the 4-stud grid) (ids + footprints match shared/Items.luau, which gameplay owns for prices/unlocks).
 -- Props.Build(itemId, seed?) -> unparented Model, pivot = centre of the footprint at ground level
 -- (y = 0 = plot floor top), facing -Z. Invisible "Root" part = PrimaryPart (footprint box).
 -- Model attributes: ItemId, Category, FootX, FootZ, BiomeTags ("tree,flower"), and Role flag
@@ -84,10 +84,10 @@ local ROWS: { { any } } = {
 		Decor.Sunspot(m, O)
 	end },
 	{ "Pond", "Lily Pond", "Feature", 3, 3, { "water" }, "Water", function(m, rng)
-		Nature.Pond(m, O, 1, rng)
+		Nature.Pond(m, O, 0.9, rng)
 	end },
 	{ "Waterfall", "Little Waterfall", "Feature", 2, 2, { "water" }, "Water", function(m, rng)
-		Structures.Waterfall(m, CFrame.new(0, 0, 0.6), rng)
+		Structures.Waterfall(m, O, rng)
 	end },
 	{ "FoodBowl", "Food Bowl", "Feature", 1, 1, {}, "Food", function(m)
 		Structures.FoodBowl(m, O)
@@ -158,8 +158,8 @@ function Props.Build(itemId: string, seed: number?, footX: number?, footZ: numbe
 		def.Build(m, Random.new(seed or 1))
 	else
 		-- Unknown id: a tidy flower planter so the game never shows a grey box.
-		Kit.Solid(m, Vector3.new(fx * 4 - 0.6, 1, fz * 4 - 0.6), CFrame.new(0, 0.5, 0), P.Wood, Enum.Material.WoodPlanks)
-		Nature.FlowerPatch(m, CFrame.new(0, 1, 0), 1, Random.new(seed or 1))
+		Kit.Brick(m, Vector3.new(fx * 4 - 1, 1.2, fz * 4 - 1), CFrame.new(0, 0.6, 0), P.Wood, "All", true)
+		Nature.FlowerPatch(m, CFrame.new(0, 1.2, 0), 1, Random.new(seed or 1))
 	end
 	local root = Kit.Block(m, Vector3.new(fx * 4, 0.2, fz * 4), CFrame.new(0, 0.1, 0), P.Cream)
 	root.Name = "Root"

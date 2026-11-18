@@ -38,7 +38,7 @@ local function chip(name: string, icon: string, pal: any, y: number, onPlus: () 
 		Size = UDim2.fromOffset(200, 52),
 		Visible = false,
 	}, root)
-	local face = Kit.Slab(holder, { Top = Color3.fromHex("#2C3B39"), Bottom = Style.Color.Chip, Dark = pal.Dark }, 99, 4)
+	local face = Kit.Slab(holder, { Top = Color3.fromHex("#2E3D52"), Bottom = Style.Color.Chip, Dark = pal.Dark }, 99, 4)
 	Kit.Icon(holder, icon, {
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.new(0, 0, 0.45, 0),

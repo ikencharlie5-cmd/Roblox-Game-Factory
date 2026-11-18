@@ -1,8 +1,10 @@
 # UI notes (Wildworld)
 
 All UI is built in code under `src/client/UI/` (entry `src/client/Main.client.luau`). Style = plant-zoo Kit
-ported to `UI/Kit/` and re-skinned as the "field journal" (parchment body, deep-teal frame + stitch border,
-category-colour header pills, sunset-coral accent). Palette/rarity/mutation colours in `UI/Style.luau`.
+ported to `UI/Kit/` and re-skinned as **"toy brick"** (research/STUDS_STYLE_GUIDE.md "For UI"): white-plastic
+window bodies (`#FFFFFF`->`#E9EEF3`, 10 px corners), navy frame `#1F3B57`, ink `#1F2A36`/`#5A6B7D`,
+category-colour header pills with a stud row, sunset-coral accent. Parchment + stitching are gone.
+Palette/rarity/mutation colours in `UI/Style.luau`.
 Root UIScale = clamp(viewportY/1080, 0.55, 1.25), `CoreUISafeInsets`, one big window at a time, blur + dim.
 No emoji: icons are `Style.Icons` image ids (empty now) with coloured-circle letter fallbacks.
 
@@ -71,3 +73,19 @@ arrow), plot = tag `Plot` part with `OwnerId`, forest arch tag `ForestGate`. Cre
 - Build math uses the levelled plot CFrame (`PlotInfo.CFrame`, same as PlotService.PlotCFrame): ToCell/CellCFrame/grid lines in plot space.
 - Zone unlocking: ParkWindow lists locked zones (Config.Zones) with an Unlock button -> confirm -> `UnlockZone(zoneId)`; client ProximityPrompt on each `ZoneGate` anchor opens the same dialog (hidden once owned).
 - Tutorial Feed step: arrow points at the creature; "Feed it" only active within Needs.InteractRange - 2 studs, otherwise "Walk closer".
+
+## Toy-brick reskin (studs art switch)
+Visual-only; no layout, behaviour or remote changes.
+- `Style.luau`: Body/Card palettes, Ink/InkSoft/Frame/Chip to navy; `Stitch` -> `Stud` (white highlight,
+  `Style.StudTransparency` 0.35); `Style.Studs` sizes (header 18 px/10 gap/max 10, button 14 px at >= 160 px wide,
+  card 3 x 14 px at Epic+). Legacy `Cream`/`Panel`/`Card` colour names kept (white-plastic tints) for call sites.
+- `Kit/Window.luau`: stitch border removed; `Kit.Stud` / `Kit.StudRow` helpers live here; header pill gets a stud
+  row on its top edge (count from window width, under the title); body/lip/shadow corners 10 px.
+- `Kit/Button.luau`: 2 studs on the top edge of text buttons >= 160 px wide (never icon buttons), recoloured by
+  `SetButtonColor`; inactive tab bottom = Body bottom.
+- `Kit/Parts.luau`: Card/Panel use the new tokens; rarity cards Epic+ get 3 studs top-left (top-right = mutation dots).
+- `Kit/View.luau`: thumbnail camera FOV 30, yaw 25 deg; `Kit.Sunburst` blue backdrop (`#3D8FE0`->`#7EC4FF`,
+  gradient + 8 soft spokes) via `CreatureView` prop `Burst` - on in CreatureCard (not silhouettes) and Inspect.
+- `Hud.luau`: currency chip top tint moved to navy ink.
+- Assumption: no loading screen exists in UI, so the sunburst is only used behind creature views; Reveal keeps its
+  rarity sunburst.

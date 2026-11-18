@@ -41,6 +41,7 @@ local function renderView(c: { [string]: any })
 		Stage = Derived.Stage(c),
 		Rarity = Derived.Rarity(tostring(c.species)),
 		ZIndex = 5,
+		Burst = true,
 	})
 end
 

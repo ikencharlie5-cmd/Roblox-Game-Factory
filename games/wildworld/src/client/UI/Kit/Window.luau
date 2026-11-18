@@ -1,7 +1,8 @@
 --!strict
--- Field-journal window chrome (guide §1): teal-ink lip + shadow, parchment gradient body with a
--- 4 px deep-teal stroke and a dashed "stitch" border 8 px inside, a category-colour header pill
--- sticking 24 px out of the top (icon + FredokaOne title), and a red tilted close button.
+-- Toy-brick window chrome (STUDS_STYLE_GUIDE "For UI"): navy lip + shadow, white-plastic gradient
+-- body (10 px corners) with a 4 px navy stroke, a category-colour header pill sticking 24 px out of
+-- the top (icon + FredokaOne title) with a row of studs on its top edge, and a red tilted close button.
+-- Also home of the shared stud helpers Kit.Stud / Kit.StudRow (used by Button + Card).
 -- Open/close animation lives in Windows.luau.
 export type WindowParts = {
 	Frame: Frame,
@@ -12,43 +13,80 @@ export type WindowParts = {
 	Close: TextButton?,
 }
 
+local BODY_RADIUS = 10
+
 return function(Kit: any, Style: any)
-	-- Dashed stitch: short segments along each edge (cheap, no image asset).
-	local function stitch(parent: GuiObject)
-		local holder = Kit.Make("Frame", {
-			Name = "Stitch",
+	-- Toy-brick stud: circle in the palette's Top colour lightened 15 %, 2 px stroke in its Dark
+	-- colour, plus a small white highlight dot (Style.Color.Stud). Centre-anchored.
+	function Kit.Stud(parent: Instance?, pal: any, size: number, props: { [string]: any }?): Frame
+		local p = Style.PaletteFor(pal)
+		local stud = Kit.Make("Frame", {
+			Name = "Stud",
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			BackgroundColor3 = p.Top:Lerp(Color3.new(1, 1, 1), Style.StudLighten),
+			BorderSizePixel = 0,
+			Size = UDim2.fromOffset(size, size),
+		})
+		Kit.Corner(stud, 99)
+		Kit.Make("UIStroke", {
+			Color = p.Dark,
+			Thickness = 2,
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+		}, stud)
+		local dot = Kit.Make("Frame", {
+			Name = "Shine",
+			BackgroundColor3 = Style.Color.Stud,
+			BackgroundTransparency = Style.StudTransparency,
+			BorderSizePixel = 0,
+			Position = UDim2.fromScale(0.2, 0.16),
+			Size = UDim2.fromScale(0.36, 0.3),
+		}, stud)
+		Kit.Corner(dot, 99)
+		Kit.Apply(stud, props)
+		dot.ZIndex = stud.ZIndex
+		stud.Parent = parent
+		return stud
+	end
+
+	-- Centred row of `count` studs along the top edge of `parent`; y = centre offset from the top
+	-- (0 = straddling the edge).
+	function Kit.StudRow(
+		parent: Instance,
+		pal: any,
+		count: number,
+		size: number,
+		gap: number,
+		z: number?,
+		y: number?
+	): Frame
+		local row = Kit.Make("Frame", {
+			Name = "Studs",
 			BackgroundTransparency = 1,
-			Position = UDim2.fromOffset(8, 8),
-			Size = UDim2.new(1, -16, 1, -16),
-			ZIndex = 3,
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.new(0.5, 0, 0, y or 0),
+			Size = UDim2.fromOffset(count * size + math.max(0, count - 1) * gap + 4, size + 4),
+			ZIndex = z or 5,
 		}, parent)
-		local function edge(horizontal: boolean, pos: UDim2, anchor: Vector2)
-			local line = Kit.Make("Frame", {
-				BackgroundTransparency = 1,
-				AnchorPoint = anchor,
-				Position = pos,
-				Size = if horizontal then UDim2.new(1, -24, 0, 2) else UDim2.new(0, 2, 1, -24),
-				ZIndex = 3,
-			}, holder)
-			local list = Kit.List(line, horizontal, 7)
-			list.HorizontalAlignment = Enum.HorizontalAlignment.Center
-			list.VerticalAlignment = Enum.VerticalAlignment.Center
-			for i = 1, 60 do
-				Kit.Make("Frame", {
-					BackgroundColor3 = Style.Color.Stitch,
-					BackgroundTransparency = 0.3,
-					BorderSizePixel = 0,
-					Size = if horizontal then UDim2.fromOffset(9, 2) else UDim2.fromOffset(2, 9),
-					LayoutOrder = i,
-					ZIndex = 3,
-				}, line)
-			end
-			line.ClipsDescendants = true
+		local list = Kit.List(row, true, gap)
+		list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		list.VerticalAlignment = Enum.VerticalAlignment.Center
+		for i = 1, count do
+			local st = Kit.Stud(row, pal, size, { LayoutOrder = i, ZIndex = z or 5 })
+			st.AnchorPoint = Vector2.zero
 		end
-		edge(true, UDim2.new(0.5, 0, 0, 0), Vector2.new(0.5, 0))
-		edge(true, UDim2.new(0.5, 0, 1, 0), Vector2.new(0.5, 1))
-		edge(false, UDim2.new(0, 0, 0.5, 0), Vector2.new(0, 0.5))
-		edge(false, UDim2.new(1, 0, 0.5, 0), Vector2.new(1, 0.5))
+		return row
+	end
+
+	-- Toy-brick studs along the top edge of the header pill: as many 18 px studs (10 px gap) as fit
+	-- on the straight part of the pill, max 10. Width is known up front (header = 70 % of the window,
+	-- clamped 280..620), so no resize signal is needed.
+	local function studRow(header: Frame, face: Frame, pal: any, windowWidth: number)
+		local cfg = Style.Studs.Header
+		local width = math.clamp(windowWidth * 0.7, 280, 620) - header.Size.Y.Offset
+		local count = math.clamp(math.floor((width + cfg.Gap) / (cfg.Size + cfg.Gap)), 0, cfg.Max)
+		if count > 0 then
+			Kit.StudRow(face, pal, count, cfg.Size, cfg.Gap, 3) -- under the title row (Z 4)
+		end
 	end
 
 	function Kit.Window(
@@ -80,7 +118,7 @@ return function(Kit: any, Style: any)
 			Size = UDim2.new(1, 0, 1, -8),
 			ZIndex = 1,
 		}, frame)
-		Kit.Corner(shadow, 22)
+		Kit.Corner(shadow, BODY_RADIUS)
 		local lip = Kit.Make("Frame", {
 			Name = "Lip",
 			BackgroundColor3 = body.Dark,
@@ -89,7 +127,7 @@ return function(Kit: any, Style: any)
 			Size = UDim2.new(1, 0, 1, -8),
 			ZIndex = 2,
 		}, frame)
-		Kit.Corner(lip, 22)
+		Kit.Corner(lip, BODY_RADIUS)
 		local bodyBg = Kit.Make("Frame", {
 			Name = "BodyBg",
 			BackgroundColor3 = Color3.new(1, 1, 1),
@@ -97,10 +135,9 @@ return function(Kit: any, Style: any)
 			Size = UDim2.new(1, 0, 1, -8),
 			ZIndex = 3,
 		}, frame)
-		Kit.Corner(bodyBg, 22)
+		Kit.Corner(bodyBg, BODY_RADIUS)
 		Kit.Gradient(bodyBg, body)
 		Kit.Stroke(bodyBg, body.Dark, 4)
-		stitch(bodyBg)
 		local content = Kit.Make("Frame", {
 			Name = "Body",
 			BackgroundTransparency = 1,
@@ -119,6 +156,7 @@ return function(Kit: any, Style: any)
 		}, frame)
 		Kit.Make("UISizeConstraint", { MinSize = Vector2.new(280, 0), MaxSize = Vector2.new(620, 69) }, header)
 		local hface = Kit.Slab(header, pal, 99, 5, 4, false)
+		studRow(header, hface, pal, sz.X)
 		local row = Kit.Make("Frame", {
 			Name = "Row",
 			BackgroundTransparency = 1,

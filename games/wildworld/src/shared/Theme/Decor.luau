@@ -1,13 +1,14 @@
 --!strict
--- Special decor build pieces: pass/starter/RP/shop-rare items + a few small-footprint nature pieces.
+-- Special decor build pieces (pass / starter / RP / shop-rare items + small nature pieces), brick style.
 -- Builders take (parent, cf at ground, rng). Glow comes from small Neon accents + PointLights (no big Neon).
+-- Crystals are "trans-clear" toy bricks: Plastic, Transparency 0.3, Reflectance 0.15, studs on.
 local Kit = require(script.Parent.Kit)
 local P = require(script.Parent.Palette)
 local Effects = require(script.Parent.Effects)
 local Nature = require(script.Parent.Nature)
 
 local Decor = {}
-local M = Enum.Material
+local V = Vector3.new
 local hex = Color3.fromHex
 local CRYSTAL = hex("#9FE8FF")
 local GOLD = hex("#F5C542")
@@ -25,37 +26,58 @@ local function light(parent: BasePart, color: Color3, range: number, nightOnly: 
 	end
 end
 
-local function shard(parent: Instance, cf: CFrame, len: number, color: Color3): Part
-	local s = Kit.Block(parent, Vector3.new(0.9, len, 0.9), cf * CFrame.new(0, len / 2, 0) * CFrame.Angles(0, math.rad(45), 0), color, M.Glass)
-	s.Transparency = 0.25
-	return s
+-- Crystal brick stack: 0.8x1.2x0.8 + 0.6x0.8x0.6 (×k), rotated 45° on Y. Returns the top brick.
+local function crystal(parent: Instance, cf: CFrame, k: number, color: Color3?): Part
+	local c = color or CRYSTAL
+	local rot = cf * CFrame.Angles(0, math.rad(45), 0)
+	local a = V(0.8, 1.2, 0.8) * k
+	local b = V(0.6, 0.8, 0.6) * k
+	local lo = Kit.Brick(parent, a, rot * CFrame.new(0, a.Y / 2, 0), c, "All")
+	local hi = Kit.Brick(parent, b, rot * CFrame.new(0, a.Y + b.Y / 2, 0), c, "All")
+	for _, p in { lo, hi } do
+		p.Transparency = 0.3
+		p.Reflectance = 0.15
+		p.CastShadow = false
+		p.Name = "Crystal"
+	end
+	return hi
+end
+
+local function gold(p: BasePart): BasePart
+	p.Reflectance = 0.2
+	return p
 end
 
 function Decor.BigRock(parent: Instance, cf: CFrame, rng: Random)
-	Nature.Rock(parent, cf * CFrame.new(-0.6, 0, 0.4), 1.5, rng, true)
-	local cave = Kit.Blob(parent, Vector3.new(2.4, 2, 0.6), cf * CFrame.new(-0.6, 1, -2.3), hex("#3A3442"))
+	Kit.Brick(parent, V(6, 3.6, 5), cf * CFrame.new(0, 1.8, 0.5), P.Stone, "All", true)
+	Kit.Brick(parent, V(4, 2.4, 4), cf * CFrame.new(-1, 4.8, 1), P.StoneDark, "All", true)
+	Kit.Brick(parent, V(3, 2.4, 3), cf * CFrame.new(2.5, 1.2, -1.5), Kit.Shade(P.Stone), "All")
+	Kit.Brick(parent, V(3, 0.4, 3), cf * CFrame.new(-1 + rng:NextInteger(0, 1), 6.2, 1), P.Moss, "Top").CastShadow = false
+	local cave = Kit.Tile(parent, V(2.4, 2, 0.1), cf * CFrame.new(-0.6, 1.2, -2.05), hex("#2E2A33"))
 	cave.CastShadow = false
+	cave.Name = "Cave"
 end
 
 function Decor.Sunspot(parent: Instance, cf: CFrame)
-	local ring = Kit.Cyl(parent, 0.1, 3.8, cf * CFrame.new(0, 0.05, 0), P.Discovery)
+	local ring = Kit.Tile(parent, V(4, 0.1, 4), cf * CFrame.new(0, 0.05, 0), P.Discovery)
 	ring.Transparency = 0.45
 	ring.CastShadow = false
-	local stone = Kit.Blob(parent, Vector3.new(3, 0.8, 2.6), cf * CFrame.new(0, 0.35, 0), hex("#E8B87A"), M.Sandstone)
-	stone.CanCollide = true
+	Kit.Brick(parent, V(3, 0.8, 2), cf * CFrame.new(0, 0.4, 0), hex("#E8B87A"), "Top", true)
 end
 
 function Decor.SmallBurrow(parent: Instance, cf: CFrame)
 	Nature.Burrow(parent, cf, 0.62)
 end
 
+-- Golden studded fountain: gold Plastic bricks (Reflectance 0.2) + water plate + sparkle/splash.
 function Decor.VipFountain(parent: Instance, cf: CFrame)
-	Kit.Cyl(parent, 1, 7.6, cf * CFrame.new(0, 0.5, 0), GOLD, M.Metal, true)
-	local water = Kit.Cyl(parent, 0.2, 6.4, cf * CFrame.new(0, 1.05, 0), P.Water, M.Glass)
-	water.Transparency = 0.2
-	Kit.Cyl(parent, 3, 0.9, cf * CFrame.new(0, 2.5, 0), GOLD, M.Metal)
-	local bowl = Kit.Blob(parent, Vector3.new(3, 0.8, 3), cf * CFrame.new(0, 4, 0), GOLD, M.Metal)
-	Kit.Ball(parent, 1.1, cf * CFrame.new(0, 4.8, 0), hex("#FFE59A"), M.Metal)
+	gold(Kit.Brick(parent, V(7, 1.2, 7), cf * CFrame.new(0, 0.6, 0), GOLD, "Top", true))
+	local water = Kit.Tile(parent, V(6, 0.2, 6), cf * CFrame.new(0, 1.3, 0), P.Water)
+	water.Transparency = 0.3
+	water.Name = "Water"
+	gold(Kit.Brick(parent, V(1, 3.2, 1), cf * CFrame.new(0, 2.8, 0), GOLD, "All"))
+	local bowl = gold(Kit.Brick(parent, V(3, 0.8, 3), cf * CFrame.new(0, 4.8, 0), GOLD, "All"))
+	gold(Kit.Brick(parent, V(1, 1.2, 1), cf * CFrame.new(0, 5.8, 0), hex("#FFE59A"), "All"))
 	Effects.Sparkle(hex("#FFE27A"), 3).Parent = bowl
 	local e = Effects.Splash()
 	e.Rate = 5
@@ -64,90 +86,99 @@ function Decor.VipFountain(parent: Instance, cf: CFrame)
 end
 
 function Decor.CrystalCluster(parent: Instance, cf: CFrame, rng: Random)
-	local base = Kit.Blob(parent, Vector3.new(3.4, 0.8, 3.4), cf * CFrame.new(0, 0.3, 0), P.Rock, M.Slate)
-	for k = 1, 4 do
-		local a = k / 4 * math.pi * 2 + rng:NextNumber(-0.3, 0.3)
-		local tilt = CFrame.Angles(math.rad(rng:NextNumber(-20, 20)), 0, math.rad(rng:NextNumber(-20, 20)))
-		shard(parent, cf * CFrame.new(math.cos(a) * 0.8, 0.3, math.sin(a) * 0.8) * tilt, rng:NextNumber(1.6, 3.2), CRYSTAL)
+	local base = Kit.Brick(parent, V(3, 0.8, 3), cf * CFrame.new(0, 0.4, 0), P.Stone, "Top", true)
+	local offs = { V(-0.6, 0, -0.6), V(0.7, 0, -0.4), V(-0.4, 0, 0.7), V(0.6, 0, 0.6) }
+	for k, o in offs do
+		crystal(parent, cf * CFrame.new(o + V(0, 0.8, 0)), if k == 1 then 1.8 else rng:NextNumber(1, 1.4))
 	end
 	light(base, CRYSTAL, 8, false)
 end
 
+-- 3 shrooms: cream stem cube + cap plate (first one Plastic + night light, others Neon).
 function Decor.GlowShroom(parent: Instance, cf: CFrame, rng: Random)
 	for k = 1, 3 do
 		local s = ({ 1.2, 0.8, 0.6 })[k]
-		local off = CFrame.new((k - 2) * 1.1, 0, rng:NextNumber(-0.6, 0.6))
-		Kit.Cyl(parent, 1.4 * s, 0.5 * s, cf * off * CFrame.new(0, 0.7 * s, 0), P.Cream)
-		local cap = Kit.Blob(parent, Vector3.new(2, 0.9, 2) * s, cf * off * CFrame.new(0, 1.5 * s, 0), P.MagicPurple, if k == 1 then M.SmoothPlastic else M.Neon)
+		local off = CFrame.new((k - 2) * 1.2, 0, rng:NextInteger(-1, 1) * 0.5)
+		Kit.Brick(parent, V(1, 1.2, 1) * s, cf * off * CFrame.new(0, 0.6 * s, 0), P.Cream, "All")
+		local cap = Kit.Brick(parent, V(2, 0.8, 2) * s, cf * off * CFrame.new(0, 1.6 * s, 0), P.MagicPurple, "Top")
+		cap.CastShadow = false
 		if k == 1 then
 			light(cap, P.MagicPurple, 8, true)
+		else
+			cap.Material = Enum.Material.Neon
 		end
 	end
 end
 
 function Decor.GrottoArch(parent: Instance, cf: CFrame, rng: Random)
 	for _, x in { -5, 5 } do
-		Kit.Solid(parent, Vector3.new(2, 8, 2.4), cf * CFrame.new(x, 4, 0), P.Rock, M.Slate)
-		shard(parent, cf * CFrame.new(x, 7.5, 0) * CFrame.Angles(0, 0, math.rad(x * -3)), 2.4, CRYSTAL)
+		Kit.Brick(parent, V(2, 8, 2), cf * CFrame.new(x, 4, 0), P.Stone, "All", true)
+		Kit.Brick(parent, V(2, 1.2, 2), cf * CFrame.new(x, 1.8, 0), P.StoneDark, "All")
+		crystal(parent, cf * CFrame.new(x, 8, 0), 1.4)
 	end
-	Kit.Blob(parent, Vector3.new(12.5, 2.4, 2.6), cf * CFrame.new(0, 8.6, 0), P.Rock, M.Slate)
-	local top = shard(parent, cf * CFrame.new(0, 9.4, 0), 2.6, CRYSTAL)
+	Kit.Brick(parent, V(12, 2.4, 2), cf * CFrame.new(0, 9.2, 0), Kit.Shade(P.Stone), "All")
+	local top = crystal(parent, cf * CFrame.new(0, 10.4, 0), 1.6)
 	light(top, CRYSTAL, 10, false)
-	Kit.Blob(parent, Vector3.new(5, 0.6, 2), cf * CFrame.new(rng:NextNumber(-2, 2), 9.8, 0), P.Moss, M.Grass)
+	Kit.Brick(parent, V(5, 0.4, 2), cf * CFrame.new(rng:NextInteger(-2, 2), 10.6, 0), P.Moss, "Top").CastShadow = false
 end
 
 function Decor.StarterArch(parent: Instance, cf: CFrame)
 	for _, x in { -5, 5 } do
-		Kit.Solid(parent, Vector3.new(1.2, 8, 1.2), cf * CFrame.new(x, 4, 0), P.WoodDark, M.Wood)
-		Kit.Ball(parent, 2.2, cf * CFrame.new(x, 8.4, 0), P.Leaf2)
+		Kit.Brick(parent, V(1, 8, 1), cf * CFrame.new(x, 4, 0), P.WoodDark, "All", true)
+		Kit.Brick(parent, V(2, 2, 2), cf * CFrame.new(x, 9, 0), P.Leaf2, "All")
 	end
-	Kit.Block(parent, Vector3.new(11.4, 0.8, 1), cf * CFrame.new(0, 7.6, 0), P.Wood, M.Wood)
-	local sign = Kit.Block(parent, Vector3.new(7, 1.6, 0.3), cf * CFrame.new(0, 6.4, -0.4), P.Teal)
+	Kit.Brick(parent, V(12, 0.8, 1), cf * CFrame.new(0, 7.6, 0), P.Wood, "Top")
+	local sign = Kit.Tile(parent, V(7, 1.6, 0.3), cf * CFrame.new(0, 6.4, -0.5), P.Teal)
 	Kit.Label(sign, Enum.NormalId.Front, "Explorer's Park", P.Discovery, true)
 	for k = 0, 4 do
-		Kit.Ball(parent, 0.6, cf * CFrame.new(-4 + k * 2, 8.2, -0.5), P.Flowers[k + 1])
+		Kit.Brick(parent, V(1, 0.4, 1), cf * CFrame.new(-4 + k * 2, 8.2, 0), P.Flowers[k + 1], "Top").CastShadow = false
 	end
 end
 
 function Decor.FieldTent(parent: Instance, cf: CFrame)
-	local c = P.Coral
-	local l = Kit.Wedge(parent, Vector3.new(7, 4.5, 3.4), cf * CFrame.new(0, 2.25, 1.7) * CFrame.Angles(0, math.pi, 0), c)
-	local r = Kit.Wedge(parent, Vector3.new(7, 4.5, 3.4), cf * CFrame.new(0, 2.25, -1.7), P.Parchment)
+	local l = Kit.Wedge(parent, V(7, 4.4, 3.5), cf * CFrame.new(0, 2.2, 1.75) * CFrame.Angles(0, math.pi, 0), P.Coral)
+	local r = Kit.Wedge(parent, V(7, 4.4, 3.5), cf * CFrame.new(0, 2.2, -1.75), P.White)
 	l.CanCollide, r.CanCollide = true, true
-	Kit.Cyl(parent, 5.4, 0.3, cf * CFrame.new(-3.6, 2.7, 0), P.WoodDark, M.Wood)
-	local flag = Kit.Block(parent, Vector3.new(0.1, 0.8, 1.2), cf * CFrame.new(-3.6, 5, 0.6), P.Teal)
+	Kit.Brick(parent, V(1, 5.6, 1), cf * CFrame.new(-4, 2.8, 0), P.WoodDark, "All")
+	local flag = Kit.Brick(parent, V(0.4, 0.8, 1.2), cf * CFrame.new(-4, 5.2, 1.1), P.Teal, "None")
 	flag.CastShadow = false
 end
 
 function Decor.JournalSign(parent: Instance, cf: CFrame)
-	Kit.Cyl(parent, 4, 0.5, cf * CFrame.new(0, 2, 0), P.WoodDark, M.Wood, true)
-	local board = Kit.Block(parent, Vector3.new(3.4, 2.2, 0.3), cf * CFrame.new(0, 4, -0.3), P.Parchment)
+	Kit.Brick(parent, V(1, 4, 1), cf * CFrame.new(0, 2, 0), P.WoodDark, "All", true)
+	local board = Kit.Tile(parent, V(3.4, 2.2, 0.4), cf * CFrame.new(0, 4.4, -0.7), P.White)
 	Kit.Label(board, Enum.NormalId.Front, "Field Notes", P.Teal)
-	Kit.Ball(parent, 0.5, cf * CFrame.new(1.4, 5, -0.4), P.Coral)
+	Kit.Brick(parent, V(1, 0.4, 1), cf * CFrame.new(1.2, 5.7, -0.7), P.Coral, "Top")
 end
 
+-- Little brick creature statue: stone base, body, big head, moss plate + flower.
 function Decor.MossStatue(parent: Instance, cf: CFrame)
-	Kit.Solid(parent, Vector3.new(3, 1, 3), cf * CFrame.new(0, 0.5, 0), P.RockWarm, M.Slate)
-	Kit.Blob(parent, Vector3.new(2.6, 1.6, 3), cf * CFrame.new(0, 1.9, 0.2), P.Rock, M.Slate)
-	Kit.Ball(parent, 1.8, cf * CFrame.new(0, 2.6, -1), P.Rock, M.Slate)
-	Kit.Ball(parent, 1.6, cf * CFrame.new(0, 2.9, 0.3), P.Moss, M.Grass)
-	Kit.Ball(parent, 0.4, cf * CFrame.new(0.3, 3.7, 0.2), P.Flowers[1])
+	Kit.Brick(parent, V(3, 1.2, 3), cf * CFrame.new(0, 0.6, 0), P.RockWarm, "All", true)
+	Kit.Brick(parent, V(2, 1.6, 3), cf * CFrame.new(0, 2, 0.2), P.Stone, "All")
+	Kit.Brick(parent, V(3, 2.4, 2), cf * CFrame.new(0, 3.6, -0.8), P.Stone, "All")
+	for _, x in { -0.7, 0.7 } do
+		Kit.Tile(parent, V(0.6, 0.8, 0.1), cf * CFrame.new(x, 3.8, -1.85), P.Eye).CastShadow = false
+	end
+	Kit.Brick(parent, V(2, 0.4, 2), cf * CFrame.new(0, 5, -0.5), P.Moss, "Top").CastShadow = false
+	Kit.Brick(parent, V(1, 0.4, 1), cf * CFrame.new(0.5, 5.4, -0.5), P.Flowers[4], "Top").CastShadow = false
 end
 
 function Decor.RainbowFlowers(parent: Instance, cf: CFrame, rng: Random)
 	for k = 1, 6 do
 		local a = k / 6 * math.pi * 2
 		local col = Color3.fromHSV(k / 6, 0.55, 1)
-		Nature.Flower(parent, cf * CFrame.new(math.cos(a) * 1.1, 0, math.sin(a) * 1.1), rng:NextNumber(0.9, 1.2), col)
+		Nature.Flower(parent, cf * CFrame.new(math.cos(a) * 1.2, 0, math.sin(a) * 1.2), rng:NextNumber(0.9, 1.2), col)
 	end
 end
 
 function Decor.StoneTotem(parent: Instance, cf: CFrame)
-	local cols = { P.Rock, P.RockWarm, P.Rock }
+	local cols = { P.Stone, P.RockWarm, P.Stone }
 	for k = 1, 3 do
-		Kit.Solid(parent, Vector3.new(2.2 - k * 0.3, 1.6, 2.2 - k * 0.3), cf * CFrame.new(0, k * 1.6 - 0.8, 0) * CFrame.Angles(0, k * 0.4, 0), cols[k], M.Slate)
+		local w = 3 - k * 0.5
+		Kit.Brick(parent, V(w, 1.6, w), cf * CFrame.new(0, k * 1.6 - 0.8, 0) * CFrame.Angles(0, if k == 2 then math.rad(45) else 0, 0), cols[k], "All", true)
 	end
-	local eye = Kit.Ball(parent, 0.5, cf * CFrame.new(0, 4, -0.85), P.Water, M.Neon)
+	local eye = Kit.Brick(parent, V(0.6, 0.6, 0.2), cf * CFrame.new(0, 4.2, -0.85), P.Water, "None")
+	eye.Material = Enum.Material.Neon
 	eye.CastShadow = false
 end
 

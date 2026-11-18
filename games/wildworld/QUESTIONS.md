@@ -33,3 +33,7 @@
 - [gameplay] VIP "Gold name + tag" promised in shop/SPEC but not built: gold "VIP" BillboardGui over VIP players' heads on CharacterAdded (UI: gold chat tag via TextChatService.OnIncomingMessage) — or remove the claim from ShopWindow INFO.VIP. ✅ Built (head billboard + chat tag)
 - [graphics] Map edge has no invisible walls; players can walk over backdrop hills off the terrain onto SafetyFloor and get stuck. Add invisible boundary walls + make SafetyFloor teleport touched players to HubSpawn. ✅ Built (Terrain.Bounds + SafetyFloor teleport)
 - [manager] README not publish-ready: title + emoji tag, How to play, description, icon/thumbnail ideas, pass/product names+prices+descriptions table. ✅ Done
+
+## Studs restyle
+- [graphics] Brick creatures follow STUDS_STYLE_GUIDE §4.3 sizes exactly, so adults are about 1.5–2x bigger than before (Lumibun ≈ 9 tall with ears, Pebblehorn ≈ 7 tall / 11 long, Thornstag ≈ 14 tall). Hitboxes come from the model bounds, so clicks/prompts still line up, but pad wander radius, nameplate offsets and capture ranges may want a look. (built: guide sizes; Baby ×0.6 already matches Config.Growth.BabyScale)
+- [graphics] Backdrop ridges use taller terrace steps (4.8–9.6 per level) than the guide's 1.2–2.4 so they still hide the map edge; meadow hills use the guide values. (built: as described)

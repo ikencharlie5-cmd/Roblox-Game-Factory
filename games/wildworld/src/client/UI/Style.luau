@@ -1,5 +1,6 @@
 --!strict
--- Wildworld "explorer's field journal" palette (research/UI_STYLE_GUIDE.md §1-2), fonts, icons.
+-- Wildworld "toy brick" palette (research/STUDS_STYLE_GUIDE.md "For UI"; layout rules still from
+-- research/UI_STYLE_GUIDE.md): white plastic bodies, navy frame, stud highlights. Fonts, icons.
 -- No emoji anywhere: icons are images (Style.Icons) or code-drawn letter badges (Style.IconFallback).
 local Style = {}
 
@@ -29,19 +30,19 @@ Style.Pal = {
 	Stone = pal("#E3E7EE", "#A7B0C0", "#4A5263"), -- Settings, disabled
 	Disabled = pal("#C9C9C9", "#9A9A9A", "#5A5A5A"),
 	Robux = pal("#7CF0B0", "#14B86A", "#055233"),
-	Body = pal("#FFF8E7", "#F3E3BF", "#2E4A45"), -- parchment body, deep teal-ink frame
-	Card = pal("#FFFFFF", "#FBF4E2", "#2E4A45"),
+	Body = pal("#FFFFFF", "#E9EEF3", "#1F3B57"), -- white plastic body, navy frame
+	Card = pal("#FFFFFF", "#F2F5F8", "#1F3B57"),
 }
 Style.Pal.Pink = Style.Pal.Coral -- old call sites
 
 Style.Color = {
-	Cream = hex("#FFF8E7"),
-	Panel = hex("#FFFDF5"),
-	Card = hex("#FBF4E2"),
-	Ink = hex("#3A2E22"),
-	InkSoft = hex("#7A6A55"),
-	Stitch = hex("#C9B48A"),
-	Frame = hex("#2E4A45"),
+	Cream = hex("#F7F9FB"), -- legacy name: now the white-plastic body tint
+	Panel = hex("#FDFEFF"),
+	Card = hex("#F2F5F8"),
+	Ink = hex("#1F2A36"),
+	InkSoft = hex("#5A6B7D"),
+	Stud = hex("#FFFFFF"), -- stud highlight dot (use with Style.StudTransparency)
+	Frame = hex("#1F3B57"),
 	Accent = hex("#FF8A5B"),
 	Leaf = hex("#38A83A"),
 	Sky = hex("#2E86EE"),
@@ -55,12 +56,21 @@ Style.Color = {
 	Red = hex("#E8383A"),
 	Grey = hex("#A7B0C0"),
 	White = Color3.new(1, 1, 1),
-	Dark = hex("#1F2A28"),
-	Chip = hex("#1F2A28"),
+	Dark = hex("#1F2A36"),
+	Chip = hex("#1F2A36"),
 	Robux = hex("#14B86A"),
 	Wood = hex("#A86B3A"),
 	Valid = hex("#5BFF7A"),
 	Invalid = hex("#FF4D4D"),
+}
+
+-- Toy-brick studs (Kit.Stud): highlight transparency, window header row, big buttons, rare cards.
+Style.StudTransparency = 0.35
+Style.StudLighten = 0.15
+Style.Studs = {
+	Header = { Size = 18, Gap = 10, Max = 10 },
+	Button = { Size = 14, MinWidth = 160 },
+	Card = { Size = 14, Count = 3, MinRarity = 4 }, -- Epic and above
 }
 
 local COLOR_TO_PAL: { [string]: string } = {}

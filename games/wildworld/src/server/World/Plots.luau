@@ -1,5 +1,6 @@
 --!strict
--- 8 player plots (128x128) in a ring around the hub. Model "Plot<i>": pivot = floor-top centre, -Z faces
+-- 8 player plots (128x128) in a ring around the hub, brick style: smooth pale base (locked land) with a
+-- studded green Land plate on top for the unlocked square. Model "Plot<i>": pivot = floor-top centre, -Z faces
 -- the hub (entrance). Children: Base, Land (unlocked square), Border, Gate (arch + glowing name sign),
 -- Spawn (tag PlotSpawn), Dressing, Items/, Creatures/.
 -- The Base part carries tag "Plot" (its top surface = plot ground, LookVector -> hub) with attributes
@@ -8,33 +9,34 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Theme = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Theme"))
 local Layout = require(script.Parent.Layout)
-local Terrain = require(script.Parent.Terrain)
 local Scatter = require(script.Parent.Scatter)
 
 local Kit, Nature, Structures, P = Theme.Kit, Theme.Nature, Theme.Structures, Theme.Colors
-local M = Enum.Material
+local V = Vector3.new
 local Plots = {}
 
 local SIZE = Layout.PlotSize
 local HALF = SIZE / 2
 local GATE_W = 14
+local LAND_H = 0.4 -- studded land plate, top 0.02 above the plot floor (items sit on the floor top)
 
 local plots: { Model } = {}
 
 local function sign(m: Model, cf: CFrame): TextLabel
 	local gate = Kit.Model(m, "Gate")
 	for _, x in { -GATE_W / 2 - 1, GATE_W / 2 + 1 } do
-		Kit.Solid(gate, Vector3.new(1.6, 11, 1.6), cf * CFrame.new(x, 5.5, 0), P.WoodDark, M.Wood)
-		Kit.Ball(gate, 2.2, cf * CFrame.new(x, 11.4, 0), P.Leaf2)
+		Kit.Brick(gate, V(2, 11, 2), cf * CFrame.new(x, 5.5, 0), P.WoodDark, "All", true)
+		Kit.Brick(gate, V(3, 2.4, 3), cf * CFrame.new(x, 12.2, 0), P.Leaf2, "All")
+		Kit.Brick(gate, V(2, 1.2, 2), cf * CFrame.new(x, 14, 0), P.Leaf3, "All")
 	end
-	Kit.Block(gate, Vector3.new(GATE_W + 5, 1.2, 1.4), cf * CFrame.new(0, 10.4, 0), P.Wood, M.Wood)
-	local board = Kit.Block(gate, Vector3.new(GATE_W - 1, 2.8, 0.4), cf * CFrame.new(0, 8.4, -0.3), P.Teal)
+	Kit.Brick(gate, V(GATE_W + 6, 1.2, 2), cf * CFrame.new(0, 10.4, 0), P.Wood, "Top")
+	local board = Kit.Brick(gate, V(GATE_W - 1, 2.8, 0.4), cf * CFrame.new(0, 8.4, -0.3), P.Teal, "Top")
 	board.Name = "NameSign"
 	local label = Kit.Label(board, Enum.NormalId.Front, "Free Plot", P.Discovery, true)
 	local back = Kit.Label(board, Enum.NormalId.Back, "Free Plot", P.Discovery, true)
 	back.Name = "BackText"
 	-- Glowing trim + lanterns for the "glowing sign" look.
-	local trim = Kit.Block(gate, Vector3.new(GATE_W - 0.6, 0.25, 0.5), cf * CFrame.new(0, 6.9, -0.3), P.Discovery, M.SmoothPlastic)
+	local trim = Kit.Tile(gate, V(GATE_W - 1, 0.4, 0.6), cf * CFrame.new(0, 6.8, -0.3), P.Discovery)
 	trim.Name = "Trim"
 	Structures.Lantern(gate, cf * CFrame.new(-GATE_W / 2 - 3.5, 0, -1) * CFrame.Angles(0, math.rad(180), 0))
 	Structures.Lantern(gate, cf * CFrame.new(GATE_W / 2 + 3.5, 0, -1))
@@ -44,19 +46,19 @@ end
 local function border(m: Model, cf: CFrame)
 	local b = Kit.Model(m, "Border")
 	local h = 1.2
-	-- Back and sides full length; front split around the gate.
-	Kit.Solid(b, Vector3.new(SIZE + 2, h, 2), cf * CFrame.new(0, h / 2 - 0.2, HALF + 1), P.Wood, M.WoodPlanks)
-	Kit.Solid(b, Vector3.new(2, h, SIZE + 2), cf * CFrame.new(HALF + 1, h / 2 - 0.2, 0), P.Wood, M.WoodPlanks)
-	Kit.Solid(b, Vector3.new(2, h, SIZE + 2), cf * CFrame.new(-HALF - 1, h / 2 - 0.2, 0), P.Wood, M.WoodPlanks)
+	-- Back and sides full length; front split around the gate. Studded wood bricks.
+	Kit.Brick(b, V(SIZE + 2, h, 2), cf * CFrame.new(0, h / 2 - 0.2, HALF + 1), P.Wood, "Top", true)
+	Kit.Brick(b, V(2, h, SIZE + 2), cf * CFrame.new(HALF + 1, h / 2 - 0.2, 0), P.Wood, "Top", true)
+	Kit.Brick(b, V(2, h, SIZE + 2), cf * CFrame.new(-HALF - 1, h / 2 - 0.2, 0), P.Wood, "Top", true)
 	local seg = (SIZE + 4 - GATE_W) / 2
 	for _, side in { -1, 1 } do
-		Kit.Solid(b, Vector3.new(seg, h, 2), cf * CFrame.new(side * (GATE_W / 2 + seg / 2), h / 2 - 0.2, -HALF - 1), P.Wood, M.WoodPlanks)
+		Kit.Brick(b, V(seg, h, 2), cf * CFrame.new(side * (GATE_W / 2 + seg / 2), h / 2 - 0.2, -HALF - 1), P.Wood, "Top", true)
 	end
-	-- Dark trim cap + corner posts.
+	-- Corner posts with leaf cubes.
 	for _, c in { { 1, 1 }, { -1, 1 }, { 1, -1 }, { -1, -1 } } do
 		local pos = cf * CFrame.new(c[1] * (HALF + 1), 1.4, c[2] * (HALF + 1))
-		Kit.Solid(b, Vector3.new(2.6, 3.2, 2.6), pos, P.WoodDark, M.Wood)
-		Kit.Ball(b, 1.6, pos * CFrame.new(0, 2.2, 0), P.Leaf1)
+		Kit.Brick(b, V(3, 3.2, 3), pos, P.WoodDark, "All", true)
+		Kit.Brick(b, V(2, 2, 2), pos * CFrame.new(0, 2.6, 0), P.Leaf2, "All")
 	end
 end
 
@@ -89,17 +91,17 @@ function Plots.Build(parent: Instance, rng: Random): { Model }
 	for i = 1, Layout.PlotCount do
 		local cf = Layout.PlotCFrame(i)
 		local m = Kit.Model(folder, "Plot" .. i)
-		Terrain.Paint(cf, SIZE + 12, SIZE + 12, M.Ground)
-		local base = Kit.Solid(m, Vector3.new(SIZE, 1, SIZE), cf * CFrame.new(0, -0.5, 0), P.PlotLocked, M.Grass)
+		local base = Kit.Brick(m, V(SIZE, 1, SIZE), cf * CFrame.new(0, -0.5, 0), P.PlotLocked, "None", true)
 		base.Name = "Base"
 		base.CastShadow = false
-		local land = Kit.Solid(m, Vector3.new(64, 0.06, 64), cf * CFrame.new(0, 0.03, 0), P.PlotFree, M.SmoothPlastic)
+		base.CanQuery = true
+		local land = Kit.Brick(m, V(64, LAND_H, 64), cf * CFrame.new(0, 0.02 - LAND_H / 2, 0), P.PlotLocked, "Top", true)
 		land.Name = "Land"
 		land.CastShadow = false
 		border(m, cf)
 		local label = sign(m, cf * CFrame.new(0, -0.5, -HALF - 1))
 		label.Name = "Text"
-		local spawnPad = Kit.Block(m, Vector3.new(6, 1, 6), cf * CFrame.new(0, 0.5, -HALF + 10) * CFrame.Angles(0, math.rad(180), 0), P.Cream)
+		local spawnPad = Kit.Block(m, V(6, 1, 6), cf * CFrame.new(0, 0.5, -HALF + 10) * CFrame.Angles(0, math.rad(180), 0), P.Cream)
 		spawnPad.Name = "Spawn"
 		spawnPad.Transparency = 1
 		spawnPad.CanQuery = false
@@ -163,9 +165,9 @@ function Plots.Refresh(i: number)
 	local land = m:FindFirstChild("Land") :: BasePart?
 	if land then
 		local s = math.clamp(if owned then studs else 64, 16, SIZE)
-		land.Size = Vector3.new(s, 0.06, s)
-		land.Color = if owned then P.PlotFloor else P.PlotFree
-		land.Material = if owned then M.Grass else M.SmoothPlastic
+		land.Size = V(s, LAND_H, s)
+		land.Color = if owned then P.PlotFloor else P.PlotLocked
+		land.Material = Enum.Material.Plastic
 	end
 end
 

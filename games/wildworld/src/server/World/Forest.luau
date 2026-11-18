@@ -13,6 +13,7 @@ local Waterfall = require(script.Parent.Waterfall)
 
 local Kit, Nature, P = Theme.Kit, Theme.Nature, Theme.Colors
 local M = Enum.Material
+local V = Vector3.new
 local Forest = {}
 
 local function zoneNumbers(z: Layout.ZoneDef): (number, number)
@@ -27,20 +28,21 @@ local function zoneNumbers(z: Layout.ZoneDef): (number, number)
 	return z.RequiredLevel, z.Cost
 end
 
--- Wooden arch across the road at z. Returns the arch model.
+-- Brick arch across the road at z (wood pillars, leaf-cube caps, beam, double-sided sign). Returns the model.
 local function arch(parent: Instance, z: number, title: string, color: Color3): Model
 	local m = Kit.Model(parent, "Arch")
 	local w = Layout.RoadWidth + 6
 	for _, x in { -w / 2, w / 2 } do
-		Kit.Solid(m, Vector3.new(2.4, 16, 2.4), CFrame.new(x, 8, z), P.Trunk, M.Wood)
-		Kit.Ball(m, 4.5, CFrame.new(x, 16.5, z), P.Leaf1)
-		Kit.Ball(m, 3, CFrame.new(x + 1.2, 15, z - 1.4), P.Leaf3)
+		Kit.Brick(m, V(2, 16, 2), CFrame.new(x, 8, z), P.Trunk, "All", true)
+		Kit.Brick(m, V(5, 2.4, 5), CFrame.new(x, 16.4, z), P.Leaf1, "All")
+		Kit.Brick(m, V(3, 2.4, 3), CFrame.new(x, 18.8, z), P.Leaf2, "All")
+		Kit.Brick(m, V(2, 1.2, 2), CFrame.new(x + 1, 15.2, z - 2), P.Leaf3, "All")
 	end
-	Kit.Block(m, Vector3.new(w + 4, 2, 2.4), CFrame.new(0, 14.6, z), P.Wood, M.Wood)
-	local board = Kit.Block(m, Vector3.new(w - 2, 3.4, 0.5), CFrame.new(0, 12, z + 1.4), color)
+	Kit.Brick(m, V(w + 4, 2, 2), CFrame.new(0, 14.6, z), P.Wood, "Top")
+	local board = Kit.Brick(m, V(w - 2, 3.6, 1), CFrame.new(0, 12, z + 1.5), color, "Top")
 	board.Name = "Sign"
-	Kit.Label(board, Enum.NormalId.Back, title, P.Cream, true)
-	local back = Kit.Label(board, Enum.NormalId.Front, title, P.Cream, true)
+	Kit.Label(board, Enum.NormalId.Back, title, P.White, true)
+	local back = Kit.Label(board, Enum.NormalId.Front, title, P.White, true)
 	back.Name = "BackText"
 	return m
 end
@@ -94,7 +96,7 @@ local function zoneGate(parent: Instance, z: Layout.ZoneDef, title: string, colo
 	anchor.Name = "GateAnchor"
 	anchor.Transparency = 1
 	anchor.CastShadow = false
-	local lock = Kit.Block(m, Vector3.new(8, 2.4, 0.4), CFrame.new(0, 7, z.ZMax + 1.4), P.Parchment)
+	local lock = Kit.Brick(m, V(8, 2.4, 0.4), CFrame.new(0, 7, z.ZMax + 1.4), P.White, "Top")
 	lock.Name = "LockSign"
 	local text = if cost > 0 then string.format("Park Lv %d  +  %d coins", lvl, cost) else string.format("Park Lv %d", lvl)
 	Kit.Label(lock, Enum.NormalId.Back, text, P.Text)
@@ -102,23 +104,26 @@ local function zoneGate(parent: Instance, z: Layout.ZoneDef, title: string, colo
 	m:SetAttribute("Zone", z.Id)
 end
 
--- Glowing mushroom (Hollow flavour).
+-- Glowing brick mushroom (Hollow flavour): cream stem cube + studded cap plate that turns Neon at night.
 local function mushroom(parent: Instance, cf: CFrame, s: number, rng: Random)
-	Kit.Cyl(parent, 1.4 * s, 0.6 * s, cf * CFrame.new(0, 0.7 * s, 0), P.Cream)
+	local k = math.floor(s * 2 + 0.5) / 2
+	Kit.Brick(parent, V(1, 1.6, 1) * k, cf * CFrame.new(0, 0.8 * k, 0), P.Cream, "All")
 	local col = if rng:NextNumber() < 0.5 then P.MagicPurple else P.Water
-	local cap = Kit.Blob(parent, Vector3.new(2.2, 1, 2.2) * s, cf * CFrame.new(0, 1.5 * s, 0), col)
+	local cap = Kit.Brick(parent, V(3, 0.8, 3) * k, cf * CFrame.new(0, 2.0 * k, 0), col, "Top")
+	Kit.Brick(parent, V(1, 0.4, 1) * k, cf * CFrame.new(0.5 * k, 2.6 * k, 0.5 * k), P.White, "Top").CastShadow = false
 	cap:SetAttribute("GlowAtNight", true)
 	cap:AddTag("NightLight")
 end
 
 local function meadow(parent: Instance, z: Layout.ZoneDef, rng: Random)
 	local f = Kit.Model(parent, "MeadowEdge")
-	-- Gentle open hills either side of the road.
+	-- Gentle terraced brick hills either side of the road (max 6 levels, 1.2–2.4 tall, 4–8 narrower each).
 	for k = 1, 6 do
 		local side = if k % 2 == 0 then 1 else -1
-		local x = side * rng:NextNumber(60, 150)
-		local zz = rng:NextNumber(z.ZMin + 40, z.ZMax - 40)
-		Terrain.Hill(Vector3.new(x, -rng:NextNumber(18, 26), zz), rng:NextNumber(28, 40), M.Grass)
+		local x = side * rng:NextInteger(70, 150)
+		local zz = rng:NextInteger(z.ZMin + 50, z.ZMax - 50)
+		local size = rng:NextInteger(40, 64)
+		Terrain.Hill(x, zz, size, size + rng:NextInteger(-8, 8), rng, { Levels = rng:NextInteger(3, 6), Step = rng:NextInteger(2, 4) })
 	end
 	task.wait()
 	for _ = 1, 10 do
@@ -175,7 +180,7 @@ end
 local function glade(parent: Instance, z: Layout.ZoneDef, rng: Random): (number, number) -> boolean
 	local f = Kit.Model(parent, "WaterfallGlade")
 	local lake = Layout.Lake
-	Terrain.Lake(lake.Center, lake.Radius)
+	Terrain.Lake()
 	Terrain.Cliff()
 	Waterfall.Build(f)
 	local function inLake(x: number, zz: number): boolean
@@ -196,11 +201,11 @@ local function glade(parent: Instance, z: Layout.ZoneDef, rng: Random): (number,
 		local ringPart = Kit.Cyl(m, 0.2, 9, CFrame.new(pos.X, y + 0.1, pos.Z), P.Discovery, M.Neon)
 		ringPart.Transparency = 0.5
 		ringPart.Name = "Ring"
-		local inner = Kit.Cyl(m, 0.22, 7.6, CFrame.new(pos.X, y + 0.11, pos.Z), P.ForestFloor)
+		local inner = Kit.Brick(m, V(6, 0.4, 6), CFrame.new(pos.X, y + 0.2, pos.Z), P.Yellow, "Top")
 		inner.Name = "Inner"
 		Theme.Effects.Discovery().Parent = ringPart
 		for k = 1, 4 do
-			local fp = Kit.Blob(m, Vector3.new(0.9, 0.12, 1.3), CFrame.new(pos.X + k * 3 * (if k % 2 == 0 then 1 else 0.8), y + 0.08, pos.Z + k * 3.4), P.WoodDark)
+			local fp = Kit.Brick(m, V(1, 0.4, 1), CFrame.new(pos.X + k * 3 * (if k % 2 == 0 then 1 else 0.8), y + 0.2, pos.Z + k * 3.4), P.WoodDark, "Top")
 			fp.CastShadow = false
 		end
 		m.PrimaryPart = ringPart
@@ -213,7 +218,7 @@ function Forest.Build(parent: Instance, rng: Random)
 	local root = Kit.Model(parent, "GreenleafForest")
 	local zones = Layout.Zones
 	-- Road from the plaza to the waterfall.
-	Terrain.Road(Vector3.new(0, 0, -Layout.PlazaRadius), Vector3.new(0, 0, zones[3].ZMin + 60), Layout.RoadWidth)
+	Terrain.Road(root, V(0, 0, -Layout.PlazaRadius + 2), V(0, 0, zones[3].ZMin + 60), Layout.RoadWidth)
 	local gate = arch(root, Layout.ForestGateZ, "Greenleaf Forest", P.Leaf1)
 	gate.Name = "ForestGate"
 	Kit.Tag(gate, "ForestGate", { Zone = zones[1].Id })

@@ -1,9 +1,13 @@
 --!strict
 -- Part-building helpers shared by World (server), Theme.Props (build items) and CreatureBuilder.
--- Every part is anchored, SmoothPlastic by default, and decoration flags follow ART_STYLE_GUIDE §4:
--- small props don't cast shadows, decoration isn't queryable/touchable.
+-- Classic studs look (STUDS_STYLE_GUIDE §2.1): blocks default to Plastic with legacy Studs on top and
+-- Inlet underneath (studs only render on Plastic block faces). Textured materials (Wood, Slate, Grass,
+-- Metal, Glass...) are mapped to Plastic so every block keeps its studs; Metal -> Reflectance 0.2.
+-- Round props (Ball / Blob / Cyl) stay SmoothPlastic. Small props don't cast shadows; decoration isn't
+-- queryable/touchable.
 local Kit = {}
 
+export type Studs = "Top" | "All" | "None"
 export type PartProps = {
 	Size: Vector3,
 	CFrame: CFrame,
@@ -13,17 +17,73 @@ export type PartProps = {
 	Transparency: number?,
 	CanCollide: boolean?,
 	Name: string?,
+	Studs: Studs?,
 }
 
-local function finish(part: BasePart, p: PartProps, parent: Instance): BasePart
+local M = Enum.Material
+local KEEP: { [Enum.Material]: boolean } = {
+	[M.Plastic] = true,
+	[M.SmoothPlastic] = true,
+	[M.Neon] = true,
+	[M.ForceField] = true,
+}
+
+-- Brick material for a requested material (+ reflectance for "metal" gold bits).
+function Kit.Mat(m: Enum.Material?): (Enum.Material, number)
+	if m == nil then
+		return M.Plastic, 0
+	end
+	if KEEP[m] then
+		return m, 0
+	end
+	if m == M.Metal or m == M.DiamondPlate or m == M.Foil then
+		return M.Plastic, 0.2
+	end
+	if m == M.Glass or m == M.Ice then
+		return M.Plastic, 0.1
+	end
+	return M.Plastic, 0
+end
+
+-- Legacy surfaces: "Top" = studs on top / inlet below (world), "All" = studs on 5 faces (creatures,
+-- trees), "None" = smooth. Only shows on Plastic.
+function Kit.Studs(part: BasePart, mode: Studs?)
+	local S = Enum.SurfaceType
+	local m = mode or "Top"
+	local side = if m == "All" then S.Studs else S.Smooth
+	part.TopSurface = if m == "None" then S.Smooth else S.Studs
+	part.BottomSurface = if m == "None" then S.Smooth else S.Inlet
+	part.FrontSurface = side
+	part.BackSurface = side
+	part.LeftSurface = side
+	part.RightSurface = side
+end
+
+-- Snap a size to the stud grid: X/Z whole studs (min 1), Y multiples of a 0.4 plate (min 0.4).
+function Kit.Snap(v: Vector3): Vector3
+	local function plate(y: number): number
+		return math.max(0.4, math.floor(y / 0.4 + 0.5) * 0.4)
+	end
+	return Vector3.new(math.max(1, math.floor(v.X + 0.5)), plate(v.Y), math.max(1, math.floor(v.Z + 0.5)))
+end
+
+local function finish(part: BasePart, p: PartProps, parent: Instance, round: boolean): BasePart
 	part.Anchored = true
-	part.TopSurface = Enum.SurfaceType.Smooth
-	part.BottomSurface = Enum.SurfaceType.Smooth
 	part.Size = p.Size
 	part.CFrame = p.CFrame
 	part.Color = p.Color or Color3.new(1, 1, 1)
-	part.Material = p.Material or Enum.Material.SmoothPlastic
+	local mat, refl = Kit.Mat(p.Material)
+	if round and p.Material == nil then
+		mat = M.SmoothPlastic
+	end
+	part.Material = mat
+	part.Reflectance = refl
 	part.Transparency = p.Transparency or 0
+	if mat == M.Plastic and not round then
+		Kit.Studs(part, p.Studs or "Top")
+	else
+		Kit.Studs(part, "None")
+	end
 	part.CanCollide = if p.CanCollide == nil then false else p.CanCollide
 	part.CanTouch = false
 	part.CanQuery = part.CanCollide
@@ -37,8 +97,13 @@ end
 function Kit.Part(parent: Instance, p: PartProps): Part
 	local part = Instance.new("Part")
 	part.Shape = p.Shape or Enum.PartType.Block
-	finish(part, p, parent)
+	finish(part, p, parent, part.Shape ~= Enum.PartType.Block)
 	return part
+end
+
+-- Studded brick. studs: "Top" (world default) | "All" (creatures, trees, props) | "None".
+function Kit.Brick(parent: Instance, size: Vector3, cf: CFrame, color: Color3, studs: Studs?, collide: boolean?): Part
+	return Kit.Part(parent, { Size = size, CFrame = cf, Color = color, Studs = studs, CanCollide = collide == true, Name = "Brick" })
 end
 
 -- Solid (walk-on / bump-into) block.
@@ -50,6 +115,12 @@ function Kit.Block(parent: Instance, size: Vector3, cf: CFrame, color: Color3, m
 	return Kit.Part(parent, { Size = size, CFrame = cf, Color = color, Material = material })
 end
 
+-- Smooth tile (signs, water surfaces, glass): SmoothPlastic, no studs.
+function Kit.Tile(parent: Instance, size: Vector3, cf: CFrame, color: Color3): Part
+	return Kit.Part(parent, { Size = size, CFrame = cf, Color = color, Material = M.SmoothPlastic, Name = "Tile" })
+end
+
+-- Round props only (toy ball, lantern glass, bowls). SmoothPlastic unless a material is given.
 function Kit.Ball(parent: Instance, d: number, cf: CFrame, color: Color3, material: Enum.Material?): Part
 	return Kit.Part(parent, {
 		Size = Vector3.new(d, d, d),
@@ -61,9 +132,10 @@ function Kit.Ball(parent: Instance, d: number, cf: CFrame, color: Color3, materi
 	})
 end
 
--- Ellipsoid (Block + SpecialMesh Sphere; mesh Scale stays 1 so part Size drives it).
+-- Ellipsoid (Block + SpecialMesh Sphere). Round props only; SmoothPlastic, no studs.
 function Kit.Blob(parent: Instance, size: Vector3, cf: CFrame, color: Color3, material: Enum.Material?): Part
-	local part = Kit.Block(parent, size, cf, color, material)
+	local part = Kit.Part(parent, { Size = size, CFrame = cf, Color = color, Material = material or M.SmoothPlastic })
+	Kit.Studs(part, "None")
 	part.Name = "Blob"
 	local mesh = Instance.new("SpecialMesh")
 	mesh.MeshType = Enum.MeshType.Sphere
@@ -92,9 +164,10 @@ function Kit.Cyl(
 	})
 end
 
+-- Slope brick (roofs, ear tips): smooth slope, like real slope bricks.
 function Kit.Wedge(parent: Instance, size: Vector3, cf: CFrame, color: Color3, material: Enum.Material?): WedgePart
 	local w = Instance.new("WedgePart")
-	finish(w, { Size = size, CFrame = cf, Color = color, Material = material }, parent)
+	finish(w, { Size = size, CFrame = cf, Color = color, Material = material }, parent, false)
 	w.Name = "Wedge"
 	return w
 end
@@ -130,7 +203,7 @@ function Kit.Label(part: BasePart, face: Enum.NormalId, text: string, color: Col
 	label.Name = "Text"
 	label.Size = UDim2.fromScale(1, 1)
 	label.BackgroundTransparency = 1
-	label.TextColor3 = color or Color3.fromHex("#3B2A1A")
+	label.TextColor3 = color or Color3.fromHex("#1F2A36")
 	label.TextScaled = true
 	label.Font = Enum.Font.FredokaOne
 	label.Text = text
@@ -157,6 +230,12 @@ end
 function Kit.Jitter(c: Color3, rng: Random, amount: number): Color3
 	local h, s, v = c:ToHSV()
 	return Color3.fromHSV(h, s, math.clamp(v + rng:NextNumber(-amount, amount), 0, 1))
+end
+
+-- Brick "seam" shade: value ×0.95 by default (alternate layers); k > 1 lightens.
+function Kit.Shade(c: Color3, k: number?): Color3
+	local h, s, v = c:ToHSV()
+	return Color3.fromHSV(h, s, math.min(1, v * (k or 0.95)))
 end
 
 return Kit

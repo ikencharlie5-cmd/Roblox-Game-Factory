@@ -1,32 +1,34 @@
 --!strict
--- Foliage clustering (ART_STYLE_GUIDE §4): groups of 3–5 (1 big, 2 medium, 1–2 small), random yaw,
--- scale ×0.8–1.3, lightness jitter. Each cluster is its own small Model (streaming-friendly).
+-- Foliage clustering: groups of 3–5 (1 big, 2 medium, 1–2 small) brick trees, yaw in 90° steps (grid look),
+-- scale ×0.8–1.3. Brick trees are bigger and blockier, so clusters are ~30% sparser than the lush plan
+-- (STUDS_STYLE_GUIDE §6). Each cluster is its own small Model (streaming-friendly).
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Theme = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Theme"))
 local Kit, Nature = Theme.Kit, Theme.Nature
+local Terrain = require(script.Parent.Terrain)
 
 local Scatter = {}
 
 local rayParams = RaycastParams.new()
 rayParams.FilterType = Enum.RaycastFilterType.Include
-rayParams.FilterDescendantsInstances = { Workspace.Terrain }
 
--- Terrain surface height at (x, z) (0 if nothing hit). Water counts as ground level 0.
+-- Ground-part surface height at (x, z) (plates, hills, cliff; 0 if nothing hit).
 function Scatter.GroundY(x: number, z: number): number
-	local hit = Workspace:Raycast(Vector3.new(x, 200, z), Vector3.new(0, -260, 0), rayParams)
-	if hit and hit.Material ~= Enum.Material.Water then
+	rayParams.FilterDescendantsInstances = { Terrain.Folder() }
+	local hit = Workspace:Raycast(Vector3.new(x, 300, z), Vector3.new(0, -320, 0), rayParams)
+	if hit then
 		return hit.Position.Y
 	end
 	return 0
 end
 
 function Scatter.Ground(x: number, z: number): CFrame
-	return CFrame.new(x, Scatter.GroundY(x, z) - 0.2, z)
+	return CFrame.new(x, Scatter.GroundY(x, z), z)
 end
 
 local function yaw(rng: Random): CFrame
-	return CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0)
+	return CFrame.Angles(0, rng:NextInteger(0, 3) * math.pi / 2, 0)
 end
 
 export type Kind = "Round" | "Pine" | "Magic" | "Mixed"
@@ -45,18 +47,18 @@ local function tree(parent: Instance, cf: CFrame, s: number, rng: Random, kind: 
 	end
 end
 
--- Tree cluster around (x, z). size = base scale (1 = ~13-stud tall tree).
+-- Tree cluster around (x, z). size = base scale (1 = ~12-stud tall brick oak).
 function Scatter.Cluster(parent: Instance, x: number, z: number, rng: Random, kind: Kind, size: number?)
 	local m = Kit.Model(parent, "TreeCluster")
 	local s = size or 1
-	local sizes = { 1.25, 0.95, 0.9, 0.7, 0.6 }
-	local n = rng:NextInteger(3, 5)
+	local sizes = { 1.25, 0.95, 0.9, 0.7 }
+	local n = rng:NextInteger(2, 4)
 	for i = 1, n do
 		local a = rng:NextNumber(0, math.pi * 2)
-		local d = if i == 1 then 0 else rng:NextNumber(7, 12) * s
+		local d = if i == 1 then 0 else rng:NextNumber(9, 13) * s
 		local px, pz = x + math.cos(a) * d, z + math.sin(a) * d
 		local sc = sizes[i] * s * rng:NextNumber(0.85, 1.15)
-		if i >= 4 and rng:NextNumber() < 0.5 then
+		if i >= 3 and rng:NextNumber() < 0.5 then
 			Nature.Bush(m, Scatter.Ground(px, pz) * yaw(rng), sc * 1.3, rng, rng:NextNumber() < 0.3)
 		else
 			tree(m, Scatter.Ground(px, pz) * yaw(rng), sc, rng, kind)
@@ -84,7 +86,7 @@ end
 -- Dense wall of clusters along a line (biome edges / map edges).
 function Scatter.Wall(parent: Instance, a: Vector3, b: Vector3, rng: Random, kind: Kind, spacing: number?)
 	local len = (b - a).Magnitude
-	local sp = spacing or 26
+	local sp = (spacing or 26) * 1.2
 	for d = 0, len, sp do
 		local p = a:Lerp(b, d / math.max(len, 1))
 		Scatter.Cluster(parent, p.X + rng:NextNumber(-6, 6), p.Z + rng:NextNumber(-6, 6), rng, kind, rng:NextNumber(1.1, 1.5))
