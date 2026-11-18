@@ -30,6 +30,6 @@
 - [gameplay] Bait sources: spec lists bait prices but not how players get the first one. (built: 5 Berry bait in new saves + shop stall restock every 5 min) ✅ Approved (5 Berry bait + restock)
 
 ## Sign-off fixes
-- [gameplay] VIP "Gold name + tag" promised in shop/SPEC but not built: gold "VIP" BillboardGui over VIP players' heads on CharacterAdded (UI: gold chat tag via TextChatService.OnIncomingMessage) — or remove the claim from ShopWindow INFO.VIP.
-- [graphics] Map edge has no invisible walls; players can walk over backdrop hills off the terrain onto SafetyFloor and get stuck. Add invisible boundary walls + make SafetyFloor teleport touched players to HubSpawn.
-- [manager] README not publish-ready: title + emoji tag, How to play, description, icon/thumbnail ideas, pass/product names+prices+descriptions table.
+- [gameplay] VIP "Gold name + tag" promised in shop/SPEC but not built: gold "VIP" BillboardGui over VIP players' heads on CharacterAdded (UI: gold chat tag via TextChatService.OnIncomingMessage) — or remove the claim from ShopWindow INFO.VIP. ✅ Built (head billboard + chat tag)
+- [graphics] Map edge has no invisible walls; players can walk over backdrop hills off the terrain onto SafetyFloor and get stuck. Add invisible boundary walls + make SafetyFloor teleport touched players to HubSpawn. ✅ Built (Terrain.Bounds + SafetyFloor teleport)
+- [manager] README not publish-ready: title + emoji tag, How to play, description, icon/thumbnail ideas, pass/product names+prices+descriptions table. ✅ Done

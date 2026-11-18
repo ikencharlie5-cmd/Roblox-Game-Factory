@@ -1,4 +1,4 @@
-**Result: NEEDS WORK — 3 items**
+**Result: APPROVED (SHIP)** — re-check 2026-11-17: all 3 prior ❌ fixed; DataService late-autosave lock race also fixed (UpdateAsync transform returns nil when not release and player left / cache[player] ~= data).
 
 Basis: SPEC.md, src/, notes/, CHECK_REPORT.md (round 2 PASS), CI green. No Studio MCP, so there was no playtest. Items that can only be checked in a live session are marked ➖ and listed under Charlie's playtest.
 
@@ -36,7 +36,7 @@ Basis: SPEC.md, src/, notes/, CHECK_REPORT.md (round 2 PASS), CI green. No Studi
 - ✅ Better with friends: visits and Likes add rating. Trading is planned for update 1, per DECISIONS.
 
 ## 6. Monetization [Gameplay, UI]
-- ❌ 2+ Game Passes with clear value: 4 passes exist, but **VIP promises "Gold name + tag" (ShopWindow.luau:16, SPEC) and nothing builds it.** Only the +10% coins, reroll and decor perks are real.
+- ✅ 2+ Game Passes with clear value: 4 passes; VIP "Gold name + tag" now built — gold VIP BillboardGui on Head via CharacterAdded/VIP attribute (MonetizationService.applyVipTag) + gold [VIP] chat prefix (client/Chat/VipChatTag.luau, TextChatService.OnIncomingMessage).
 - ✅ 1+ Dev Product: Instant Hatch x3, Coin packs x3, Starter Pack.
 - ✅ The shop is easy to find (HUD row, "+" on the Coins chip, hub stall) and never blocks free players. Passes are cosmetic/convenience only.
 - ✅ Purchases give instant feedback: Purchase sound plus a Splash ("Starter Pack!" / name).
@@ -58,7 +58,7 @@ Basis: SPEC.md, src/, notes/, CHECK_REPORT.md (round 2 PASS), CI green. No Studi
 - ✅ No grey filler: all 35 build items have Theme.Props models, and the terrain is materialised.
 - ✅ Lighting and atmosphere are set: ShadowMap, Sky, 14-min day cycle, weather (Sky.luau, project Lighting).
 - ✅ Clear paths: spoke roads to each plot, a forest road with a signpost and gate arches.
-- ❌ Kill floors/invisible walls: **the map edge has none.** The park is ringed by blobby backdrop hills (Terrain.Backdrop) that can be walked over, and terrain ends at x ±640 / z +640. Players who go past it land on the invisible `SafetyFloor` 15 studs down and get stuck. Nothing respawns or returns them.
+- ✅ Kill floors/invisible walls: Terrain.Bounds adds invisible collide walls (park box ±420, forest corridor x ±225 to z -1240; clear of plots and zones HalfWidth 200), and SafetyFloor.Touched teleports characters to HubSpawn with per-character debounce (WorldService).
 
 ## 9. Sound & music [Audio]
 - ✅ Background music fits the mood (marimba/ukulele park, acoustic forest), with Music on/off in Settings.
@@ -89,10 +89,10 @@ Basis: SPEC.md, src/, notes/, CHECK_REPORT.md (round 2 PASS), CI green. No Studi
 - ✅ Effects are pooled (FxPools) or destroyed.
 
 ## 13. Ready to publish [Manager → Charlie TODO]
-- ❌ README is not publish-ready: **no title + emoji tag, "How to play: TBD", no game description, no icon/thumbnail ideas, and no pass/product names, prices and descriptions for Charlie.**
-- (same ❌ as above) Game description
-- (same ❌ as above) Icon + thumbnail ideas
-- (same ❌ as above) Game Pass / Product names, prices, descriptions
+- ✅ README publish-ready: title + emoji tag, description, How to play, icon/thumbnail ideas, pass/product table matching Config prices, publish steps, Charlie TODO.
+- ✅ (in README) Game description
+- ✅ (in README) Icon + thumbnail ideas
+- ✅ (in README) Game Pass / Product names, prices, descriptions
 - ✅ The Charlie TODO list is short. It needs one line added: "create the 4 passes + 7 products from the table and paste IDs".
 
 ## Fix list
