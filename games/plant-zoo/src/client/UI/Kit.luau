@@ -269,4 +269,23 @@ function Kit.Sig(value: any): string
 	return if ok then s else tostring(os.clock())
 end
 
+-- Icon: an "rbxassetid://" string becomes an ImageLabel (Fit), anything else an emoji TextLabel.
+function Kit.Icon(parent: Instance?, icon: string, props: { [string]: any }?): GuiObject
+	if string.sub(icon, 1, 13) == "rbxassetid://" then
+		local img = Kit.Make("ImageLabel", {
+			BackgroundTransparency = 1,
+			Image = icon,
+			ScaleType = Enum.ScaleType.Fit,
+		}, nil)
+		for k, v in props or {} do
+			pcall(function()
+				(img :: any)[k] = v
+			end)
+		end
+		img.Parent = parent
+		return img
+	end
+	return Kit.Label(parent, icon, props)
+end
+
 return Kit

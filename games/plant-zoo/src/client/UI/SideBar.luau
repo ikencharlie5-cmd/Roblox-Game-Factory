@@ -43,7 +43,10 @@ function SideBar.Mount(gui: ScreenGui)
 		if c then
 			c:Destroy()
 		end
-		Kit.Label(b, def.Icon, { Size = UDim2.fromScale(1, 0.62) })
+		Kit.Icon(b, Style.Icons[def.Name] or def.Icon, {
+			Size = UDim2.fromScale(0.9, 0.58),
+			Position = UDim2.fromScale(0.05, 0.04),
+		})
 		local text = Kit.Label(b, def.Label or def.Name, {
 			Size = UDim2.fromScale(1, 0.36),
 			Position = UDim2.fromScale(0, 0.64),

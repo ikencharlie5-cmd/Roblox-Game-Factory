@@ -41,7 +41,14 @@ local function card(
 	if owned then
 		(c:FindFirstChildOfClass("UIStroke") :: UIStroke).Color = Style.Color.Leaf
 	end
-	Kit.Label(c, icon .. " " .. name, { Size = UDim2.new(1, -8, 0.24, 0), Position = UDim2.new(0, 4, 0.04, 0) })
+	local isImg = string.sub(icon, 1, 13) == "rbxassetid://"
+	if isImg then
+		Kit.Icon(c, icon, { Size = UDim2.new(0.24, 0, 0.26, 0), Position = UDim2.new(0, 4, 0.03, 0) })
+	end
+	Kit.Label(c, if isImg then name else icon .. " " .. name, {
+		Size = UDim2.new(if isImg then 0.74 else 1, -8, 0.24, 0),
+		Position = UDim2.new(if isImg then 0.26 else 0, 4, 0.04, 0),
+	})
 	Kit.Label(c, desc, {
 		Size = UDim2.new(1, -8, 0.32, 0),
 		Position = UDim2.new(0, 4, 0.29, 0),
@@ -69,7 +76,7 @@ function StoreWindow.Render()
 	for i, p in PASSES do
 		local def = Config.GamePasses[p.Key]
 		if def then
-			card(i, p.Icon, def.Name, p.Desc, def.Price or 0, Derived.HasPass(p.Key), function()
+			card(i, Style.Icons[p.Key] or p.Icon, def.Name, p.Desc, def.Price or 0, Derived.HasPass(p.Key), function()
 				Market.PromptPass(p.Key)
 			end)
 		end
@@ -77,7 +84,7 @@ function StoreWindow.Render()
 	for i, p in PRODUCTS do
 		local def = Config.DevProducts[p.Key]
 		if def then
-			card(10 + i, p.Icon, def.Name, p.Desc, def.Price or 0, false, function()
+			card(10 + i, Style.Icons[p.Key] or p.Icon, def.Name, p.Desc, def.Price or 0, false, function()
 				Market.PromptProduct(p.Key)
 			end)
 		end

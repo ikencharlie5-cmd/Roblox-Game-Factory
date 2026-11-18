@@ -33,7 +33,7 @@ local function pill(parent: Instance, icon: string, color: Color3, width: number
 		BackgroundTransparency = 0.15,
 		LayoutOrder = order,
 	})
-	Kit.Label(p, icon, { Size = UDim2.new(0.22, 0, 0.9, 0), Position = UDim2.fromScale(0.02, 0.05) })
+	Kit.Icon(p, icon, { Size = UDim2.new(0.22, 0, 0.9, 0), Position = UDim2.fromScale(0.02, 0.05) })
 	local l = Kit.Label(p, "0", {
 		Size = UDim2.new(0.74, 0, 0.8, 0),
 		Position = UDim2.fromScale(0.24, 0.1),
@@ -54,7 +54,7 @@ function Hud.Mount(gui: ScreenGui)
 	Kit.Make("UISizeConstraint", { MinSize = Vector2.new(300, 36), MaxSize = Vector2.new(640, 56) }, top)
 	Kit.List(top, true, 6, true)
 	local cashPill
-	cashPill, cashLabel = pill(top, "💵", Style.Color.Cash, 0.46, 1)
+	cashPill, cashLabel = pill(top, Style.Icons.Cash, Style.Color.Cash, 0.46, 1)
 	cashLabel.Size = UDim2.new(0.74, 0, 0.58, 0)
 	rateLabel = Kit.Label(cashPill, "+$0/s", {
 		Size = UDim2.new(0.74, 0, 0.34, 0),
@@ -93,9 +93,10 @@ function Hud.Mount(gui: ScreenGui)
 		Windows.Open("Shop")
 	end, { Size = UDim2.new(1, -50, 1, 0) })
 	restockLabel = Kit.Label(restockBtn, "🛒 Restock 5:00", { TextColor3 = Style.Color.White })
-	Kit.Button(right, "⚙️", Style.Color.Grey, function()
+	local gear = Kit.Button(right, "", Style.Color.Grey, function()
 		Windows.Toggle("Settings")
 	end, { AnchorPoint = Vector2.new(1, 0), Position = UDim2.fromScale(1, 0), Size = UDim2.new(0, 44, 1, 0) })
+	Kit.Icon(gear, Style.Icons.Settings, { Size = UDim2.fromScale(0.84, 0.84), Position = UDim2.fromScale(0.08, 0.08) })
 
 	-- Goal card (top-left): next pad + Release progress
 	goalCard = Kit.Panel(gui, Style.Color.Cream, {

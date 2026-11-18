@@ -107,4 +107,17 @@ function Style.WeatherInfo(name: string): { Icon: string, Color: Color3, Text: s
 	return Style.Weather[key] or { Icon = "🌤️", Color = Style.Color.Sky, Text = "" }
 end
 
+-- Charlie's uploaded icons (image asset ids). Buttons without one fall back to emoji.
+Style.Icons = {
+	Store = "rbxassetid://118340248374796",
+	Settings = "rbxassetid://77037572950989",
+	Daily = "rbxassetid://88974008115545",
+	Release = "rbxassetid://114309448468135",
+	Cash = "rbxassetid://75451473231283",
+	DoubleCash = "rbxassetid://129143175711617",
+	VIP = "rbxassetid://124845073094946",
+	AutoGardener = "rbxassetid://133153479023421",
+	CashBoost = "rbxassetid://101692449472461",
+}
+
 return Style
