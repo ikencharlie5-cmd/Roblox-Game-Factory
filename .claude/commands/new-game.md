@@ -5,7 +5,9 @@ argument-hint: <game idea>
 New game idea: $ARGUMENTS
 
 1. Pick a short kebab-case slug. Run `bash scripts/new-game.sh <slug> "<Game Name>" "<idea>"`.
-2. Use the **rnd** subagent (Job A) to research the idea online → `research/RESEARCH.md`.
+2. Launch the 4 R&D researchers IN PARALLEL (one message, four Agent calls): **rnd-gameplay**, **rnd-art**,
+   **rnd-ui**, **rnd-audio** — each told the slug + idea. Then the **rnd** lead merges their Summaries into
+   `research/RESEARCH.md` (Job C).
 3. `python3 scripts/status.py <slug> stage ideas`, then the **ideas** subagent (Job A) writes
    the full SPEC.md using RESEARCH.md + inspiration.
 4. `python3 scripts/status.py <slug> stage approval`

@@ -165,7 +165,8 @@ function Build.Billboard(adornee: BasePart, text: string, color: Color3, height:
 	return label
 end
 
--- Simple low-poly tree: trunk + 2-3 leaf balls. ~4 parts.
+-- Primitive cartoon tree: trunk + 3 overlapping SmoothPlastic leaf balls in 3 palette shades. ~4 parts.
+-- (World/Props.Tree uses ReplicatedStorage.Assets.Props.Tree* first and falls back to this.)
 function Build.Tree(parent: Instance, pos: Vector3, scale: number, leaf: Color3?)
 	local s = scale
 	local trunk = Build.Cyl(
@@ -174,36 +175,48 @@ function Build.Tree(parent: Instance, pos: Vector3, scale: number, leaf: Color3?
 		1.4 * s,
 		CFrame.new(pos + Vector3.new(0, 3 * s, 0)),
 		Color3.fromHex("#8B5A2B"),
-		Enum.Material.Wood,
+		Enum.Material.SmoothPlastic,
 		true
 	)
 	trunk.Name = "Trunk"
-	local c = leaf or Color3.fromHex("#4CAF50")
-	Build.Ball(parent, 6 * s, CFrame.new(pos + Vector3.new(0, 7 * s, 0)), c, Enum.Material.Grass)
+	local c = leaf or Color3.fromHex("#4FBF4A")
+	Build.Ball(parent, 6.4 * s, CFrame.new(pos + Vector3.new(0, 7.4 * s, 0)), c, Enum.Material.SmoothPlastic)
 	Build.Ball(
 		parent,
-		4.5 * s,
-		CFrame.new(pos + Vector3.new(1.8 * s, 6 * s, 0.8 * s)),
-		c:Lerp(Color3.new(1, 1, 0.6), 0.15),
-		Enum.Material.Grass
+		4.8 * s,
+		CFrame.new(pos + Vector3.new(2 * s, 6.2 * s, 0.8 * s)),
+		c:Lerp(Color3.fromHex("#A8E36A"), 0.35),
+		Enum.Material.SmoothPlastic
 	)
 	Build.Ball(
 		parent,
-		4 * s,
-		CFrame.new(pos + Vector3.new(-1.6 * s, 6.4 * s, -1 * s)),
-		c:Lerp(Color3.new(0, 0.2, 0), 0.15),
-		Enum.Material.Grass
+		4.4 * s,
+		CFrame.new(pos + Vector3.new(-1.8 * s, 6.6 * s, -1.1 * s)),
+		c:Lerp(Color3.fromHex("#2F8F3E"), 0.25),
+		Enum.Material.SmoothPlastic
 	)
 end
 
--- Little flower: stem + bloom. 2 parts.
+-- Little flower: stem + bloom + centre. 3 parts, no shadows.
 function Build.Flower(parent: Instance, pos: Vector3, color: Color3)
-	Build.Deco(parent, {
+	local stem = Build.Deco(parent, {
 		Size = Vector3.new(0.2, 1.2, 0.2),
 		CFrame = CFrame.new(pos + Vector3.new(0, 0.6, 0)),
-		Color = Color3.fromHex("#4CAF50"),
+		Color = Color3.fromHex("#4FA83A"),
 	})
-	Build.Ball(parent, 0.8, CFrame.new(pos + Vector3.new(0, 1.3, 0)), color, Enum.Material.SmoothPlastic)
+	stem.CanQuery = false
+	local bloom = Build.Blob(
+		parent,
+		Vector3.new(1, 0.45, 1),
+		CFrame.new(pos + Vector3.new(0, 1.3, 0)),
+		color,
+		Enum.Material.SmoothPlastic
+	)
+	bloom.CanQuery = false
+	bloom.CastShadow = false
+	local mid = Build.Ball(parent, 0.4, CFrame.new(pos + Vector3.new(0, 1.45, 0)), Color3.fromHex("#FFE38A"))
+	mid.CanQuery = false
+	mid.CastShadow = false
 end
 
 function Build.Tag(inst: Instance, tag: string, attrs: { [string]: any }?)

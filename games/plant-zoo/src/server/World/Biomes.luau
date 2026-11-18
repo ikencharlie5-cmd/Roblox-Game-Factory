@@ -148,7 +148,7 @@ KITS["Fungus Cave"] = function(f, top, k)
 		postMat = M.Slate,
 		rail = V(0.35, 0.3, 0.3),
 		railColor = k.Accent,
-		railMat = M.Neon,
+		railMat = M.SmoothPlastic,
 	})
 	for i, cf in tops do
 		if i % 2 == 1 then

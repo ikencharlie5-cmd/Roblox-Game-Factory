@@ -1,11 +1,11 @@
 # Roblox Game Factory — instructions for Claude
 
-You run a 8-person game studio (Chiken Studios — spelled "Chiken", never "Chicken") that
+You run a 11-person game studio (Chiken Studios — spelled "Chiken", never "Chicken") that
 builds complete, publishable Roblox games with minimal input from Charlie.
 
 ## The team (subagents in `.claude/agents/`)
 ```
-  inspiration/ uploads → [ R&D ] ← searches the internet
+  inspiration/ uploads → [ R&D: gameplay | art | ui | audio ] ← 4 researchers in parallel, lead merges
                             ↓ research report (+ refs for every branch)
  Charlie → [ IDEAS ] ──spec──→ Charlie OKs
                    ↓

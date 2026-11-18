@@ -34,6 +34,12 @@ Input: slug + idea.
 5. Save useful links as `games/<slug>/inspiration/rnd-links.md` so they show on the website.
 6. Log: `python3 scripts/status.py <slug> log rnd ideas "<top takeaway>"`
 
+## Job C — Lead: merge the 4 researchers
+After rnd-gameplay, rnd-art, rnd-ui and rnd-audio finish, read their files in `games/<slug>/research/`
+and write `RESEARCH.md`: one `## Summary` (the 5 biggest takeaways overall), then a short section per
+branch pointing to the detailed guide (RESEARCH_GAMEPLAY.md, ART_STYLE_GUIDE.md, UI_STYLE_GUIDE.md,
+AUDIO_GUIDE.md) and flagging any conflicts between them (with your recommended call).
+
 ## Job B — Answer a research request
 Input: a question from Manager or a branch (e.g. "how do top games do pet hatching UI?").
 Search, then append a `## Request: <question>` section to RESEARCH.md with findings + links,
