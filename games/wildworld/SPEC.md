@@ -58,10 +58,10 @@ Rule: one new HUD button per goal reached; full menu only after 2 creatures.
 - **Key sounds:** egg crack + chirp, 5-tier rarity reveal ladder (F major, ≤ 3.5 s, music ducks −8 dB), capture success/fail, coin tick ladder, place thud, rating-up chime.
 
 ## Out of scope (v1)
-Trading, co-breeding, cross-species hybrids, biomes 2–6, water/flying creatures, freeform fence enclosures (pads only), elders/bonding, photo mode, extra mutations (Melanistic, Giant, Celestial…; keep disabled in data).
+Trading (planned update 1), co-breeding, cross-species hybrids (later update), biomes 2–6, water/flying creatures, freeform fence enclosures (pads only), elders/bonding, photo mode, extra mutations (Melanistic, Giant, Celestial…; keep disabled in data).
 
-## Questions for Charlie
-See `QUESTIONS.md` (creature build method, trading timing, cross-species breeding). Defaults are used until answered.
+## Decided (Manager)
+Creatures code-built parts only · trading = update 1 (v1 has visits + Likes) · same-species breeding only in v1. See `DECISIONS.md`.
 
 ---
 
