@@ -1,0 +1,14 @@
+{
+  "_note": "Reusable AI-generated 3D assets in Charlie's Roblox inventory (cute stylized simulator style). Load at runtime with InsertService:LoadAsset(id) (works for assets the place owner owns) \u2014 see games/plant-zoo/src/server/Services/AssetLoaderService.luau for the pattern.",
+  "props": {
+    "Tree_RoundGreen": 104119464568180,
+    "Tree_CherryBlossom": 113615958382838,
+    "Tree_TallPuffs": 92251120753488,
+    "Bush_Green": 115234404334743,
+    "Bush_Flowering": 81154315921007,
+    "Flower_Tulips": 85422531426819,
+    "Flower_Daisies": 101231148323503,
+    "Rock_Mossy": 135411069854830
+  },
+  "creatures_plant_zoo": "games/plant-zoo/assets/creature_assets.json"
+}
