@@ -49,7 +49,11 @@
   .edge.loop { stroke-dasharray: 6 6; }
   .edge.hot { stroke: var(--ideas); animation: flow 1s linear infinite; stroke-dasharray: 8 6; }
   @keyframes flow { to { stroke-dashoffset: -28; } }
-  .worker { animation: bob .5s ease-in-out infinite alternate; transform-box: fill-box; }
+  .type { animation: tap .22s ease-in-out infinite alternate; }
+  .type2 { animation: tap .22s ease-in-out infinite alternate-reverse; }
+  @keyframes tap { to { transform: rotate(-14deg); } }
+  .flick { animation: neonflick 4s infinite; }
+  @keyframes neonflick { 0%,18%,22%,60%,100% { opacity: 1; } 20% { opacity: .55; } 62% { opacity: .8; } }
   @keyframes bob { to { transform: translateY(-3px) rotate(-3deg); } }
   .glow { animation: flick 2.2s ease-in-out infinite; }
   @keyframes flick { 50% { opacity: .05; } }
@@ -222,99 +226,101 @@ function lastMsg(g, role) {
   return "";
 }
 const STAGE_FLOOR = { research: 4, ideas: 3, approval: 3, branches: 2, manager: 5, checker: 5, signoff: 5, done: 1 };
+const NEON = { manager: "#ff4d6d", checker: "#ffe14d", rnd: "#2de2e6", ideas: "#ffb02e", charlie: "#ff8a3d",
+  gameplay: "#39ff88", graphics: "#3db8ff", ui: "#c77dff", audio: "#ff5ec8", animation: "#ff6b8a",
+  inspiration: "#9aa8ff", done: "#39ffb6" };
+
+function stick(cx, baseY, color, on) {
+  // stick figure sitting at a desk, typing when on
+  return `<g stroke="${color}" stroke-width="2.4" stroke-linecap="round" fill="none" filter="url(#neon)">
+    <circle cx="${cx}" cy="${baseY - 30}" r="6"/>
+    <line x1="${cx}" y1="${baseY - 24}" x2="${cx}" y2="${baseY - 8}"/>
+    <line x1="${cx}" y1="${baseY - 8}" x2="${cx + 9}" y2="${baseY - 8}"/>
+    <line x1="${cx + 9}" y1="${baseY - 8}" x2="${cx + 9}" y2="${baseY + 4}"/>
+    <g class="${on ? "type" : ""}" style="transform-origin:${cx}px ${baseY - 20}px">
+      <line x1="${cx}" y1="${baseY - 20}" x2="${cx - 12}" y2="${baseY - 14}"/>
+    </g>
+    <g class="${on ? "type2" : ""}" style="transform-origin:${cx}px ${baseY - 20}px">
+      <line x1="${cx}" y1="${baseY - 20}" x2="${cx - 13}" y2="${baseY - 12}"/>
+    </g>
+  </g>`;
+}
 
 function renderMap() {
   const g = selGame;
   const X0 = 90, X1 = 850, FH = 128, TOP = 120;
-  const floorY = f => TOP + (5 - f) * FH; // floor 5 at top
+  const floorY = f => TOP + (5 - f) * FH;
   const short = (s, n) => (s && s.length > n ? s.slice(0, n - 1) + "…" : s || "");
 
-  function room(id, label, icon, x, y, w, sub) {
+  function room(id, label, x, y, w, sub) {
     const h = FH - 10;
     const s = nodeState(id, g);
-    const role = ROLES[id] || { color: "var(--dim)" };
+    const c = NEON[id] || "#9aa8ff";
     const lit = s.active, done = /done|shipped/.test(s.text), blocked = s.text === "blocked";
-    const win = lit ? "url(#lit)" : done ? "#cdeedc" : blocked ? "#ffd3d3" : "#26304d";
-    const ink = lit || done || blocked ? "#1d2333" : "#c9d1ec";
-    const sel = selNode === id ? `stroke="${role.color}" stroke-width="4"` : `stroke="#5b4a3a" stroke-width="3"`;
-    const cx = x + w / 2, deskY = y + h - 34;
+    const edge = lit ? c : done ? "#39ffb6" : blocked ? "#ff3b5c" : "#2b3160";
+    const sel = selNode === id ? 4 : 2;
+    const cx = x + w / 2, deskY = y + h - 26;
     const msg = lit && g ? short(lastMsg(g, id), Math.floor(w / 7.2)) : "";
+    const glowOn = lit || done || blocked;
     return `<g class="room ${lit ? "on" : ""}" onclick="pickNode('${id}')" style="cursor:pointer">
-      <rect x="${x + 4}" y="${y + 5}" width="${w - 8}" height="${h}" rx="6" fill="${win}" ${sel}/>
-      ${lit ? `<rect class="glow" x="${x + 4}" y="${y + 5}" width="${w - 8}" height="${h}" rx="6" fill="#ffd36b" opacity=".18"/>` : ""}
-      <line x1="${x + 4}" y1="${y + 5 + h * 0.5}" x2="${x + w - 4}" y2="${y + 5 + h * 0.5}" stroke="#ffffff" stroke-opacity=".08"/>
-      <rect x="${cx - 26}" y="${deskY}" width="52" height="8" rx="2" fill="#8a5a33"/>
-      <rect x="${cx - 22}" y="${deskY + 8}" width="4" height="18" fill="#6b4426"/><rect x="${cx + 18}" y="${deskY + 8}" width="4" height="18" fill="#6b4426"/>
-      <rect x="${cx - 10}" y="${deskY - 18}" width="20" height="14" rx="2" fill="${lit ? "#7fe3ff" : "#3b4466"}" stroke="#1d2333" stroke-width="1.5"/>
-      <g class="${lit ? "worker" : ""}" style="transform-origin:${cx + 22}px ${deskY + 6}px">
-        <rect x="${cx + 14}" y="${deskY - 10}" width="16" height="18" rx="7" fill="${role.color}"/>
-        <circle cx="${cx + 22}" cy="${deskY - 17}" r="7" fill="#ffd9b3" stroke="#1d2333" stroke-width="1"/>
-      </g>
-      <text x="${x + 12}" y="${y + 24}" font-family="Fredoka" font-size="15" font-weight="600" fill="${ink}">${icon} ${label}</text>
-      <text x="${x + 12}" y="${y + 40}" font-family="Inter" font-size="11" fill="${ink}" opacity=".8">${esc(sub || s.text)}</text>
-      ${msg ? `<g><rect x="${x + 10}" y="${y + 47}" width="${w - 20}" height="20" rx="10" fill="#fff" stroke="${role.color}" stroke-width="2"/>
-        <text x="${x + 18}" y="${y + 61}" font-family="Inter" font-size="10.5" fill="#1d2333">💬 ${esc(msg)}</text></g>` : ""}
+      <rect x="${x + 5}" y="${y + 6}" width="${w - 10}" height="${h}" rx="8" fill="${lit ? c : "#0a0d1f"}" fill-opacity="${lit ? 0.10 : 1}"
+        stroke="${edge}" stroke-width="${sel}" ${glowOn ? 'filter="url(#neon)"' : ""} class="${lit ? "flick" : ""}"/>
+      <line x1="${cx - 30}" y1="${deskY}" x2="${cx + 18}" y2="${deskY}" stroke="${glowOn ? edge : "#2b3160"}" stroke-width="2.5" filter="url(#neon)"/>
+      <line x1="${cx - 26}" y1="${deskY}" x2="${cx - 26}" y2="${deskY + 18}" stroke="#2b3160" stroke-width="2"/>
+      <line x1="${cx + 14}" y1="${deskY}" x2="${cx + 14}" y2="${deskY + 18}" stroke="#2b3160" stroke-width="2"/>
+      <rect x="${cx - 22}" y="${deskY - 16}" width="18" height="12" rx="2" fill="${lit ? "#7ff9ff" : "#141a3a"}" stroke="${lit ? "#7ff9ff" : "#2b3160"}" ${lit ? 'filter="url(#neon)"' : ""}/>
+      ${stick(cx + 8, deskY + 10, glowOn ? c : "#3a4277", lit)}
+      <text x="${x + 14}" y="${y + 26}" font-family="Fredoka" font-size="15" font-weight="600" fill="${glowOn ? c : "#6b74a8"}" ${glowOn ? 'filter="url(#neon)"' : ""}>${label}</text>
+      <text x="${x + 14}" y="${y + 42}" font-family="Inter" font-size="11" fill="${glowOn ? "#e8ebff" : "#4d5590"}">${esc(sub || s.text)}</text>
+      ${msg ? `<rect x="${x + 12}" y="${y + 48}" width="${w - 24}" height="20" rx="10" fill="#0a0d1f" stroke="${c}" stroke-width="1.5" filter="url(#neon)"/>
+        <text x="${x + 20}" y="${y + 62}" font-family="Inter" font-size="10.5" fill="#e8ebff">${esc(msg)}</text>` : ""}
     </g>`;
   }
 
   let rooms = "";
-  // Floor 5: executive
-  rooms += room("manager", "Manager's Office", "🧑‍💼", X0, floorY(5), 380);
-  rooms += room("checker", "QA Lab (Checker)", "🔍", X0 + 380, floorY(5), 380);
-  // Floor 4: R&D labs
-  const rw = 190;
-  [["Gameplay Lab", "🎮"], ["Art Lab", "🖌️"], ["UI Lab", "📱"], ["Audio Lab", "🎧"]].forEach(([l, i], k) => {
-    rooms += room("rnd", "R&D " + l, i, X0 + k * rw, floorY(4), rw);
-  });
-  // Floor 3: ideas + charlie
-  rooms += room("ideas", "Ideas Studio", "💡", X0, floorY(3), 460);
-  rooms += room("charlie", "Charlie's Office", "👑", X0 + 460, floorY(3), 300, g ? (g.stage === "approval" ? "waiting for your OK!" : nodeState("charlie", g).text) : "idle");
-  // Floor 2: production
-  const pw = 152;
-  [["gameplay", "Gameplay", "⚙️"], ["graphics", "Graphics", "🎨"], ["ui", "UI / Menus", "🖥️"], ["audio", "Sound", "🎵"], ["animation", "Animation", "🎬"]]
-    .forEach(([id, l, i], k) => { rooms += room(id, l, i, X0 + k * pw, floorY(2), pw); });
-  // Floor 1: lobby
-  rooms += room("inspiration", "Mailroom", "📬", X0, floorY(1), 250, "inspiration uploads");
-  rooms += `<g><rect x="${X0 + 254}" y="${floorY(1) + 5}" width="252" height="${FH - 10}" rx="6" fill="#f3e6cf" stroke="#5b4a3a" stroke-width="3"/>
-    <rect x="${X0 + 350}" y="${floorY(1) + 40}" width="60" height="${FH - 45}" rx="4" fill="#7fc7e8" stroke="#5b4a3a" stroke-width="3"/>
-    <line x1="${X0 + 380}" y1="${floorY(1) + 40}" x2="${X0 + 380}" y2="${floorY(1) + FH - 5}" stroke="#5b4a3a" stroke-width="2"/>
-    <text x="${X0 + 380}" y="${floorY(1) + 28}" text-anchor="middle" font-family="Fredoka" font-size="16" fill="#5b4a3a">🐔 LOBBY</text>
-    <circle cx="${X0 + 290}" cy="${floorY(1) + FH - 30}" r="14" fill="#5fbf6a"/><rect x="${X0 + 286}" y="${floorY(1) + FH - 20}" width="8" height="14" fill="#8a5a33"/>
-    <circle cx="${X0 + 470}" cy="${floorY(1) + FH - 30}" r="14" fill="#5fbf6a"/><rect x="${X0 + 466}" y="${floorY(1) + FH - 20}" width="8" height="14" fill="#8a5a33"/></g>`;
-  rooms += room("done", "Shipping Dock", "🚀", X0 + 506, floorY(1), 254);
+  rooms += room("manager", "MANAGER", X0, floorY(5), 380);
+  rooms += room("checker", "QA LAB", X0 + 380, floorY(5), 380);
+  ["R&D · GAMEPLAY", "R&D · ART", "R&D · UI", "R&D · AUDIO"].forEach((l, k) => { rooms += room("rnd", l, X0 + k * 190, floorY(4), 190); });
+  rooms += room("ideas", "IDEAS STUDIO", X0, floorY(3), 460);
+  rooms += room("charlie", "CHARLIE'S OFFICE", X0 + 460, floorY(3), 300, g ? (g.stage === "approval" ? "waiting for your OK!" : nodeState("charlie", g).text) : "idle");
+  [["gameplay", "GAMEPLAY"], ["graphics", "GRAPHICS"], ["ui", "UI"], ["audio", "SOUND"], ["animation", "ANIMATION"]]
+    .forEach(([id, l], k) => { rooms += room(id, l, X0 + k * 152, floorY(2), 152); });
+  rooms += room("inspiration", "MAILROOM", X0, floorY(1), 250, "inspiration uploads");
+  rooms += `<g><rect x="${X0 + 255}" y="${floorY(1) + 6}" width="250" height="${FH - 10}" rx="8" fill="#0a0d1f" stroke="#ff4dd8" stroke-width="2" filter="url(#neon)"/>
+    <text x="${X0 + 380}" y="${floorY(1) + 50}" text-anchor="middle" font-family="Fredoka" font-size="22" font-weight="700" fill="#ff4dd8" filter="url(#neon)" class="flick">LOBBY</text>
+    <rect x="${X0 + 355}" y="${floorY(1) + 62}" width="50" height="${FH - 66}" rx="3" fill="none" stroke="#2de2e6" stroke-width="2" filter="url(#neon)"/>
+    <line x1="${X0 + 380}" y1="${floorY(1) + 62}" x2="${X0 + 380}" y2="${floorY(1) + FH - 4}" stroke="#2de2e6" stroke-width="1.5"/></g>`;
+  rooms += room("done", "SHIPPING DOCK", X0 + 510, floorY(1), 250);
 
-  // Elevator
   const ef = g ? STAGE_FLOOR[g.stage] || 1 : 1;
-  const elev = `<rect x="${X1 + 6}" y="${TOP}" width="54" height="${FH * 5}" fill="#1b2135" stroke="#5b4a3a" stroke-width="3"/>
-    ${[1,2,3,4,5].map(f => `<text x="${X1 + 33}" y="${floorY(f) + 16}" text-anchor="middle" font-family="Fredoka" font-size="12" fill="${f === ef ? "#ffd36b" : "#5d6a95"}">${f}</text>`).join("")}
+  const elev = `<rect x="${X1 + 8}" y="${TOP}" width="52" height="${FH * 5}" rx="6" fill="#06081a" stroke="#2b3160" stroke-width="2"/>
+    ${[1,2,3,4,5].map(f => `<text x="${X1 + 34}" y="${floorY(f) + 18}" text-anchor="middle" font-family="Fredoka" font-size="12" fill="${f === ef ? "#2de2e6" : "#2b3160"}" ${f === ef ? 'filter="url(#neon)"' : ""}>${f}</text>`).join("")}
     <g class="elev" style="transform: translateY(${floorY(ef) - TOP}px)">
-      <rect x="${X1 + 12}" y="${TOP + 24}" width="42" height="${FH - 34}" rx="4" fill="#ffd36b" stroke="#8a6a1a" stroke-width="2"/>
-      <line x1="${X1 + 33}" y1="${TOP + 24}" x2="${X1 + 33}" y2="${TOP + FH - 10}" stroke="#8a6a1a" stroke-width="2"/>
+      <rect x="${X1 + 14}" y="${TOP + 26}" width="40" height="${FH - 36}" rx="4" fill="#2de2e6" fill-opacity=".12" stroke="#2de2e6" stroke-width="2.5" filter="url(#neon)"/>
     </g>`;
+  const floors = [5,4,3,2,1].map(f => `<line x1="${X0 - 6}" y1="${floorY(f) + FH - 2}" x2="${X1 + 6}" y2="${floorY(f) + FH - 2}" stroke="#2b3160" stroke-width="3"/>`).join("");
+  const stars = Array.from({ length: 40 }, (_, i) => `<circle cx="${(i * 97) % 960}" cy="${(i * 53) % 110}" r="${i % 3 ? 1 : 1.6}" fill="#fff" opacity="${0.3 + (i % 5) / 10}"/>`).join("");
+  const sign = `<rect x="${X0 + 170}" y="38" width="420" height="60" rx="14" fill="#0a0d1f" stroke="#ffb02e" stroke-width="3" filter="url(#neon)"/>
+    <text x="${X0 + 380}" y="79" text-anchor="middle" font-family="Fredoka" font-size="30" font-weight="700" fill="#ffb02e" filter="url(#neon)" class="flick">CHIKEN STUDIOS</text>`;
 
-  const floors = [5,4,3,2,1].map(f => `<rect x="${X0 - 8}" y="${floorY(f) + FH - 5}" width="${X1 - X0 + 16}" height="8" fill="#b9a68c"/>`).join("");
-  const sign = `<rect x="${X0 + 170}" y="40" width="420" height="58" rx="12" fill="#ffb02e" stroke="#7a4b06" stroke-width="4"/>
-    <text x="${X0 + 380}" y="80" text-anchor="middle" font-family="Fredoka" font-size="30" font-weight="700" fill="#3a2300">🐔 CHIKEN STUDIOS</text>
-    <rect x="${X0 + 220}" y="98" width="8" height="${TOP - 98}" fill="#7a4b06"/><rect x="${X0 + 532}" y="98" width="8" height="${TOP - 98}" fill="#7a4b06"/>`;
-
+  const H = TOP + FH * 5 + 50;
   document.getElementById("map").innerHTML = `
     <div class="row" style="justify-content:space-between;margin-bottom:6px">
       <h2 style="margin:0">${g ? esc(g.name) : "Chiken Studios HQ"}</h2>
-      ${g ? `<span class="sub">${STAGE_LABEL[g.stage] || g.stage} · ${esc(g.idea || "")}</span>` : ""}
+      ${g ? `<span class="sub">${STAGE_LABEL[g.stage] || g.stage}</span>` : ""}
     </div>
-    <svg viewBox="0 0 960 ${TOP + FH * 5 + 60}" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 960 ${H}" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ec6ff"/><stop offset="1" stop-color="#c8ecff"/></linearGradient>
-        <linearGradient id="lit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset="1" stop-color="#ffd77a"/></linearGradient>
-        <pattern id="brick" width="40" height="20" patternUnits="userSpaceOnUse"><rect width="40" height="20" fill="#d98a5f"/><path d="M0 10H40M20 0V10M0 10V20M40 10V20" stroke="#b86e47" stroke-width="2"/></pattern>
+        <linearGradient id="night" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05061a"/><stop offset="1" stop-color="#1a0b3a"/></linearGradient>
+        <filter id="neon" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
       </defs>
-      <rect width="960" height="${TOP + FH * 5 + 60}" fill="url(#sky)" rx="14"/>
-      <circle cx="880" cy="60" r="28" fill="#fff3a6"/>
-      <ellipse cx="120" cy="60" rx="50" ry="16" fill="#fff" opacity=".9"/><ellipse cx="160" cy="50" rx="34" ry="14" fill="#fff" opacity=".9"/>
-      <rect x="0" y="${TOP + FH * 5}" width="960" height="60" fill="#7bc96f"/>
-      <rect x="0" y="${TOP + FH * 5 + 22}" width="960" height="16" fill="#9aa3b5"/>
-      <rect x="${X0 - 14}" y="${TOP - 6}" width="${X1 - X0 + 28}" height="${FH * 5 + 8}" fill="url(#brick)" stroke="#5b4a3a" stroke-width="4" rx="6"/>
+      <rect width="960" height="${H}" fill="url(#night)" rx="14"/>${stars}
+      <circle cx="880" cy="58" r="22" fill="#f4f1ff" opacity=".9" filter="url(#neon)"/>
+      <rect x="${X0 - 14}" y="${TOP - 6}" width="${X1 - X0 + 28}" height="${FH * 5 + 8}" rx="10" fill="#0d1030" stroke="#c77dff" stroke-width="2" filter="url(#neon)"/>
       ${sign}${floors}${rooms}${elev}
+      <line x1="0" y1="${TOP + FH * 5 + 6}" x2="960" y2="${TOP + FH * 5 + 6}" stroke="#ff4dd8" stroke-width="2" filter="url(#neon)"/>
     </svg>`;
 }
 
