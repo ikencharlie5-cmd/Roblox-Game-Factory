@@ -1,6 +1,6 @@
 # Open questions
 
-1. **How should creatures be built?** Code-built parts only, AI-generated meshes via Studio MCP, or a hybrid (part bodies + one AI-mesh hero feature)? ✅ Code-built parts only (gene-recolourable, no uploads, no Charlie IDs)
+1. **How should creatures be built?** Code-built parts only, AI-generated meshes via Studio MCP, or a hybrid (part bodies + one AI-mesh hero feature)? ✅ Code-built parts only (gene-recolourable, no uploads, no Charlie IDs); 2026-11-18: now studded brick models, AI mesh fallback below B+
    *Default until answered:* code-built parts only (original, recolourable by genes, no uploads).
 2. **Trading in the first build or the next update?** The MVP spec lists park visits only; your priority list includes trading. ✅ Not in v1; secure two-sided trading is update 1 (park visits + Likes now)
    *Default:* park visits + Likes now; secure two-sided trading as the first update.
@@ -37,3 +37,7 @@
 ## Studs restyle
 - [graphics] Brick creatures follow STUDS_STYLE_GUIDE §4.3 sizes exactly, so adults are about 1.5–2x bigger than before (Lumibun ≈ 9 tall with ears, Pebblehorn ≈ 7 tall / 11 long, Thornstag ≈ 14 tall). Hitboxes come from the model bounds, so clicks/prompts still line up, but pad wander radius, nameplate offsets and capture ranges may want a look. (built: guide sizes; Baby ×0.6 already matches Config.Growth.BabyScale)
 - [graphics] Backdrop ridges use taller terrace steps (4.8–9.6 per level) than the guide's 1.2–2.4 so they still hide the map edge; meadow hills use the guide values. (built: as described)
+
+## Quality-rules migration (2026-11-18)
+- [manager] New cap (1 zone, ≤8 Services, real models, Look test) vs the built 3-zone / 16-service game: grandfather or cut? ✅ Cut to 1 zone (Greenleaf Meadow) + 8 Services (see SPEC "v1 scope")
+- [manager] Replace part-built studs creatures/props with AI meshes? ✅ No; studded brick models stay, AI mesh only as fallback for any asset below B+

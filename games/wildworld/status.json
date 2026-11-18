@@ -2,9 +2,9 @@
   "name": "Wildworld",
   "slug": "wildworld",
   "idea": "Multiplayer wildlife park + creature collection/breeding sim (Planet Zoo x Slime Rancher x Pokemon inspired, all original). Explore, capture original creatures, build habitats, breed for genetics + rare mutations, earn from visitors, visit/trade securely.",
-  "stage": "done",
+  "stage": "art3d",
   "created": "2026-11-18T03:02:43Z",
-  "updated": "2026-11-18T07:15:59Z",
+  "updated": "2026-11-18T10:13:42Z",
   "branches": {
     "gameplay": "done",
     "graphics": "done",
@@ -222,6 +222,18 @@
       "from": "graphics",
       "to": "all",
       "text": "Studs restyle done: Theme (palette, Kit.Brick/Studs/Snap, brick nature/structures/decor/props), 5 brick-figure creatures + builder/mutations/egg (API, Role/Anim/Rest, Hitbox unchanged; new role Nose), part-based studded world (ground plates, terraced hills/ridges, lake basin, brick cliff/waterfall), \u00a77 lighting. Tags/zone ids unchanged. See notes/graphics.md + QUESTIONS.md (creature sizes)."
+    },
+    {
+      "time": "2026-11-18T10:13:14Z",
+      "from": "manager",
+      "to": "ideas",
+      "text": "Quality-rules migration: v1 cut to 1 zone (Greenleaf Meadow) + 8 Services; studded brick models kept (AI mesh fallback below B+); SPEC Look target + Asset list added"
+    },
+    {
+      "time": "2026-11-18T10:13:42Z",
+      "from": "system",
+      "to": "all",
+      "text": "Stage \u2192 art3d"
     }
   ]
 }
