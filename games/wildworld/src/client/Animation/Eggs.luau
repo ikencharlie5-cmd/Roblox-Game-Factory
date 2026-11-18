@@ -133,10 +133,9 @@ local function add(inst: Instance)
 end
 
 local function consider(inst: Instance)
-	if CollectionService:HasTag(inst, "Egg") then
-		add(inst)
-	elseif
-		inst:IsA("Model")
+	if
+		CollectionService:HasTag(inst, "Egg")
+		or inst:IsA("Model")
 		and (
 			inst:GetAttribute("IsEgg") == true
 			or inst:GetAttribute("HatchAt") ~= nil

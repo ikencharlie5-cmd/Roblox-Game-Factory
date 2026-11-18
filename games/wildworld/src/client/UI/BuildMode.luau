@@ -250,7 +250,7 @@ function BuildMode.Mount(gui: ScreenGui)
 			return
 		end
 		local k = input.KeyCode
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or k == Enum.KeyCode.ButtonA then
 			BuildMode.Place()
 		elseif input.UserInputType == Enum.UserInputType.Touch then
 			touchPos = raycast(Vector2.new(input.Position.X, input.Position.Y), false)
@@ -264,8 +264,6 @@ function BuildMode.Mount(gui: ScreenGui)
 			BuildMode.ToggleDelete()
 		elseif k == Enum.KeyCode.G then
 			BuildMode.ToggleGrid()
-		elseif k == Enum.KeyCode.ButtonA then
-			BuildMode.Place()
 		elseif k == Enum.KeyCode.Escape or k == Enum.KeyCode.ButtonB then
 			BuildMode.Exit()
 		elseif k == Enum.KeyCode.ButtonL1 or k == Enum.KeyCode.ButtonR1 then
