@@ -38,3 +38,11 @@
 - https://devforum.roblox.com/t/ambientsorcery%E2%80%99s-tutorial-1-creating-compelling-environmental-audio/3507022 — ambience bed + random one-shots, search terms
 - https://devforum.roblox.com/t/how-to-find-good-music-in-robloxs-audio-library-using-the-apm-music-website/2149632 — find APM tracks by exact title
 - https://github.com/Githolz/All-Classic-Roblox-Sound-Paths- — built-in rbxasset://sounds paths
+
+## Art: Studs style (R&D Art)
+- [Surface API kept for back-compat (studs still settable)](https://devforum.roblox.com/t/deprecating-surface-tool-api/1222218)
+- [Surfaces render only on Plastic](https://roblox.fandom.com/wiki/Surface)
+- [HD stud MaterialVariants (fallback)](https://devforum.roblox.com/t/hd-stud-materials-and-creation-pipeline-now-with-welds/2916846)
+- [Old stud texture via MaterialVariants + caveats](https://devforum.roblox.com/t/how-to-get-back-the-old-stud-texture-easily-includes-meshes-unions/3157449)
+- [BrickHeadz shape study (cube head 4x4 / 3x3)](https://bricknerd.com/home/brickheadz-blueprints-a-study-of-shape-and-form-1-19-23)
+- [Perf: built-in materials vs textures, draw calls](https://create.roblox.com/docs/performance-optimization/design.md)

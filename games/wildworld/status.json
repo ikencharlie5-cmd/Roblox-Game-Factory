@@ -4,7 +4,7 @@
   "idea": "Multiplayer wildlife park + creature collection/breeding sim (Planet Zoo x Slime Rancher x Pokemon inspired, all original). Explore, capture original creatures, build habitats, breed for genetics + rare mutations, earn from visitors, visit/trade securely.",
   "stage": "done",
   "created": "2026-11-18T03:02:43Z",
-  "updated": "2026-11-18T05:14:07Z",
+  "updated": "2026-11-18T06:56:22Z",
   "branches": {
     "gameplay": "done",
     "graphics": "done",
@@ -204,6 +204,12 @@
       "from": "system",
       "to": "all",
       "text": "Stage \u2192 done"
+    },
+    {
+      "time": "2026-11-18T06:56:22Z",
+      "from": "rnd",
+      "to": "ideas",
+      "text": "[art] Studs style: legacy SurfaceType.Studs on Plastic block parts (no assets); creatures = 18-30 grid-snapped bricks, 3x3/4x4 cube heads, square eyes; UI = toy-brick reskin of Kit"
     }
   ]
 }
