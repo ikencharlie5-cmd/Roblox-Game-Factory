@@ -3,6 +3,19 @@
 The game is NOT done until the Manager marks every item ✅ (or ➖ with a reason it doesn't apply).
 Any ❌ goes back to the branch in [brackets] to fix.
 
+## 0. Look test — BLOCKING [Checker, Graphics, UI, 3D Art]
+Judged ONLY from real screenshots in `games/<slug>/screens/`. No screenshots = LOOK TEST NEEDED.
+- [ ] Spawn screenshot grades B or better next to the Look target references
+- [ ] HUD and shop screenshots look like a top game's UI (not default Roblox, no emoji icons)
+- [ ] Every prop/creature/building is a real model or mesh, not stacked Parts
+- [ ] Lighting has mood (not flat daylight grey); colors match the spec palette
+- [ ] Would this screenshot make a kid click the game? If no → ❌
+
+## 0b. Scope — small and deep [Manager]
+- [ ] v1 is ONE core loop and ONE polished zone (more zones only if they're already polished)
+- [ ] ≤ 8 gameplay Services (not counting Data/Guard/Signals/AssetLoader)
+- [ ] Every system that shipped is finished and juicy; half-done systems are cut, not shipped
+
 ## 1. First 60 seconds — the hook [UI, Gameplay]
 - [ ] Player knows what to do within 10 seconds, with no reading required
 - [ ] First reward lands within 15 seconds

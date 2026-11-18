@@ -26,4 +26,9 @@ Input: `games/<slug>/DECISIONS.md` has new decisions.
 2. Log one line per affected branch:
    `python3 scripts/status.py <slug> log ideas <branch> "<what to change>"`
 
+## Scope rules (most important)
+- v1 = ONE core loop + ONE zone + ≤ 8 gameplay Services. Everything else goes under "Saved for updates".
+- A small game that looks and feels great beats a big game that's half-done. When in doubt, cut.
+- Fill `## Look target` with R&D's reference screenshots and `## Asset list` with every model needed.
+
 Never write game code. Keep SPEC.md under ~2 pages.

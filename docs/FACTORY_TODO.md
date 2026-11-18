@@ -17,8 +17,14 @@
   set those in project.json / Studio.
 - **Usage:** start a fresh chat per game; keep v1 scope small; one checker round before the final sign-off.
 
+## Polish overhaul (Nov 18) — Charlie: "it all looks bad, overall like a bad game"
+- Causes: v1 scope too big (Wildworld ~25 services, everything half-done), sign-off without anyone
+  seeing the game, props built from Parts.
+- Fixes: scope cap (1 loop, 1 zone, ≤8 services), Look target refs in every SPEC, art3d before
+  branches, blocking Look test (screenshots graded B+) in checker + checklist section 0.
+
 ## Next
-- [ ] Add **3D Art** department formally (owns asset list + Studio mesh generation + asset IDs)
+- [x] Add **3D Art** department (art3d agent: asset list, mesh gen / Creator Store, asset IDs) — Nov 18
 - [ ] Add **Economy/Balance** department (simulate first hour; tune prices, timers, odds)
 - [ ] Optional "lite mode": 1 R&D researcher, smaller v1, single checker round
 - [x] R&D split into 4 researchers · Animation department · Office-building website
