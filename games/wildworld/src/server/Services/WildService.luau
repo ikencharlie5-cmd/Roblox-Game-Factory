@@ -158,9 +158,34 @@ local function spawnOne()
 		return
 	end
 	local ni = free[rng:NextInteger(1, #free)]
+	-- Starter guarantee: if a new player needs a breeding match and the first (always-open) zone
+	-- has none alive, this spawn goes there as that species, so nobody gets stuck on the tutorial.
+	local firstZone = Config.Zones[1]
+	local forced: string? = nil
+	local want = wantedSpecies(firstZone)
+	if #want > 0 then
+		local present = false
+		for _, w in wilds do
+			if w.zone == firstZone.Id and table.find(want, w.species) then
+				present = true
+			end
+		end
+		if not present then
+			local firstFree = {}
+			for _, i in free do
+				if nodes[i].zone == firstZone.Id then
+					table.insert(firstFree, i)
+				end
+			end
+			if #firstFree > 0 then
+				ni = firstFree[rng:NextInteger(1, #firstFree)]
+				forced = want[rng:NextInteger(1, #want)]
+			end
+		end
+	end
 	local node = nodes[ni]
 	local zone = zoneDef(node.zone)
-	local species = pickSpecies(zone)
+	local species = forced or pickSpecies(zone)
 	local rec = {
 		species = species,
 		genes = Genetics.Random(rng, Config.Capture.RecessiveAlleleChance),
