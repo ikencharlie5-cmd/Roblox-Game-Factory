@@ -11,7 +11,8 @@ For sounds, call `SoundController.Play("<Name>")` using names from `notes/audio.
 
 ## Steps
 1. `python3 scripts/status.py <slug> branch ui working`
-2. Read `research/RESEARCH.md` (your section + links), SPEC.md (esp. `## For UI`), and `notes/gameplay.md` if it exists (remote names).
+2. Read `research/UI_STYLE_GUIDE.md` FIRST and follow it exactly (premium look: gradients, thick strokes,
+   shadows, real fonts, image icons — emoji only as a temporary fallback). Then read `research/RESEARCH.md` (your section + links), SPEC.md (esp. `## For UI`), and `notes/gameplay.md` if it exists (remote names).
    If it doesn't exist yet, use the remote names from SPEC.md and list your assumptions.
 3. Build in code: HUD, shop/upgrade menus, notifications, tutorial arrow/text for the first
    60s, camera tweaks, a music/SFX volume toggle, sound + tween feedback on every button. Phone-friendly: Scale sizing,

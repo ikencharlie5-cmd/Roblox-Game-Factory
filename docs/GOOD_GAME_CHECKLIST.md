@@ -61,6 +61,9 @@ Any ❌ goes back to the branch in [brackets] to fix.
 - [ ] Volumes balanced (music under SFX)
 
 ## 10. UI / UX [UI]
+- [ ] Looks premium, not cheap: follows research/UI_STYLE_GUIDE.md (gradients, thick outlines, shadows, real fonts)
+- [ ] Main buttons use image icons, not emoji (Charlie's uploaded icons or Creator Store icon pack)
+- [ ] In Studio mode: screenshot reviewed side-by-side with a top game's UI
 - [ ] Works on phone, tablet, PC, and console (Scale sizing, ≥44px buttons, no hover-only actions)
 - [ ] Nothing off-screen or overlapping on a small phone
 - [ ] Menus open/close smoothly and can be closed with one tap
