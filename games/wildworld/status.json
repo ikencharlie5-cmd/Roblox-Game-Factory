@@ -1,0 +1,77 @@
+{
+  "name": "Wildworld",
+  "slug": "wildworld",
+  "idea": "Multiplayer wildlife park + creature collection/breeding sim (Planet Zoo x Slime Rancher x Pokemon inspired, all original). Explore, capture original creatures, build habitats, breed for genetics + rare mutations, earn from visitors, visit/trade securely.",
+  "stage": "approval",
+  "created": "2026-11-18T03:02:43Z",
+  "updated": "2026-11-18T03:13:36Z",
+  "branches": {
+    "gameplay": "waiting",
+    "graphics": "waiting",
+    "ui": "waiting",
+    "audio": "waiting",
+    "animation": "waiting"
+  },
+  "log": [
+    {
+      "time": "2026-11-18T03:02:43Z",
+      "from": "charlie",
+      "to": "rnd",
+      "text": "Multiplayer wildlife park + creature collection/breeding sim (Planet Zoo x Slime Rancher x Pokemon inspired, all original). Explore, capture original creatures, build habitats, breed for genetics + rare mutations, earn from visitors, visit/trade securely."
+    },
+    {
+      "time": "2026-11-18T03:02:57Z",
+      "from": "system",
+      "to": "all",
+      "text": "Stage \u2192 research"
+    },
+    {
+      "time": "2026-11-18T03:06:17Z",
+      "from": "rnd",
+      "to": "ideas",
+      "text": "[gameplay] Make beautiful habitats the optimal strategy: habitat rating multiplies income; cheap server-state/client-lerp creature AI; Mendelian genes + Heirloom mutation boost"
+    },
+    {
+      "time": "2026-11-18T03:06:29Z",
+      "from": "rnd",
+      "to": "ideas",
+      "text": "[ui] Reuse plant-zoo premium Kit reskinned as field-journal; one shared CreatureCard; breeding shows odds/ranges not promises; every build key has an on-screen button"
+    },
+    {
+      "time": "2026-11-18T03:06:43Z",
+      "from": "rnd",
+      "to": "ideas",
+      "text": "[art] Code-built chibi creatures (12-20 rounded parts, role-tagged colours) + role-based mutation layers; ShadowMap lighting; client procedural animation with distance tiers"
+    },
+    {
+      "time": "2026-11-18T03:10:28Z",
+      "from": "rnd",
+      "to": "ideas",
+      "text": "[audio] Marimba/vibes music, sparse; biome bed+one-shot ambience; creature voices = species pitch + mutation modifiers; 5-tier one-key stingers w/ ducking, legendary <=3.5s"
+    },
+    {
+      "time": "2026-11-18T03:11:24Z",
+      "from": "rnd",
+      "to": "ideas",
+      "text": "Research merged: beautiful parks = best income; code-built creatures; 4 MVP mutations; open Q for Charlie: parts vs AI meshes"
+    },
+    {
+      "time": "2026-11-18T03:11:32Z",
+      "from": "system",
+      "to": "all",
+      "text": "Stage \u2192 ideas"
+    },
+    {
+      "time": "2026-11-18T03:13:23Z",
+      "from": "ideas",
+      "to": "charlie",
+      "text": "Hatch, catch and breed cute original creatures, chase Golden/Albino/Crystal mutations, and build them a beautiful park visitors pay to see."
+    },
+    {
+      "time": "2026-11-18T03:13:36Z",
+      "from": "system",
+      "to": "all",
+      "text": "Stage \u2192 approval"
+    }
+  ]
+}
