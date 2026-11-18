@@ -66,8 +66,8 @@ local Defs: { [string]: SoundDef } = {
 	InstantHatch = { Id = 94077390731779, Volume = 0.45, Kind = "SFX", PitchVar = 0, MaxLength = 1.5 },
 
 	-- Capture
-	Bait_Throw = { Id = "rbxasset://sounds/swoosh.wav", Volume = 0.35, Kind = "SFX" }, -- built-in (verify ext)
-	Capture_Throw = { Id = "rbxasset://sounds/swoosh.wav", Volume = 0.4, Kind = "SFX", Pitch = 1.15 },
+	Bait_Throw = { Id = 15675024286, Volume = 0.35, Kind = "SFX", Pitch = 0.8 }, -- swoosh.wav blocked in playtest; reuse UI_Open
+	Capture_Throw = { Id = 15675024286, Volume = 0.4, Kind = "SFX", Pitch = 1.15 },
 	Capture_Wobble = { Id = 106984966606682, Volume = 0.4, Kind = "SFX", PitchVar = 0 }, -- pitch 1.0/1.12/1.25
 	Capture_Success = { Id = 15675043410, Volume = 0.6, Kind = "Stinger", Tier = 2 },
 	Capture_Fail = { Id = 15675075163, Volume = 0.4, Kind = "SFX", Pitch = 0.85 },

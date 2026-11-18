@@ -46,7 +46,8 @@ Nothing for sale changes mutation or capture odds.
 ## Charlie TODO
 - [ ] UI icons (one pack, one style, PNG with transparent background): Collection, Breed, Build, Journal, Inventory, Park, Shop, Daily, Visit, Settings, Coins, RP, Quest, Feed, Pet, Inspect, Capture, Hatch, Rotate, Delete, Grid, Place, Exit, mutation badges (Golden, Albino, Crystal, Glowing) and build categories. Upload, then paste ids into `Style.Icons` in `src/client/UI/Style.luau` (letter badges show until then).
 - [ ] Create the 4 Game Passes + 7 Dev Products from the table above, then paste each ID into `Config.GamePasses` / `Config.DevProducts` in `src/shared/Config.luau` (Id 0 = shop button disabled)
-- [ ] Playtest in Studio (no Studio was connected during the build): full first 60 s, check Output for red errors, try a 2-player Team Test (visit + Like), phone emulator
+- [x] Studio playtest by Claude: hatch → feed → place tree → catch → breed all work, no script errors (saving untested until published)
+- [ ] Try a 2-player Team Test (visit + Like) and the phone emulator
 - [ ] Audio: in Studio Toolbox > Audio, fill every `Id = 0` in `src/shared/Sounds.luau` (creature voices, egg crack, feed munch, mutation riser, night/waterfall/forest one-shots). Search terms in `notes/audio.md`. Missing ones are just silent.
-- [ ] Audio: listen to and keep or swap the "verify" tracks (Music_Forest, Music_Glade, Music_Menu, LevelUp) and check `rbxasset://sounds/swoosh.wav` plays.
+- [ ] Audio: listen to and keep or swap the "verify" tracks (Music_Forest, Music_Glade, Music_Menu, LevelUp).
 - [ ] (Optional) Waterfall: upload a vertical water-streak texture and note its id here; Graphics then adds a scrolling Beam to `src/server/World/Waterfall.luau` (part sheets + particles work fine without it).
