@@ -181,7 +181,7 @@ end
 function Structures.SandPatch(parent: Instance, cf: CFrame, rng: Random)
 	local s = Kit.Blob(parent, Vector3.new(7.6, 0.5, 7.6), cf * CFrame.new(0, 0.1, 0), P.Sand, M.Sand)
 	s.CastShadow = false
-	for k = 1, 3 do
+	for _ = 1, 3 do
 		Kit.Ball(parent, 0.4, cf * CFrame.new(rng:NextNumber(-2.5, 2.5), 0.35, rng:NextNumber(-2.5, 2.5)), P.Cream)
 	end
 end

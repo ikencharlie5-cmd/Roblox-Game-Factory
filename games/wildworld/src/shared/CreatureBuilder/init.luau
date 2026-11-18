@@ -143,7 +143,6 @@ local function build(species: string, opts: BuildOpts): Model?
 	local model = Instance.new("Model")
 	model.Name = species
 	local minV, maxV = Vector3.one * math.huge, -Vector3.one * math.huge
-	local parts: { BasePart } = {}
 	for _, spec in bp.Parts do
 		if spec.Pattern and not showPattern then
 			continue
@@ -161,7 +160,6 @@ local function build(species: string, opts: BuildOpts): Model?
 			part.Material = Enum.Material.Neon
 		end
 		part.Parent = model
-		table.insert(parts, part)
 		local half = part.Size / 2
 		minV = minV:Min(part.Position - half)
 		maxV = maxV:Max(part.Position + half)

@@ -77,7 +77,7 @@ function Nature.Bush(parent: Instance, cf: CFrame, s: number, rng: Random, berri
 	Kit.Ball(parent, 2.6 * s, cf * CFrame.new(1.5 * s, 0.9 * s, 0.4 * s), Kit.Jitter(c, rng, 0.06))
 	Kit.Ball(parent, 2.4 * s, cf * CFrame.new(-1.3 * s, 0.8 * s, -0.5 * s), Kit.Jitter(c, rng, 0.06))
 	if berries then
-		for k = 1, 3 do
+		for _ = 1, 3 do
 			local a = rng:NextNumber(0, math.pi * 2)
 			Kit.Ball(parent, 0.45 * s, cf * CFrame.new(math.cos(a) * 1.5 * s, 1.6 * s, math.sin(a) * 1.5 * s), P.Coral)
 		end

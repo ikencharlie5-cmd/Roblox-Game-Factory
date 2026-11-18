@@ -22,7 +22,7 @@ local function prompt(parent: BasePart, action: string, object: string): Proximi
 	return pp
 end
 
-local function ring(parent: Instance, r: number, n: number, fn: (CFrame, number) -> ())
+local function ring(_parent: Instance, r: number, n: number, fn: (CFrame, number) -> ())
 	for k = 0, n - 1 do
 		local a = k / n * math.pi * 2
 		fn(CFrame.new(math.cos(a) * r, 0, math.sin(a) * r) * CFrame.Angles(0, -a - math.pi / 2, 0), a)
@@ -123,7 +123,7 @@ local function dailyChest(parent: Instance, cf: CFrame)
 	return m
 end
 
-local function shopStall(parent: Instance, cf: CFrame, rng: Random)
+local function shopStall(parent: Instance, cf: CFrame, _rng: Random)
 	local m = Kit.Model(parent, "ShopStall")
 	local counter = Kit.Solid(m, Vector3.new(14, 3.4, 4), cf * CFrame.new(0, 1.7, 0), P.Cream)
 	counter.Name = "Counter"
