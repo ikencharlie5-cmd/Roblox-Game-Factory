@@ -182,6 +182,10 @@ function MonetizationService.Init()
 			return Enum.ProductPurchaseDecision.NotProcessedYet
 		end
 		if table.find(data.receipts, info.PurchaseId) then
+			-- already granted here; only confirm once it's actually persisted (SaveNow is false on lost lock)
+			if not DataService.SaveNow(player) then
+				return Enum.ProductPurchaseDecision.NotProcessedYet
+			end
 			return Enum.ProductPurchaseDecision.PurchaseGranted
 		end
 		for key, product in Config.DevProducts :: any do

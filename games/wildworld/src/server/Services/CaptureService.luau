@@ -178,7 +178,7 @@ local function captureRelease(player: Player, data: any, wildId: any)
 	end
 	local win = w.window
 	local ping = math.clamp(player:GetNetworkPing(), 0, 0.5)
-	local elapsed = os.clock() - win.start - ping
+	local elapsed = os.clock() - win.start - ping / 2 -- GetNetworkPing is RTT; release travels one way
 	local tol = C.Tolerance
 	local hitStart, hitEnd = win.from * win.duration - tol, win.to * win.duration + tol
 	if elapsed < hitStart or elapsed > hitEnd then
@@ -243,7 +243,8 @@ function CaptureService.Start()
 					wa.agent.paused = false
 				end
 			end
-			if wa.trust > 0 and not wa.window then
+			local claimed = wa.claimedBy ~= nil and os.clock() <= (wa.claimUntil or 0)
+			if wa.trust > 0 and not wa.window and not claimed then
 				wa.trust = math.max(0, wa.trust - C.TrustDecayPerSecond)
 			end
 			if wa.claimedBy and (os.clock() > wa.claimUntil or not wa.claimedBy.Parent) and not wa.window then

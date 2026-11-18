@@ -120,16 +120,30 @@ local function update()
 			Net.Do("HatchEgg", nil, id)
 		end)
 	elseif s == 2 then
-		text = "Your baby is hungry - feed it!"
 		local c = Derived.Creatures()[1]
-		Arrows.World(WorldQuery.MyItem("FoodBowl") or WorldQuery.MyCreature(c and c.uid))
+		local model = WorldQuery.MyCreature(c and c.uid)
+		local at: Vector3? = if model then WorldQuery.Pos(model) else nil
+		local me = WorldQuery.MyPos()
+		-- Server feed range (CreatureAI.Distance <= Needs.InteractRange); 2 studs margin for lag.
+		local range = (tonumber(Derived.Config.Needs and Derived.Config.Needs.InteractRange) or 30) - 2
+		local near = at ~= nil and me ~= nil and (at - me).Magnitude <= range
+		Arrows.World(model)
 		Arrows.Ui(nil)
-		setBig("Feed it", "Leaf", function()
-			if c and Net.Do("FeedCreature", nil, c.uid) then
-				fedLocal = true
-				Kit.Sound("Feed")
-			end
-		end)
+		if near then
+			text = "Your baby is hungry - feed it!"
+			setBig("Feed it", "Leaf", function()
+				if c and Net.Do("FeedCreature", nil, c.uid) then
+					fedLocal = true
+					Kit.Sound("Feed")
+				end
+			end)
+		else
+			text = "Walk to your baby - follow the arrow!"
+			setBig("Walk closer", "Disabled", function()
+				Kit.Sound("Error")
+				Net.Toast("Walk to your creature first!", "error")
+			end)
+		end
 	elseif s == 3 then
 		setBig(nil)
 		Arrows.World(nil)

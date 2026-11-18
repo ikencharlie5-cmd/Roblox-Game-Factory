@@ -1,7 +1,8 @@
 --!strict
 -- Client-only park visitors: simple 6-part figures walking a square loop just outside each owned
 -- plot's buildable Land square (so they never cross a habitat), stopping to look in and emote.
--- No network. Plot Model (tag "Plot", pivot = floor-top centre) attributes read:
+-- No network. Plot = the Base part tagged "Plot" (pivot = floor-top centre; a Plot Model is mapped to its
+-- tagged PrimaryPart). Attributes read from it:
 --   OwnerId / OwnerUserId (non-zero = owned), LandSize / Land (buildable side, studs),
 --   Visitors (optional count), Tips (counter: +1 -> coin fountain from a visitor), TipAmount ("+N").
 local CollectionService = game:GetService("CollectionService")
@@ -25,7 +26,7 @@ type Visitor = {
 }
 
 type Plot = {
-	model: Model,
+	model: PVInstance,
 	center: Vector3,
 	points: { Vector3 },
 	visitors: { Visitor },
@@ -33,7 +34,7 @@ type Plot = {
 	tips: number,
 }
 
-local plots: { [Model]: Plot } = {}
+local plots: { [PVInstance]: Plot } = {}
 local folder: Folder
 local rng = Random.new()
 local SHIRTS = { "#FF8A65", "#4FC3F7", "#FFD54F", "#81C784", "#BA68C8", "#F06292", "#4DB6AC" }
@@ -91,7 +92,7 @@ local function newVisitor(plot: Plot): Visitor
 	}
 end
 
-local function wanted(m: Model): number
+local function wanted(m: PVInstance): number
 	local owner = m:GetAttribute("OwnerId") or m:GetAttribute("OwnerUserId") or m:GetAttribute("Owner")
 	local owned = (typeof(owner) == "number" and owner ~= 0) or (typeof(owner) == "string" and owner ~= "")
 	if not owned then
@@ -133,10 +134,14 @@ local function sync(plot: Plot)
 end
 
 local function addPlot(child: Instance)
-	if not child:IsA("Model") or plots[child] then
+	-- The tag (and OwnerId/LandSize/Tips/TipAmount) lives on the Base part; folder children are Models.
+	if child:IsA("Model") and child.PrimaryPart and CollectionService:HasTag(child.PrimaryPart, "Plot") then
+		child = child.PrimaryPart
+	end
+	if not (child:IsA("BasePart") or child:IsA("Model")) or plots[child :: PVInstance] then
 		return
 	end
-	local inst = child :: Model
+	local inst = child :: PVInstance
 	local plot: Plot = { model = inst, center = inst:GetPivot().Position, points = {}, visitors = {}, shown = true, tips = 0 }
 	local t = inst:GetAttribute("Tips")
 	plot.tips = if typeof(t) == "number" then t else 0
@@ -166,7 +171,7 @@ local function addPlot(child: Instance)
 end
 
 -- Coin fountain from one of this plot's visitors (or the plot centre).
-function Visitors.Tip(plotModel: Model)
+function Visitors.Tip(plotModel: PVInstance)
 	local plot = plots[plotModel]
 	if not plot then
 		return
@@ -198,15 +203,10 @@ function Visitors.Start()
 		end
 		f.ChildAdded:Connect(addPlot)
 	end
-	local pf = workspace:FindFirstChild("Plots")
+	local world = workspace:FindFirstChild("World")
+	local pf = (world and world:FindFirstChild("Plots")) or workspace:FindFirstChild("Plots")
 	if pf then
 		watch(pf)
-	else
-		workspace.ChildAdded:Connect(function(ch)
-			if ch.Name == "Plots" then
-				watch(ch)
-			end
-		end)
 	end
 end
 

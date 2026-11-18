@@ -53,14 +53,14 @@ local Defs: { [string]: SoundDef } = {
 	RatingUp = { Id = 15675016548, Volume = 0.45, Kind = "Stinger", Tier = 1 }, -- rising chime
 
 	-- Care
-	Feed = { Id = 0, Volume = 0.45, Kind = "SFX", PitchVar = 0.1 },
+	Feed = { Id = 15675055424, Volume = 0.45, Kind = "SFX", Pitch = 0.9, PitchVar = 0.1 }, -- fallback: Pet pop (swap for a munch)
 	Pet = { Id = 15675055424, Volume = 0.4, Kind = "SFX", Pitch = 1.15, PitchVar = 0.1 },
 	HappyHearts = { Id = 15675043410, Volume = 0.3, Kind = "SFX", Pitch = 1.25 },
 
 	-- Eggs / hatch / breeding
 	Egg_Wobble = { Id = 106984966606682, Volume = 0.3, Kind = "SFX", Pitch = 0.9, PitchVar = 0.05 },
-	Egg_Crack = { Id = 0, Volume = 0.55, Kind = "SFX", PitchVar = 0.04 },
-	Baby_Chirp = { Id = 0, Volume = 0.5, Kind = "Creature", Pitch = 1.35, PitchVar = 0.08 },
+	Egg_Crack = { Id = 106984966606682, Volume = 0.55, Kind = "SFX", Pitch = 1.25, PitchVar = 0.04 }, -- fallback: wobble thud
+	Baby_Chirp = { Id = 15675043410, Volume = 0.4, Kind = "Creature", Pitch = 1.6, PitchVar = 0.08 }, -- fallback: chime
 	Breed_Start = { Id = 15675043410, Volume = 0.5, Kind = "SFX", Pitch = 0.9, PitchVar = 0 },
 	Breed_Ready = { Id = 15675046931, Volume = 0.5, Kind = "SFX", PitchVar = 0 },
 	InstantHatch = { Id = 94077390731779, Volume = 0.45, Kind = "SFX", PitchVar = 0, MaxLength = 1.5 },
@@ -139,6 +139,30 @@ local Aliases: { [string]: string } = {
 	Remove = "Build_Remove",
 	Hatch = "Egg_Crack",
 	DailyReward = "DailyClaim",
+	-- Server-fired names (Guard.Sound)
+	EggCrack = "Egg_Crack",
+	EggLaid = "Breed_Start",
+	EggReady = "Breed_Ready",
+	BaitThrow = "Bait_Throw",
+	NetCharge = "Capture_Wobble",
+	CaptureSuccess = "Capture_Success",
+	CaptureFail = "Capture_Fail",
+	Discovery = "Discover_New",
+	JournalStep = "Journal_NewEntry",
+	Munch = "Feed", -- Voice_Munch is still Id 0
+	GrowUp = "Baby_Chirp",
+	Assign = "UI_Confirm",
+	Refill = "Build_PlacePlant",
+	Sell = "Coins_Gain",
+	Scan = "Trust_Up",
+	TierUp = "ParkTierUp",
+	Unlock = "ZoneUnlock",
+	QuestReady = "Notification",
+	Restock = "Notification",
+	WeatherClear = "Notification",
+	Weather_Sunny = "Notification",
+	Weather_Rain = "Notification",
+	Weather_RainbowShower = "RatingUp",
 }
 
 -- Zone (Config.Zones Id / "Park" default / "Hub") -> music + ambience bed + one-shots {name, minGap, maxGap} + reverb. Night swaps park/hub.

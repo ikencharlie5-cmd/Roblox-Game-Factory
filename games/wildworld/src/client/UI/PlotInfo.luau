@@ -58,6 +58,22 @@ function PlotInfo.Center(): Vector3?
 	return nil
 end
 
+-- Levelled plot CFrame at ground top (same as server PlotService.PlotCFrame).
+function PlotInfo.CFrame(): CFrame?
+	local m = PlotInfo.Model()
+	local cf: CFrame
+	if m and m:IsA("BasePart") then
+		cf = m.CFrame * CFrame.new(0, m.Size.Y / 2, 0)
+	elseif m and m:IsA("Model") then
+		local mcf, size = m:GetBoundingBox()
+		cf = mcf * CFrame.new(0, size.Y / 2, 0)
+	else
+		return nil
+	end
+	local look = cf.LookVector
+	return CFrame.lookAt(cf.Position, cf.Position + Vector3.new(look.X, 0, look.Z))
+end
+
 local function landLevel(): number
 	return tonumber(State.Tbl("upgrades").Land) or 0
 end
@@ -69,15 +85,14 @@ end
 
 -- World position -> 0-based plot cell.
 function PlotInfo.ToCell(pos: Vector3): (number, number)
-	local c = PlotInfo.Center() or Vector3.zero
+	local l = (PlotInfo.CFrame() or CFrame.new()):PointToObjectSpace(pos)
 	local half = Formulas.PlotCells() / 2
-	return math.floor((pos.X - c.X) / PlotInfo.Cell + half), math.floor((pos.Z - c.Z) / PlotInfo.Cell + half)
+	return math.floor(l.X / PlotInfo.Cell + half), math.floor(l.Z / PlotInfo.Cell + half)
 end
 
 function PlotInfo.CellCFrame(cx: number, cz: number, w: number, d: number, rotDeg: number): CFrame
-	local c = PlotInfo.Center() or Vector3.zero
 	local x, z = Formulas.CellCentre(cx, cz, w, d)
-	return CFrame.new(c.X + x, c.Y, c.Z + z) * CFrame.Angles(0, math.rad(rotDeg), 0)
+	return (PlotInfo.CFrame() or CFrame.new()) * CFrame.new(x, 0, z) * CFrame.Angles(0, math.rad(rotDeg), 0)
 end
 
 function PlotInfo.InBounds(cx: number, cz: number, w: number, d: number): boolean

@@ -24,13 +24,13 @@ function BuildGrid.Draw(folder: Instance, center: Vector3?)
 		return
 	end
 	local _, size = PlotInfo.Bounds()
-	local key = tostring(center) .. size
+	local pcf = PlotInfo.CFrame() or CFrame.new(center :: Vector3)
+	local key = tostring(pcf) .. size
 	if key == gridKey then
 		return
 	end
 	gridKey = key
 	local n = math.floor(size / PlotInfo.Cell)
-	local c = center :: Vector3
 	for i = 0, n do
 		for axis = 1, 2 do
 			local idx = i * 2 + axis
@@ -51,10 +51,10 @@ function BuildGrid.Draw(folder: Instance, center: Vector3?)
 			local off = -size / 2 + i * PlotInfo.Cell
 			if axis == 1 then
 				l.Size = Vector3.new(0.12, 0.05, size)
-				l.CFrame = CFrame.new(c.X + off, c.Y + 0.06, c.Z)
+				l.CFrame = pcf * CFrame.new(off, 0.06, 0)
 			else
 				l.Size = Vector3.new(size, 0.05, 0.12)
-				l.CFrame = CFrame.new(c.X, c.Y + 0.06, c.Z + off)
+				l.CFrame = pcf * CFrame.new(0, 0.06, off)
 			end
 			l.Parent = folder
 		end

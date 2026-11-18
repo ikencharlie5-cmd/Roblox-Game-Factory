@@ -173,6 +173,10 @@ Net.On("Reveal", function(kind, data)
 	local d = if type(data) == "table" then data else {}
 	if k == "hatch" or k == "capture" then
 		Reveal.Show(k, d)
+	elseif k == "openwindow" then -- hub DailyChest / ShopStall prompts
+		if (d.name == "Daily" or d.name == "Shop") and not BuildMode.IsActive() then
+			Windows.Open(d.name)
+		end
 	elseif k == "offline" then
 		Notify.Offline(tonumber(d.coins) or 0, tonumber(d.seconds) or 0, nil)
 	elseif k == "levelup" then

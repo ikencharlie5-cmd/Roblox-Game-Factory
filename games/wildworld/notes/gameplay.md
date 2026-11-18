@@ -81,7 +81,8 @@ RotateItem / MoveItem / RemoveItem 0.1 s, ThrowBait / CaptureStart / CaptureRele
 `Capture` (same fields) · `Discovery` {species, rarity, blurb, rp, coins} (first time a species is owned; fires
 right after Hatch/Capture) · `LevelUp` {level, unlocks[]} · `Tier` {tier, rating, bonus} · `Offline` {coins, seconds,
 cappedSeconds, eggsReady} · `Daily` {day, text, streak} · `Tutorial` {step, text} · `ZoneUnlocked` {zone, name} ·
-`StarterPack` {coins} · `PassBought` {key, name}.
+`StarterPack` {coins} · `PassBought` {key, name} · `OpenWindow` {name = "Daily" | "Shop"} (fired when the hub
+`DailyChest` / `ShopStall` ProximityPrompt is triggered; Main.client.luau opens that window — listener already added).
 
 **PlaySound names fired by the server:** Error, Place, Rotate, Remove, Assign, Munch, Pet, GrowUp, Refill, Sell,
 EggLaid, EggCrack, EggReady, Scan, Discovery, JournalStep, BaitThrow, NetCharge, CaptureSuccess, CaptureFail,
@@ -134,12 +135,19 @@ Lumibun/Mossback/Emberfox, ready instantly) appears on the pad with a "Hatch!" p
 Tutorial chain (`TutorialStep`): 1 Hatch -> 2 Feed (completing pays a **25-coin visitor tip** = the first tree) ->
 3 Place a tree -> 4 Catch a wild -> 5 Breed -> 6 done. The starter hatches as an **Adult** so the first catch of the
 same species can breed at once; the **first bred egg is always Golden** (`flags.goldenGiven`).
+Until `goldenGiven`, each wild spawn has a `Config.Capture.StarterSpeciesBias` (60%) chance to be a species some
+online player owns exactly one of (WildService.wantedSpecies). Trust doesn't decay while a wild is claimed by the
+baiting player, so one Berry (40 = TrustNeeded) is enough. Capture timing subtracts ping/2 (one-way).
+**Hub prompts:** DailyChest -> Reveal OpenWindow Daily; ShopStall -> ShopChanged + Reveal OpenWindow Shop
+(`Guard.WirePrompt(tag, fn)`). **DiscoverySpot** (Glade) is decor only — no gameplay reads it.
 
 ## Saving (never lose data)
 UpdateAsync with a session lock `{job, t}`: a second server waits up to 30 s for the lock, takes over a lock older than
 180 s, and a server that lost its lock never writes. Autosave 60 s, save + release on leave, BindToClose waits for all
 saves. Robux receipts are deduped by PurchaseId saved in data and force-saved before PurchaseGranted. Studio without
-API access plays on default data and doesn't save (warns once).
+API access plays on default data and doesn't save (warns once). An autosave in flight when the player
+leaves writes nothing (transform returns nil) so it can't re-take the lock after release. `save`/`SaveNow` return
+false when the lock was lost, so receipts stay NotProcessedYet (also re-checked for already-cached receipts).
 
 ## Needs from other branches
 - **Graphics:** gameplay uses `Shared.Theme.Props.Build(itemId, seed)` for items and `Shared.CreatureBuilder.Build/BuildEgg`.

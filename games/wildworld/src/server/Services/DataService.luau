@@ -65,8 +65,11 @@ end
 -- One UpdateAsync write. Returns true when written (or nothing to write).
 local function save(player: Player, release: boolean): boolean
 	local data = cache[player]
-	if not data or noSave[player] or not store or lockLost[player] then
+	if not data or noSave[player] or not store then
 		return true
+	end
+	if lockLost[player] then
+		return false -- not saved: receipts must not be granted (another server owns the profile)
 	end
 	if leaving[player] and not release then
 		return true
@@ -77,6 +80,9 @@ local function save(player: Player, release: boolean): boolean
 	for attempt = 1, 4 do
 		local ok, err = pcall(function()
 			store:UpdateAsync(key(player), function(old)
+				if leaving[player] and not release then
+					return nil -- autosave finishing after leave must not re-write the lock
+				end
 				if lockedByOther(old) then
 					lockLost[player] = true
 					return nil -- another server owns this profile now: never overwrite it
@@ -93,6 +99,7 @@ local function save(player: Player, release: boolean): boolean
 		task.wait(attempt)
 	end
 	if lockLost[player] then
+		written = false
 		warn("[DataService] session lock lost for", player.UserId, "- stopped saving this session")
 	end
 	if written and board and type(data.bestRating) == "number" then

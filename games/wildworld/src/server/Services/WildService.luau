@@ -86,7 +86,31 @@ local function nearestStarfruit(pos: Vector3): boolean
 	return false
 end
 
+-- Species that a player who hasn't bred their first (Golden) egg owns exactly one of.
+local function wantedSpecies(zone: any): { string }
+	local out = {}
+	for _, p in Players:GetPlayers() do
+		local d = DataService.Get(p)
+		if d and not d.flags.goldenGiven then
+			local count: { [string]: number } = {}
+			for _, c in d.creatures do
+				count[c.species] = (count[c.species] or 0) + 1
+			end
+			for sp, n in count do
+				if n == 1 and table.find(zone.Species, sp) and not table.find(out, sp) then
+					table.insert(out, sp)
+				end
+			end
+		end
+	end
+	return out
+end
+
 local function pickSpecies(zone: any): string
+	local want = wantedSpecies(zone)
+	if #want > 0 and rng:NextNumber() < Config.Capture.StarterSpeciesBias then
+		return want[rng:NextInteger(1, #want)]
+	end
 	local weights: any = Config.Capture.SpawnWeights
 	local rain = Guard.State():GetAttribute("Weather") == "Rain"
 	local total, list = 0, {}

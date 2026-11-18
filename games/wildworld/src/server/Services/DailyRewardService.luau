@@ -82,6 +82,10 @@ function DailyRewardService.Init()
 		refreshAttr(player, data)
 	end, 80)
 	Guard.Bind("ClaimDaily", claim)
+	-- Hub Daily Chest: open the Daily window (it shows claim / next-claim time)
+	Guard.WirePrompt("DailyChest", function(player)
+		Guard.Reveal(player, "OpenWindow", { name = "Daily" })
+	end)
 end
 
 function DailyRewardService.Start()

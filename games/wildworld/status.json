@@ -4,7 +4,7 @@
   "idea": "Multiplayer wildlife park + creature collection/breeding sim (Planet Zoo x Slime Rancher x Pokemon inspired, all original). Explore, capture original creatures, build habitats, breed for genetics + rare mutations, earn from visitors, visit/trade securely.",
   "stage": "checker",
   "created": "2026-11-18T03:02:43Z",
-  "updated": "2026-11-18T05:04:02Z",
+  "updated": "2026-11-18T05:05:55Z",
   "branches": {
     "gameplay": "done",
     "graphics": "done",
@@ -162,6 +162,18 @@
       "from": "checker",
       "to": "all",
       "text": "FAIL: 14 issues"
+    },
+    {
+      "time": "2026-11-18T05:05:54Z",
+      "from": "ui",
+      "to": "all",
+      "text": "Fixed plot-space build math, added zone unlock (Park window + gate prompts), tutorial feed range gate"
+    },
+    {
+      "time": "2026-11-18T05:05:55Z",
+      "from": "gameplay",
+      "to": "all",
+      "text": "Fixed 7 CHECK_REPORT gameplay issues (trust decay, hub prompts, save race, starter bias, ping/2, receipt lock, DiscoverySpot = decor)"
     }
   ]
 }

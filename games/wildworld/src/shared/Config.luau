@@ -143,6 +143,8 @@ Config.AI = {
 Config.Capture = {
 	MaxWild = 12,
 	RespawnSeconds = 45,
+	-- chance a spawn picks a species some new player (no Golden egg yet) owns exactly 1 of, so they can breed
+	StarterSpeciesBias = 0.6,
 	Bait = {
 		Berry = { Trust = 40, Coins = 10 },
 		Honey = { Trust = 70, Coins = 50 },

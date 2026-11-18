@@ -109,4 +109,26 @@ function Guard.Bind(name: string, handler: (Player, any, ...any) -> (boolean, an
 	end
 end
 
+-- Connects Triggered on every ProximityPrompt under instances tagged `tag` (now and later).
+-- fn runs only for loaded players.
+function Guard.WirePrompt(tag: string, fn: (Player, any) -> ())
+	local CollectionService = game:GetService("CollectionService")
+	local function hook(inst: Instance)
+		for _, d in inst:GetDescendants() do
+			if d:IsA("ProximityPrompt") then
+				d.Triggered:Connect(function(player: Player)
+					local data = DataService.Get(player)
+					if data then
+						fn(player, data)
+					end
+				end)
+			end
+		end
+	end
+	for _, inst in CollectionService:GetTagged(tag) do
+		hook(inst)
+	end
+	CollectionService:GetInstanceAddedSignal(tag):Connect(hook)
+end
+
 return Guard

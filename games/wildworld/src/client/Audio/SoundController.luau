@@ -30,6 +30,9 @@ local function normalizeOpts(opts: any): PlayOpts
 	elseif typeof(opts) == "Instance" or typeof(opts) == "Vector3" then
 		return { At = opts }
 	elseif type(opts) == "table" then
+		if opts.At == nil and (typeof(opts.position) == "Vector3" or typeof(opts.position) == "Instance") then
+			opts.At = opts.position -- server sends lowercase { position = Vector3 }
+		end
 		return opts
 	end
 	return {}

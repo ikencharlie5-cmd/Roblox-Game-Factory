@@ -66,3 +66,8 @@ arrow), plot = tag `Plot` part with `OwnerId`, forest arch tag `ForestGate`. Cre
 - `DailyDay` = when `DailyReady` true, the day the claim gives; when false, the day already claimed today (that tile shows "Claimed"; next = DailyDay % 7 + 1). HUD zone chip shows `Config.Zones[].Name` looked up by `Zone` Id (Park -> "My Park", Hub -> "Plaza").
 - Tutorial step 3 highlights `TreeOak` in the build tray.
 - No favourites in v1 (Manager decision). Move action skipped (Remove + Place covers it; MoveItem exists).
+
+## Check-report fixes (ui)
+- Build math uses the levelled plot CFrame (`PlotInfo.CFrame`, same as PlotService.PlotCFrame): ToCell/CellCFrame/grid lines in plot space.
+- Zone unlocking: ParkWindow lists locked zones (Config.Zones) with an Unlock button -> confirm -> `UnlockZone(zoneId)`; client ProximityPrompt on each `ZoneGate` anchor opens the same dialog (hidden once owned).
+- Tutorial Feed step: arrow points at the creature; "Feed it" only active within Needs.InteractRange - 2 studs, otherwise "Walk closer".

@@ -1,6 +1,7 @@
 --!strict
 -- Park panel: park rating (stars + number), tier ladder (Poor -> Legendary with income bonus),
 -- income per minute, and the coin upgrades (BuyUpgrade). Server decides prices and effects.
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -137,6 +138,64 @@ local function renderList()
 	end
 end
 
+-- Locked wild zones (Config.Zones): Park Level + coins, unlocked by the server via UnlockZone.
+local function unlockZone(z: { [string]: any })
+	local name, cost = tostring(z.Name or z.Id), tonumber(z.Cost) or 0
+	if Derived.Level() < (tonumber(z.Level) or 1) then
+		Kit.Sound("Error")
+		Net.Toast(name .. " unlocks at Park Level " .. tostring(z.Level), "error")
+		return
+	end
+	if State.Num("coins") < cost then
+		Kit.Sound("Error")
+		Net.Toast("Needs " .. Format.Number(cost) .. " Coins", "error")
+		return
+	end
+	Windows.Confirm("Unlock " .. name .. "?", "Open " .. name .. " for " .. Format.Number(cost) .. " Coins?", "Unlock", function()
+		if Net.Do("UnlockZone", name .. " unlocked!", z.Id) then
+			Kit.Sound("Purchase")
+		end
+	end)
+end
+ParkWindow.UnlockZone = unlockZone
+
+local function renderZones(order: number)
+	local owned = State.Tbl("zones")
+	local lvlNow = Derived.Level()
+	for i, z in Derived.Cfg("Zones") or {} do
+		if type(z) == "table" and (tonumber(z.Cost) or 0) > 0 and not owned[z.Id] then
+			local need = tonumber(z.Level) or 1
+			local cost = tonumber(z.Cost) or 0
+			local ready = lvlNow >= need and State.Num("coins") >= cost
+			local card = Kit.Panel(list, nil, { Size = UDim2.new(1, -12, 0, 84), LayoutOrder = order + i })
+			Kit.Label(card, "Zone: " .. tostring(z.Name or z.Id), {
+				Position = UDim2.fromOffset(16, 6),
+				Size = UDim2.new(0.6, 0, 0, 36),
+				TextSize = 26,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				ZIndex = 3,
+			})
+			Kit.Body(card, string.format("Needs Park Level %d  ·  New wild creatures", need), {
+				Position = UDim2.fromOffset(16, 44),
+				Size = UDim2.new(0.6, 0, 0, 28),
+				TextSize = 18,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				ZIndex = 3,
+			})
+			local text = if lvlNow < need then "Lv " .. need else "Unlock " .. Format.Number(cost)
+			Kit.Button(card, text, if ready then "Sun" else "Disabled", function()
+				unlockZone(z)
+			end, {
+				AnchorPoint = Vector2.new(1, 0.5),
+				Position = UDim2.new(1, -12, 0.5, 0),
+				Size = UDim2.fromOffset(220, 62),
+				TextSize = 24,
+				ZIndex = 4,
+			})
+		end
+	end
+end
+
 local function render()
 	if not Windows.IsOpen("Park") then
 		return
@@ -146,6 +205,8 @@ local function render()
 		player:GetAttribute("ParkRating"),
 		State.Get("upgrades"),
 		State.Num("coins"),
+		State.Get("zones"),
+		State.Get("level"),
 		player:GetAttribute("IncomePerMin"),
 	})
 	if sig == lastSig then
@@ -154,9 +215,48 @@ local function render()
 	lastSig = sig
 	renderTop()
 	renderList()
+	renderZones(100)
+end
+
+-- Client-side "Unlock" prompt on each locked ZoneGate anchor (opens the confirm dialog).
+local gatePrompts: { [ProximityPrompt]: { [string]: any } } = {}
+local function refreshGates()
+	local owned = State.Tbl("zones")
+	for prompt, z in gatePrompts do
+		if prompt.Parent then
+			prompt.Enabled = not owned[z.Id]
+		else
+			gatePrompts[prompt] = nil
+		end
+	end
+end
+local function addGate(anchor: Instance)
+	if not anchor:IsA("BasePart") then
+		return
+	end
+	for _, z in Derived.Cfg("Zones") or {} do
+		if type(z) == "table" and z.Id == anchor:GetAttribute("Zone") and (tonumber(z.Cost) or 0) > 0 then
+			local prompt = Kit.Make("ProximityPrompt", {
+				ActionText = "Unlock " .. tostring(z.Name or z.Id),
+				ObjectText = string.format("Park Lv %d + %s Coins", tonumber(z.Level) or 1, Format.Number(tonumber(z.Cost) or 0)),
+				HoldDuration = 0,
+				MaxActivationDistance = 14,
+				RequiresLineOfSight = false,
+			}, anchor)
+			prompt.Triggered:Connect(function()
+				unlockZone(z)
+			end)
+			gatePrompts[prompt] = z
+		end
+	end
+	refreshGates()
 end
 
 function ParkWindow.Mount()
+	CollectionService:GetInstanceAddedSignal("ZoneGate"):Connect(addGate)
+	for _, g in CollectionService:GetTagged("ZoneGate") do
+		addGate(g)
+	end
 	win = Windows.Create("Park", "My Park", "Leaf", "Park", Vector2.new(860, 620))
 	top = Kit.Make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 130) }, win.Body)
 	list = Kit.Scroll(win.Body, { Position = UDim2.fromOffset(0, 140), Size = UDim2.new(1, 0, 1, -140) })
@@ -168,6 +268,7 @@ function ParkWindow.Mount()
 	end
 	State.OnChange(function(what)
 		if what == "data" then
+			refreshGates()
 			render()
 		end
 	end)
