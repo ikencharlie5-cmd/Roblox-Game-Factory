@@ -49,6 +49,12 @@
   .edge.loop { stroke-dasharray: 6 6; }
   .edge.hot { stroke: var(--ideas); animation: flow 1s linear infinite; stroke-dasharray: 8 6; }
   @keyframes flow { to { stroke-dashoffset: -28; } }
+  .worker { animation: bob .5s ease-in-out infinite alternate; transform-box: fill-box; }
+  @keyframes bob { to { transform: translateY(-3px) rotate(-3deg); } }
+  .glow { animation: flick 2.2s ease-in-out infinite; }
+  @keyframes flick { 50% { opacity: .05; } }
+  .elev { transition: transform 1.4s cubic-bezier(.5,0,.3,1); }
+  .room:hover rect:first-child { filter: brightness(1.12); }
   .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
   .tab { font: 600 13px Fredoka; padding: 6px 12px; border-radius: 10px; background: var(--panel2); color: var(--dim); border: 0; cursor: pointer; }
   .tab.on { color: #111; }
@@ -83,7 +89,7 @@
 <header>
   <div>
     <div class="logo">🐔 Chiken <span>Studios</span></div>
-    <div class="sub">Game Factory — live pipeline</div>
+    <div class="sub">Game Factory HQ — live from the office</div>
   </div>
   <div class="spacer"></div>
   <span class="updated" id="updated"></span>
@@ -116,7 +122,7 @@
   </section>
 
   <aside class="card">
-    <h2>Team chat</h2>
+    <h2>Office chat</h2>
     <div class="feed" id="feed"></div>
   </aside>
 </main>
@@ -210,72 +216,105 @@ function nodeState(id, g) {
   return { text: "waiting", active: false, color: null };
 }
 
+function lastMsg(g, role) {
+  const log = g?.log || [];
+  for (let i = log.length - 1; i >= 0; i--) if (log[i].from === role) return log[i].text;
+  return "";
+}
+const STAGE_FLOOR = { research: 4, ideas: 3, approval: 3, branches: 2, manager: 5, checker: 5, signoff: 5, done: 1 };
+
 function renderMap() {
   const g = selGame;
-  const N = {
-    inspiration: [870, 60, "📎", "Inspiration"],
-    rnd: [870, 170, "🔬", "R&D"],
-    charlie: [130, 170, "👑", "Charlie OK"],
-    ideas: [500, 170, "💡", "Ideas"],
-    manager: [900, 345, "🧑‍💼", "Manager"],
-    gameplay: [90, 345, "⚙️", "Gameplay"],
-    graphics: [250, 345, "🎨", "Graphics"],
-    ui: [410, 345, "🖥️", "UI / Menus"],
-    audio: [570, 345, "🎵", "Sound"],
-    animation: [730, 345, "🎬", "Animation"],
-    checker: [410, 520, "🔍", "Checker"],
-    done: [750, 520, "🚀", "Shipped"],
-  };
-  const W = 150, H = 70;
-  const hot = (from, to) => g && ((g.stage === "research" && to === "rnd") || (g.stage === "ideas" && from === "rnd" && to === "ideas") ||
-    (g.stage === "branches" && from === "ideas") || (g.stage === "manager" && to === "manager") ||
-    (g.stage === "checker" && to === "checker") || (g.stage === "signoff" && from === "checker" && to === "manager") || (g.stage === "approval" && to === "charlie") || (g.stage === "done" && to === "done"));
-  const E = (a, b, d, cls = "") => `<path class="edge ${cls} ${hot(a, b) ? "hot" : ""}" d="${d}" marker-end="url(#ar)"/>`;
-  const [ix, iy] = N.ideas, [mx, my] = N.manager, [rx, ry] = N.rnd;
-  let edges = "";
-  edges += E("inspiration", "rnd", `M${rx},${N.inspiration[1] + H / 2} L${rx},${ry - H / 2 - 8}`);
-  edges += E("rnd", "ideas", `M${rx - W / 2},${ry} L${ix + W / 2 + 8},${iy}`);
-  edges += E("rnd", "branches", `M${rx - 60},${ry + H / 2} C${rx - 80},265 ${N.audio[0] + 40},260 ${N.audio[0] + 40},${N.audio[1] - H / 2 - 8}`, "loop");
-  edges += E("ideas", "charlie", `M${ix - W / 2},${iy - 8} L${N.charlie[0] + W / 2 + 8},${iy - 8}`);
-  edges += E("charlie", "ideas", `M${N.charlie[0] + W / 2},${iy + 10} L${ix - W / 2 - 8},${iy + 10}`, "loop");
-  for (const b of ["gameplay", "graphics", "ui", "audio", "animation"]) {
-    const [bx, by] = N[b];
-    edges += E("ideas", b, `M${ix},${iy + H / 2} C${ix},260 ${bx},250 ${bx},${by - H / 2 - 8}`);
-    edges += E(b, "checker", `M${bx},${by + H / 2} C${bx},440 ${N.checker[0]},430 ${N.checker[0]},${N.checker[1] - H / 2 - 8}`);
-  }
-  edges += E("animation", "manager", `M${N.animation[0] + W / 2},${my} L${mx - W / 2 - 8},${my}`);
-  edges += E("manager", "ideas", `M${mx + 40},${my - H / 2} C${mx + 120},250 ${mx + 120},${ry + 70} ${rx + 30},${ry + H / 2 + 8}`, "loop");
-  edges += E("checker", "manager", `M${N.checker[0] + W / 2},${N.checker[1] - 14} C${mx - 120},${N.checker[1] - 30} ${mx},${N.checker[1] - 60} ${mx},${my + H / 2 + 8}`, "loop");
-  edges += E("checker", "done", `M${N.checker[0] + W / 2},${N.checker[1]} L${N.done[0] - W / 2 - 8},${N.done[1]}`);
-  edges += E("checker", "branches", `M${N.checker[0] - W / 2},${N.checker[1] + 10} C120,540 60,430 ${N.gameplay[0] - W / 2 - 8},362`, "loop");
+  const X0 = 90, X1 = 850, FH = 128, TOP = 120;
+  const floorY = f => TOP + (5 - f) * FH; // floor 5 at top
+  const short = (s, n) => (s && s.length > n ? s.slice(0, n - 1) + "…" : s || "");
 
-  const labels = `<text x="815" y="395" text-anchor="middle" fill="var(--manager)" font-size="11" font-family="Inter">questions</text>
-    <text x="985" y="300" text-anchor="end" fill="var(--manager)" font-size="11" font-family="Inter">decision → R&D/Ideas → fix</text>
-    <text x="700" y="250" text-anchor="middle" fill="#2dd4bf" font-size="11" font-family="Inter">refs for branches</text>
-    <text x="985" y="455" text-anchor="end" fill="var(--manager)" font-size="11" font-family="Inter">sign-off checklist</text>
-    <text x="40" y="500" fill="var(--checker)" font-size="12" font-family="Inter">issues → fix</text>
-    <text x="300" y="150" fill="var(--charlie)" font-size="12" font-family="Inter">spec → OK?</text>
-    <text x="690" y="160" text-anchor="middle" fill="#2dd4bf" font-size="11" font-family="Inter">research</text>`;
-
-  const nodes = Object.entries(N).map(([id, [x, y, icon, label]]) => {
+  function room(id, label, icon, x, y, w, sub) {
+    const h = FH - 10;
     const s = nodeState(id, g);
-    const stroke = s.color || "var(--line)";
-    return `<g class="node ${s.active ? "active" : ""} ${selNode === id ? "sel" : ""}" onclick="pickNode('${id}')">
-      <rect x="${x - W / 2}" y="${y - H / 2}" width="${W}" height="${H}" rx="16" style="stroke:${stroke}"/>
-      <text class="role" x="${x - W / 2 + 18}" y="${y - 4}">${icon} ${label}</text>
-      <circle cx="${x - W / 2 + 24}" cy="${y + 17}" r="4" fill="${s.color || "#475069"}"/>
-      <text class="state" x="${x - W / 2 + 34}" y="${y + 21}">${esc(s.text)}</text></g>`;
-  }).join("");
+    const role = ROLES[id] || { color: "var(--dim)" };
+    const lit = s.active, done = /done|shipped/.test(s.text), blocked = s.text === "blocked";
+    const win = lit ? "url(#lit)" : done ? "#cdeedc" : blocked ? "#ffd3d3" : "#26304d";
+    const ink = lit || done || blocked ? "#1d2333" : "#c9d1ec";
+    const sel = selNode === id ? `stroke="${role.color}" stroke-width="4"` : `stroke="#5b4a3a" stroke-width="3"`;
+    const cx = x + w / 2, deskY = y + h - 34;
+    const msg = lit && g ? short(lastMsg(g, id), Math.floor(w / 7.2)) : "";
+    return `<g class="room ${lit ? "on" : ""}" onclick="pickNode('${id}')" style="cursor:pointer">
+      <rect x="${x + 4}" y="${y + 5}" width="${w - 8}" height="${h}" rx="6" fill="${win}" ${sel}/>
+      ${lit ? `<rect class="glow" x="${x + 4}" y="${y + 5}" width="${w - 8}" height="${h}" rx="6" fill="#ffd36b" opacity=".18"/>` : ""}
+      <line x1="${x + 4}" y1="${y + 5 + h * 0.5}" x2="${x + w - 4}" y2="${y + 5 + h * 0.5}" stroke="#ffffff" stroke-opacity=".08"/>
+      <rect x="${cx - 26}" y="${deskY}" width="52" height="8" rx="2" fill="#8a5a33"/>
+      <rect x="${cx - 22}" y="${deskY + 8}" width="4" height="18" fill="#6b4426"/><rect x="${cx + 18}" y="${deskY + 8}" width="4" height="18" fill="#6b4426"/>
+      <rect x="${cx - 10}" y="${deskY - 18}" width="20" height="14" rx="2" fill="${lit ? "#7fe3ff" : "#3b4466"}" stroke="#1d2333" stroke-width="1.5"/>
+      <g class="${lit ? "worker" : ""}" style="transform-origin:${cx + 22}px ${deskY + 6}px">
+        <rect x="${cx + 14}" y="${deskY - 10}" width="16" height="18" rx="7" fill="${role.color}"/>
+        <circle cx="${cx + 22}" cy="${deskY - 17}" r="7" fill="#ffd9b3" stroke="#1d2333" stroke-width="1"/>
+      </g>
+      <text x="${x + 12}" y="${y + 24}" font-family="Fredoka" font-size="15" font-weight="600" fill="${ink}">${icon} ${label}</text>
+      <text x="${x + 12}" y="${y + 40}" font-family="Inter" font-size="11" fill="${ink}" opacity=".8">${esc(sub || s.text)}</text>
+      ${msg ? `<g><rect x="${x + 10}" y="${y + 47}" width="${w - 20}" height="20" rx="10" fill="#fff" stroke="${role.color}" stroke-width="2"/>
+        <text x="${x + 18}" y="${y + 61}" font-family="Inter" font-size="10.5" fill="#1d2333">💬 ${esc(msg)}</text></g>` : ""}
+    </g>`;
+  }
+
+  let rooms = "";
+  // Floor 5: executive
+  rooms += room("manager", "Manager's Office", "🧑‍💼", X0, floorY(5), 380);
+  rooms += room("checker", "QA Lab (Checker)", "🔍", X0 + 380, floorY(5), 380);
+  // Floor 4: R&D labs
+  const rw = 190;
+  [["Gameplay Lab", "🎮"], ["Art Lab", "🖌️"], ["UI Lab", "📱"], ["Audio Lab", "🎧"]].forEach(([l, i], k) => {
+    rooms += room("rnd", "R&D " + l, i, X0 + k * rw, floorY(4), rw);
+  });
+  // Floor 3: ideas + charlie
+  rooms += room("ideas", "Ideas Studio", "💡", X0, floorY(3), 460);
+  rooms += room("charlie", "Charlie's Office", "👑", X0 + 460, floorY(3), 300, g ? (g.stage === "approval" ? "waiting for your OK!" : nodeState("charlie", g).text) : "idle");
+  // Floor 2: production
+  const pw = 152;
+  [["gameplay", "Gameplay", "⚙️"], ["graphics", "Graphics", "🎨"], ["ui", "UI / Menus", "🖥️"], ["audio", "Sound", "🎵"], ["animation", "Animation", "🎬"]]
+    .forEach(([id, l, i], k) => { rooms += room(id, l, i, X0 + k * pw, floorY(2), pw); });
+  // Floor 1: lobby
+  rooms += room("inspiration", "Mailroom", "📬", X0, floorY(1), 250, "inspiration uploads");
+  rooms += `<g><rect x="${X0 + 254}" y="${floorY(1) + 5}" width="252" height="${FH - 10}" rx="6" fill="#f3e6cf" stroke="#5b4a3a" stroke-width="3"/>
+    <rect x="${X0 + 350}" y="${floorY(1) + 40}" width="60" height="${FH - 45}" rx="4" fill="#7fc7e8" stroke="#5b4a3a" stroke-width="3"/>
+    <line x1="${X0 + 380}" y1="${floorY(1) + 40}" x2="${X0 + 380}" y2="${floorY(1) + FH - 5}" stroke="#5b4a3a" stroke-width="2"/>
+    <text x="${X0 + 380}" y="${floorY(1) + 28}" text-anchor="middle" font-family="Fredoka" font-size="16" fill="#5b4a3a">🐔 LOBBY</text>
+    <circle cx="${X0 + 290}" cy="${floorY(1) + FH - 30}" r="14" fill="#5fbf6a"/><rect x="${X0 + 286}" y="${floorY(1) + FH - 20}" width="8" height="14" fill="#8a5a33"/>
+    <circle cx="${X0 + 470}" cy="${floorY(1) + FH - 30}" r="14" fill="#5fbf6a"/><rect x="${X0 + 466}" y="${floorY(1) + FH - 20}" width="8" height="14" fill="#8a5a33"/></g>`;
+  rooms += room("done", "Shipping Dock", "🚀", X0 + 506, floorY(1), 254);
+
+  // Elevator
+  const ef = g ? STAGE_FLOOR[g.stage] || 1 : 1;
+  const elev = `<rect x="${X1 + 6}" y="${TOP}" width="54" height="${FH * 5}" fill="#1b2135" stroke="#5b4a3a" stroke-width="3"/>
+    ${[1,2,3,4,5].map(f => `<text x="${X1 + 33}" y="${floorY(f) + 16}" text-anchor="middle" font-family="Fredoka" font-size="12" fill="${f === ef ? "#ffd36b" : "#5d6a95"}">${f}</text>`).join("")}
+    <g class="elev" style="transform: translateY(${floorY(ef) - TOP}px)">
+      <rect x="${X1 + 12}" y="${TOP + 24}" width="42" height="${FH - 34}" rx="4" fill="#ffd36b" stroke="#8a6a1a" stroke-width="2"/>
+      <line x1="${X1 + 33}" y1="${TOP + 24}" x2="${X1 + 33}" y2="${TOP + FH - 10}" stroke="#8a6a1a" stroke-width="2"/>
+    </g>`;
+
+  const floors = [5,4,3,2,1].map(f => `<rect x="${X0 - 8}" y="${floorY(f) + FH - 5}" width="${X1 - X0 + 16}" height="8" fill="#b9a68c"/>`).join("");
+  const sign = `<rect x="${X0 + 170}" y="40" width="420" height="58" rx="12" fill="#ffb02e" stroke="#7a4b06" stroke-width="4"/>
+    <text x="${X0 + 380}" y="80" text-anchor="middle" font-family="Fredoka" font-size="30" font-weight="700" fill="#3a2300">🐔 CHIKEN STUDIOS</text>
+    <rect x="${X0 + 220}" y="98" width="8" height="${TOP - 98}" fill="#7a4b06"/><rect x="${X0 + 532}" y="98" width="8" height="${TOP - 98}" fill="#7a4b06"/>`;
 
   document.getElementById("map").innerHTML = `
     <div class="row" style="justify-content:space-between;margin-bottom:6px">
-      <h2 style="margin:0">${g ? esc(g.name) : "Pipeline"}</h2>
-      ${g ? `<span class="sub">${esc(g.idea || "")}</span>` : ""}
+      <h2 style="margin:0">${g ? esc(g.name) : "Chiken Studios HQ"}</h2>
+      ${g ? `<span class="sub">${STAGE_LABEL[g.stage] || g.stage} · ${esc(g.idea || "")}</span>` : ""}
     </div>
-    <svg viewBox="0 0 1000 570" xmlns="http://www.w3.org/2000/svg">
-      <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" fill="#5a6390"/></marker></defs>
-      ${edges}${labels}${nodes}
+    <svg viewBox="0 0 960 ${TOP + FH * 5 + 60}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ec6ff"/><stop offset="1" stop-color="#c8ecff"/></linearGradient>
+        <linearGradient id="lit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset="1" stop-color="#ffd77a"/></linearGradient>
+        <pattern id="brick" width="40" height="20" patternUnits="userSpaceOnUse"><rect width="40" height="20" fill="#d98a5f"/><path d="M0 10H40M20 0V10M0 10V20M40 10V20" stroke="#b86e47" stroke-width="2"/></pattern>
+      </defs>
+      <rect width="960" height="${TOP + FH * 5 + 60}" fill="url(#sky)" rx="14"/>
+      <circle cx="880" cy="60" r="28" fill="#fff3a6"/>
+      <ellipse cx="120" cy="60" rx="50" ry="16" fill="#fff" opacity=".9"/><ellipse cx="160" cy="50" rx="34" ry="14" fill="#fff" opacity=".9"/>
+      <rect x="0" y="${TOP + FH * 5}" width="960" height="60" fill="#7bc96f"/>
+      <rect x="0" y="${TOP + FH * 5 + 22}" width="960" height="16" fill="#9aa3b5"/>
+      <rect x="${X0 - 14}" y="${TOP - 6}" width="${X1 - X0 + 28}" height="${FH * 5 + 8}" fill="url(#brick)" stroke="#5b4a3a" stroke-width="4" rx="6"/>
+      ${sign}${floors}${rooms}${elev}
     </svg>`;
 }
 
