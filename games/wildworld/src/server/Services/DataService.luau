@@ -134,6 +134,9 @@ local function load(player: Player): (string, any)
 		end
 		if not ok then
 			warn("[DataService] load failed:", result)
+			if RunService:IsStudio() and string.find(tostring(result), "403", 1, true) then
+				return "error", nil -- Studio without API access: don't retry, fall back to default data
+			end
 		end
 		if not player.Parent then
 			return "error", nil

@@ -53,23 +53,32 @@ function World.Init()
 		return World.WaitReady()
 	end
 	started = true
+	local t0 = os.clock()
 	local rng = Random.new(20261118)
 	local root = Kit.Folder(Workspace, "World")
 	Kit.Folder(Workspace, "WorldFX")
 	Terrain.Setup()
 	Terrain.Ground()
+	task.wait() -- yield between build stages so Studio/plugins don't time out
 	local hillTops = Terrain.Backdrop(rng)
+	task.wait() -- yield between build stages so Studio/plugins don't time out
 	hubSpawn = Hub.Build(root, rng)
+	task.wait() -- yield between build stages so Studio/plugins don't time out
 	spokes(root, rng)
+	task.wait() -- yield between build stages so Studio/plugins don't time out
 	-- Tree clusters on the lawns between spokes (not on the meadow road at 270°).
 	local lawn = Kit.Model(root, "LawnTrees")
 	for _, deg in { 0, 45, 90, 135, 180, 225, 315 } do
 		local a = math.rad(deg)
 		Scatter.Cluster(lawn, math.cos(a) * 150, math.sin(a) * 150, rng, "Round", 1.1)
+		task.wait()
 	end
 	Plots.Build(root, rng)
+	task.wait() -- yield between build stages so Studio/plugins don't time out
 	Forest.Build(root, rng)
+	task.wait() -- yield between build stages so Studio/plugins don't time out
 	Terrain.Bounds(root)
+	print(("[World] built in %.1fs"):format(os.clock() - t0))
 	-- Anyone who falls onto the hidden SafetyFloor goes back to the hub (per-character debounce).
 	local floor = Workspace:FindFirstChild("SafetyFloor") :: BasePart?
 	if floor then
